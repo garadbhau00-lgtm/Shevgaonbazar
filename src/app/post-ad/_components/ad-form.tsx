@@ -47,29 +47,27 @@ async function createAdAction(
     }
 
     try {
-        let totalUploaded = 0;
-        const photoURLs = await Promise.all(
-            files.map(async (file) => {
+        const uploadPromises = files.map(file => {
+            return new Promise<string>((resolve, reject) => {
                 const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
-                return new Promise<string>((resolve, reject) => {
-                    uploadTask.on('state_changed',
-                        (snapshot) => {
-                            // This part is tricky for multiple uploads. We will simplify.
-                        },
-                        (error) => reject(error),
-                        async () => {
-                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                            totalUploaded++;
-                            onProgress((totalUploaded / files.length) * 100);
-                            resolve(downloadURL);
-                        }
-                    );
-                });
-            })
-        );
-        
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        // This will be called for each file, so we calculate total progress in onSubmit
+                    },
+                    (error) => reject(error),
+                    async () => {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        resolve(downloadURL);
+                    }
+                );
+            });
+        });
+
+        const photoURLs = await Promise.all(uploadPromises);
+        onProgress(100);
+
         await addDoc(collection(db, 'ads'), {
             ...data,
             userId: userId,
@@ -103,7 +101,7 @@ export default function AdForm() {
     defaultValues: {
       title: '',
       description: '',
-      price: '',
+      price: undefined,
       location: '',
     },
   });
@@ -179,9 +177,23 @@ export default function AdForm() {
         return;
     }
     setUploadProgress(0);
-    const result = await createAdAction(data, user.uid, files, setUploadProgress);
+    // Simulate progress for UX
+    const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+            if (prev === null || prev >= 95) {
+                clearInterval(progressInterval);
+                return prev;
+            }
+            return prev + 5;
+        });
+    }, 200);
+
+    const result = await createAdAction(data, user.uid, files, (p) => setUploadProgress(p));
     
+    clearInterval(progressInterval);
+
     if(result.success) {
+        setUploadProgress(100);
         toast({
             title: "यशस्वी!",
             description: result.message,
@@ -189,8 +201,13 @@ export default function AdForm() {
         form.reset();
         setFiles([]);
         setPreviews([]);
-        setUploadProgress(null);
-        router.push('/my-ads');
+        
+        // Wait a bit before clearing progress and redirecting
+        setTimeout(() => {
+            setUploadProgress(null);
+            router.push('/my-ads');
+        }, 500);
+
     } else {
         toast({
             variant: "destructive",
@@ -272,7 +289,7 @@ export default function AdForm() {
             <FormItem>
               <FormLabel>किंमत (₹)</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="उदा. १५०००" {...field} value={field.value ?? ''} />
+                <Input type="number" placeholder="उदा. १५०००" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
