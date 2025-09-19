@@ -28,22 +28,8 @@ export default function AccessManagementPage() {
                 router.push('/more');
                 return;
             }
-
-            const fetchUsers = async () => {
-                try {
-                    const usersCollection = collection(db, 'users');
-                    const userSnapshot = await getDocs(usersCollection);
-                    const userList = userSnapshot.docs.map(doc => doc.data() as UserProfile);
-                    setUsers(userList);
-                } catch (error) {
-                    console.error("Error fetching users:", error);
-                    toast({ variant: 'destructive', title: 'त्रुटी', description: 'वापरकर्त्यांना आणण्यात अयशस्वी.' });
-                } finally {
-                    setPageLoading(false);
-                }
-            };
-
-            fetchUsers();
+            // Temporarily disable user fetching to prevent permission errors.
+            setPageLoading(false);
         }
     }, [authLoading, userProfile, router, toast]);
 
@@ -81,7 +67,7 @@ export default function AccessManagementPage() {
                     <p className="text-muted-foreground">वापरकर्ता खाती सक्षम किंवा अक्षम करा.</p>
                 </div>
                 <div className="space-y-4">
-                    {users.map((user) => (
+                    {users.length > 0 ? users.map((user) => (
                         <div key={user.uid} className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm">
                             <div className="flex items-center gap-4">
                                 <Avatar>
@@ -105,7 +91,11 @@ export default function AccessManagementPage() {
                                 />
                             </div>
                         </div>
-                    ))}
+                    )) : (
+                        <div className="text-center text-muted-foreground mt-8">
+                            वापरकर्त्यांची सूची लोड करण्यात अक्षम. कृपया तुमच्या फायरस्टोअर नियमांची तपासणी करा.
+                        </div>
+                    )}
                 </div>
             </main>
         </div>
