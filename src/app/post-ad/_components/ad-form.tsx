@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 const adSchema = z.object({
   title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
@@ -33,42 +34,19 @@ const adSchema = z.object({
 
 type AdFormValues = z.infer<typeof adSchema>;
 
-async function createAdAction(
-    data: AdFormValues,
-    userId: string,
-    files: File[]
+async function createAd(
+    data: AdFormValues & { userId: string; photos: string[] }
 ): Promise<{ success: boolean; message: string }> {
-    if (!userId) {
-        return { success: false, message: 'तुम्ही लॉग इन केलेले नाही.' };
-    }
-    if (files.length === 0) {
-        return { success: false, message: 'कृपया किमान एक फोटो अपलोड करा.' };
-    }
-
     try {
-        const photoURLs: string[] = [];
-
-        // Upload files sequentially for better reliability
-        for (const file of files) {
-            const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-            const uploadTask = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(uploadTask.ref);
-            photoURLs.push(downloadURL);
-        }
-
         await addDoc(collection(db, 'ads'), {
             ...data,
-            userId: userId,
             status: 'pending',
             createdAt: serverTimestamp(),
-            photos: photoURLs,
         });
-
         return { success: true, message: 'तुमची जाहिरात समीक्षेसाठी पाठवली आहे.' };
-
     } catch (error) {
         console.error("Error creating ad:", error);
-        return { success: false, message: 'जाहिरात तयार करण्यात एक अनपेक्षित त्रुटी आली. कृपया तुमच्या स्टोरेज नियमांची तपासणी करा.' };
+        return { success: false, message: 'जाहिरात तयार करण्यात एक अनपेक्षित त्रुटी आली.' };
     }
 }
 
@@ -83,6 +61,7 @@ export default function AdForm() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -132,7 +111,6 @@ export default function AdForm() {
     setFiles(prev => prev.filter((_, i) => i !== index));
     setPreviews(prev => {
         const newPreviews = prev.filter((_, i) => i !== index);
-        // Revoke the object URL to free up memory
         URL.revokeObjectURL(previews[index]);
         return newPreviews;
     });
@@ -167,25 +145,52 @@ export default function AdForm() {
     }
     
     setIsSubmitting(true);
-    const result = await createAdAction(data, user.uid, files);
-    
-    if(result.success) {
-        toast({
-            title: "यशस्वी!",
-            description: result.message,
+    setUploadProgress(0);
+
+    try {
+        const photoURLs: string[] = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const storageRef = ref(storage, `ad-photos/${user.uid}/${Date.now()}-${file.name}`);
+            
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+            photoURLs.push(downloadURL);
+            
+            // Update progress after each file upload
+            setUploadProgress(((i + 1) / files.length) * 100);
+        }
+
+        const result = await createAd({
+            ...data,
+            userId: user.uid,
+            photos: photoURLs,
         });
-        form.reset();
-        setFiles([]);
-        setPreviews([]);
-        router.push('/my-ads');
-    } else {
+
+        if (result.success) {
+            toast({
+                title: "यशस्वी!",
+                description: result.message,
+            });
+            form.reset();
+            setFiles([]);
+            setPreviews([]);
+            router.push('/my-ads');
+        } else {
+            throw new Error(result.message);
+        }
+
+    } catch (error) {
+        console.error("Submission failed:", error);
         toast({
             variant: "destructive",
             title: "त्रुटी!",
-            description: result.message,
+            description: 'जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
         });
+    } finally {
+        setIsSubmitting(false);
+        setUploadProgress(null);
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -321,6 +326,13 @@ export default function AdForm() {
             </FormControl>
             <FormMessage />
         </FormItem>
+        
+        {isSubmitting && uploadProgress !== null && (
+            <div className="space-y-2">
+                <Label>{`फोटो अपलोड करत आहे... ${Math.round(uploadProgress)}%`}</Label>
+                <Progress value={uploadProgress} />
+            </div>
+        )}
 
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
