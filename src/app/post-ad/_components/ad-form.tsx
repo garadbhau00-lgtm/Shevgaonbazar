@@ -18,7 +18,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytesResumable, type UploadTaskSnapshot } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 
 const adSchema = z.object({
@@ -48,10 +48,22 @@ async function createAdAction(
 
     try {
         const photoURLs = await new Promise<string[]>((resolve, reject) => {
-            const urls: string[] = [];
+            const uploadStates: UploadTaskSnapshot[] = new Array(files.length);
+            const urls: string[] = new Array(files.length);
             let uploadedCount = 0;
-            let totalBytesTransferred = 0;
             const totalBytes = files.reduce((acc, file) => acc + file.size, 0);
+
+            const checkCompletion = () => {
+                if (uploadedCount === files.length) {
+                    resolve(urls.filter(url => url));
+                }
+            };
+
+            const updateTotalProgress = () => {
+                const totalBytesTransferred = uploadStates.reduce((acc, snapshot) => acc + (snapshot?.bytesTransferred ?? 0), 0);
+                const progress = (totalBytesTransferred / totalBytes) * 100;
+                onProgress(progress);
+            };
 
             files.forEach((file, index) => {
                 const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
@@ -59,34 +71,32 @@ async function createAdAction(
 
                 uploadTask.on('state_changed',
                     (snapshot) => {
-                        // This handler is called multiple times for each file.
-                        // We need a way to track total progress across all files.
-                        // For simplicity now, we will just update a global progress.
-                        // A more robust solution might track each file's progress individually.
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        console.log(`Upload is ${progress}% done for file ${index}`);
+                        uploadStates[index] = snapshot;
+                        updateTotalProgress();
                     },
                     (error) => {
-                        console.error("Upload failed for a file:", error);
+                        console.error(`Upload failed for file ${index}:`, error);
+                        // In a real app, you might want to cancel all uploads here.
+                        // For now, we'll just reject the whole operation.
                         reject(new Error('एक किंवा अधिक फोटो अपलोड करण्यात अयशस्वी.'));
                     },
                     async () => {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        urls[index] = downloadURL; // Keep order
-                        uploadedCount++;
-
-                        // Track total progress
-                        totalBytesTransferred += files[index].size;
-                        const overallProgress = (totalBytesTransferred / totalBytes) * 100;
-                        onProgress(overallProgress);
-
-                        if (uploadedCount === files.length) {
-                            resolve(urls);
+                        try {
+                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            urls[index] = downloadURL;
+                            uploadedCount++;
+                            checkCompletion();
+                        } catch (error) {
+                            reject(new Error('फोटो URL मिळवण्यात अयशस्वी.'));
                         }
                     }
                 );
             });
         });
+
+        if (photoURLs.length !== files.length) {
+             throw new Error('सर्व फोटो अपलोड झाले नाहीत.');
+        }
 
         await addDoc(collection(db, 'ads'), {
             ...data,
@@ -375,5 +385,3 @@ export default function AdForm() {
     </Form>
   );
 }
-
-    
