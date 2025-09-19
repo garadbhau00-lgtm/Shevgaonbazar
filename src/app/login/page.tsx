@@ -1,20 +1,58 @@
+
+'use client';
+
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Leaf } from 'lucide-react';
+import { Leaf, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
 
 function GoogleIcon() {
     return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
             <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-1.5c-1.1 0-1.5.9-1.5 1.5V12h3l-.5 3h-2.5v6.8c4.56-.93 8-4.96 8-9.8z"/>
         </svg>
     )
 }
 
+const loginSchema = z.object({
+  email: z.string().email({ message: 'कृपया वैध ईमेल पत्ता प्रविष्ट करा.' }),
+  password: z.string().min(1, { message: 'पासवर्ड आवश्यक आहे.' }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 export default function LoginPage() {
+    const { toast } = useToast();
+    const form = useForm<LoginFormValues>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: '',
+            password: '',
+        },
+    });
+
+    const { isSubmitting } = form.formState;
+
+    async function onSubmit(data: LoginFormValues) {
+        console.log(data);
+        // Mock API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        toast({
+            title: "लॉगिन यशस्वी!",
+            description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+        });
+        form.reset();
+    }
+
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
             <Card className="w-full max-w-sm">
@@ -30,24 +68,45 @@ export default function LoginPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">ईमेल</Label>
-                            <Input id="email" type="email" placeholder="तुमचा ईमेल पत्ता" required />
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="password">पासवर्ड</Label>
-                                <Link href="#" className="text-sm font-medium text-primary hover:underline">
-                                    पासवर्ड विसरलात?
-                                </Link>
-                            </div>
-                            <Input id="password" type="password" required />
-                        </div>
-                        <Button type="submit" className="w-full">
-                            लॉगिन करा
-                        </Button>
-                    </form>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>ईमेल</FormLabel>
+                                        <FormControl>
+                                            <Input type="email" placeholder="तुमचा ईमेल पत्ता" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel>पासवर्ड</FormLabel>
+                                            <Link href="#" className="text-sm font-medium text-primary hover:underline">
+                                                पासवर्ड विसरलात?
+                                            </Link>
+                                        </div>
+                                        <FormControl>
+                                            <Input type="password" placeholder="तुमचा पासवर्ड" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                लॉगिन करा
+                            </Button>
+                        </form>
+                    </Form>
                     <div className="my-6 flex items-center">
                         <Separator className="flex-1" />
                         <span className="mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>

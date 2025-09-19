@@ -1,20 +1,64 @@
+
+'use client';
+
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Leaf } from 'lucide-react';
+import { Leaf, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
 
 function GoogleIcon() {
     return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
             <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-1.5c-1.1 0-1.5.9-1.5 1.5V12h3l-.5 3h-2.5v6.8c4.56-.93 8-4.96 8-9.8z"/>
         </svg>
     )
 }
 
+const signupSchema = z.object({
+    email: z.string().email({ message: 'कृपया वैध ईमेल पत्ता प्रविष्ट करा.' }),
+    password: z.string().min(6, { message: 'पासवर्ड किमान ६ वर्णांचा असावा.' }),
+    confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "पासवर्ड जुळत नाहीत.",
+    path: ["confirmPassword"],
+});
+
+type SignupFormValues = z.infer<typeof signupSchema>;
+
+
 export default function SignupPage() {
+    const { toast } = useToast();
+    const form = useForm<SignupFormValues>({
+        resolver: zodResolver(signupSchema),
+        defaultValues: {
+            email: '',
+            password: '',
+            confirmPassword: '',
+        },
+    });
+    
+    const { isSubmitting } = form.formState;
+
+    async function onSubmit(data: SignupFormValues) {
+        console.log(data);
+        // Mock API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        toast({
+            title: "खाते तयार झाले!",
+            description: "तुम्ही आता लॉग इन करू शकता.",
+        });
+        form.reset();
+    }
+
+
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
             <Card className="w-full max-w-sm">
@@ -30,23 +74,53 @@ export default function SignupPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">ईमेल</Label>
-                            <Input id="email" type="email" placeholder="तुमचा ईमेल पत्ता" required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="password">पासवर्ड</Label>
-                            <Input id="password" type="password" required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="confirm-password">पासवर्डची पुष्टी करा</Label>
-                            <Input id="confirm-password" type="password" required />
-                        </div>
-                        <Button type="submit" className="w-full">
-                           खाते तयार करा
-                        </Button>
-                    </form>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>ईमेल</FormLabel>
+                                        <FormControl>
+                                            <Input type="email" placeholder="तुमचा ईमेल पत्ता" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>पासवर्ड</FormLabel>
+                                        <FormControl>
+                                            <Input type="password" placeholder="तुमचा पासवर्ड" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="confirmPassword"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>पासवर्डची पुष्टी करा</FormLabel>
+                                        <FormControl>
+                                            <Input type="password" placeholder="पासवर्डची पुष्टी करा" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                               खाते तयार करा
+                            </Button>
+                        </form>
+                    </Form>
                     <div className="my-6 flex items-center">
                         <Separator className="flex-1" />
                         <span className="mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>
