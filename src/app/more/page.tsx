@@ -7,10 +7,7 @@ import { ChevronRight, HelpCircle, LogIn, LogOut, Settings, User, UserPlus, Shie
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 
 
 const baseMenuItems = [
@@ -21,19 +18,13 @@ const baseMenuItems = [
 const adminMenuItem = { label: "प्रवेश व्यवस्थापन", icon: ShieldCheck, href: "/access-management" };
 
 export default function MorePage() {
-    const { user, userProfile, loading } = useAuth();
+    const { user, userProfile, loading, handleLogout } = useAuth();
     const router = useRouter();
-    const { toast } = useToast();
 
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-            toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
-            router.push('/login');
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'लॉगआउट अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
-        }
-    };
+    const onLogout = async () => {
+        await handleLogout();
+        router.push('/login');
+    }
 
     const getMenuItems = () => {
         if (loading) return [];
@@ -45,7 +36,7 @@ export default function MorePage() {
             if (userProfile?.role === 'Admin') {
                 menu.push(adminMenuItem);
             }
-            menu.push({ label: "लॉगआउट", icon: LogOut, href: "#", action: handleLogout });
+            menu.push({ label: "लॉगआउट", icon: LogOut, href: "#", action: onLogout });
             return menu;
         } else {
             return [

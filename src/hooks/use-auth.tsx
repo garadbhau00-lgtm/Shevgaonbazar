@@ -1,28 +1,41 @@
 
 'use client';
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
+import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { doc, onSnapshot, Unsubscribe, DocumentData } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
+import { useToast } from './use-toast';
 
 interface AuthContextType {
     user: FirebaseUser | null;
     userProfile: UserProfile | null;
     loading: boolean;
+    handleLogout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     userProfile: null,
     loading: true,
+    handleLogout: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<FirebaseUser | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
+
+    const handleLogout = useCallback(async () => {
+        try {
+            await signOut(auth);
+            toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'लॉगआउट अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
+        }
+    }, [toast]);
 
     useEffect(() => {
         let unsubscribeSnapshot: Unsubscribe | undefined;
@@ -65,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, userProfile, loading }}>
+        <AuthContext.Provider value={{ user, userProfile, loading, handleLogout }}>
             {children}
         </AuthContext.Provider>
     );

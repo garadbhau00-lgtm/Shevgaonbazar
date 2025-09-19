@@ -1,4 +1,7 @@
-import { Bell, Search } from 'lucide-react';
+
+'use client';
+
+import { Bell, LogOut, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,6 +9,9 @@ import type { Ad } from '@/lib/types';
 import { mockAds } from '@/lib/data';
 import AdCard from '@/components/ad-card';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useRouter } from 'next/navigation';
 
 const categories = ['सर्व', 'पशुधन', 'शेती उत्पादन', 'उपकरणे'];
 
@@ -33,10 +39,18 @@ function AdList({ ads }: { ads: Ad[] }) {
 }
 
 export default function Home() {
+  const { user, userProfile, loading, handleLogout } = useAuth();
+  const router = useRouter();
+
   const approvedAds = mockAds.filter((ad) => ad.status === 'approved');
   const livestockAds = approvedAds.filter((ad) => ad.category === 'पशुधन');
   const produceAds = approvedAds.filter((ad) => ad.category === 'शेती उत्पादन');
   const equipmentAds = approvedAds.filter((ad) => ad.category === 'उपकरणे');
+
+  const onLogout = async () => {
+    await handleLogout();
+    router.push('/login');
+  };
 
   return (
     <div>
@@ -48,9 +62,23 @@ export default function Home() {
                     <Bell className="h-5 w-5" />
                     <span className="sr-only">सूचना</span>
                 </Button>
-                <Button asChild variant="outline">
-                    <Link href="/login">लॉगिन करा</Link>
-                </Button>
+                {loading ? null : user ? (
+                    <div className="flex items-center gap-2">
+                        <Link href="/more">
+                            <Avatar className="h-8 w-8 cursor-pointer">
+                                <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} />
+                                <AvatarFallback>{userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                        </Link>
+                        <Button variant="ghost" size="icon" onClick={onLogout}>
+                            <LogOut className="h-5 w-5" />
+                        </Button>
+                    </div>
+                ) : (
+                    <Button asChild variant="outline">
+                        <Link href="/login">लॉगिन करा</Link>
+                    </Button>
+                )}
             </div>
         </div>
         <div className="mt-2 text-center">
