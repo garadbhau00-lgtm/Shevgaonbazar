@@ -1,21 +1,32 @@
 
 'use client';
 
-import { Bell, LogOut, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bell, Loader2, LogOut, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
-import { mockAds } from '@/lib/data';
 import AdCard from '@/components/ad-card';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const categories = ['सर्व', 'पशुधन', 'शेती उत्पादन', 'उपकरणे'];
 
-function AdList({ ads }: { ads: Ad[] }) {
+function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
+  if (loading) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-2 text-muted-foreground">जाहिराती लोड होत आहेत...</p>
+      </div>
+    );
+  }
+
   if (ads.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-center">
@@ -23,7 +34,7 @@ function AdList({ ads }: { ads: Ad[] }) {
           कोणत्याही जाहिराती आढळल्या नाहीत.
         </p>
         <p className="text-sm text-muted-foreground">
-          पहिली जाहिरात टाकणारे तुम्ही व्हा!
+          या वर्गात सध्या कोणत्याही जाहिराती नाहीत.
         </p>
       </div>
     );
@@ -39,13 +50,33 @@ function AdList({ ads }: { ads: Ad[] }) {
 }
 
 export default function Home() {
-  const { user, userProfile, loading, handleLogout } = useAuth();
+  const { user, userProfile, loading: authLoading, handleLogout } = useAuth();
   const router = useRouter();
+  const [ads, setAds] = useState<Ad[]>([]);
+  const [adsLoading, setAdsLoading] = useState(true);
 
-  const approvedAds = mockAds.filter((ad) => ad.status === 'approved');
-  const livestockAds = approvedAds.filter((ad) => ad.category === 'पशुधन');
-  const produceAds = approvedAds.filter((ad) => ad.category === 'शेती उत्पादन');
-  const equipmentAds = approvedAds.filter((ad) => ad.category === 'उपकरणे');
+  useEffect(() => {
+    const q = query(
+        collection(db, 'ads'), 
+        where('status', '==', 'approved'),
+        orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const adsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ad));
+        setAds(adsData);
+        setAdsLoading(false);
+    }, (error) => {
+        console.error("Error fetching ads: ", error);
+        setAdsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const livestockAds = ads.filter((ad) => ad.category === 'पशुधन');
+  const produceAds = ads.filter((ad) => ad.category === 'शेती उत्पादन');
+  const equipmentAds = ads.filter((ad) => ad.category === 'उपकरणे');
 
   const onLogout = async () => {
     await handleLogout();
@@ -62,7 +93,7 @@ export default function Home() {
                     <Bell className="h-5 w-5" />
                     <span className="sr-only">सूचना</span>
                 </Button>
-                {loading ? null : user ? (
+                {authLoading ? null : user ? (
                     <div className="flex items-center gap-2">
                         <Link href="/more">
                             <Avatar className="h-8 w-8 cursor-pointer">
@@ -101,16 +132,16 @@ export default function Home() {
             ))}
           </TabsList>
           <TabsContent value="सर्व" className="mt-4">
-            <AdList ads={approvedAds} />
+            <AdList ads={ads} loading={adsLoading} />
           </TabsContent>
           <TabsContent value="पशुधन" className="mt-4">
-            <AdList ads={livestockAds} />
+            <AdList ads={livestockAds} loading={adsLoading} />
           </TabsContent>
           <TabsContent value="शेती उत्पादन" className="mt-4">
-            <AdList ads={produceAds} />
+            <AdList ads={produceAds} loading={adsLoading} />
           </TabsContent>
           <TabsContent value="उपकरणे" className="mt-4">
-            <AdList ads={equipmentAds} />
+            <AdList ads={equipmentAds} loading={adsLoading} />
           </TabsContent>
         </Tabs>
       </main>

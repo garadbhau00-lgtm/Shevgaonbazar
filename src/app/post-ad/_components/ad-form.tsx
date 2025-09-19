@@ -18,7 +18,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 
 const adSchema = z.object({
@@ -49,46 +49,28 @@ async function createAdAction(
     try {
         const photoURLs: string[] = [];
         const totalFiles = files.length;
-        let filesUploaded = 0;
 
-        // Use Promise.all to upload all files in parallel
-        const uploadPromises = files.map(file => {
+        for (let i = 0; i < totalFiles; i++) {
+            const file = files[i];
             const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
+            
+            // Upload the file
+            await uploadBytes(storageRef, file);
+            
+            // Get the download URL
+            const downloadURL = await getDownloadURL(storageRef);
+            photoURLs.push(downloadURL);
 
-            return new Promise<string>((resolve, reject) => {
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        // This part is for individual file progress, which we won't show for simplicity.
-                        // The overall progress is simpler to manage.
-                    },
-                    (error) => {
-                        console.error(`Upload failed for file ${file.name}:`, error);
-                        reject(new Error(`'${file.name}' अपलोड करण्यात अयशस्वी.`));
-                    },
-                    async () => {
-                        try {
-                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                            filesUploaded++;
-                            onProgress((filesUploaded / totalFiles) * 100);
-                            resolve(downloadURL);
-                        } catch (error) {
-                             reject(new Error('फोटो URL मिळवण्यात अयशस्वी.'));
-                        }
-                    }
-                );
-            });
-        });
-
-        // Wait for all uploads to complete
-        const uploadedUrls = await Promise.all(uploadPromises);
-        photoURLs.push(...uploadedUrls);
+            // Update progress
+            const progressPercentage = ((i + 1) / totalFiles) * 100;
+            onProgress(progressPercentage);
+        }
 
         // Now that all files are uploaded, create the document in Firestore
         await addDoc(collection(db, 'ads'), {
             ...data,
             userId: userId,
-            status: 'pending',
+            status: 'pending', // Ads are pending approval by default
             createdAt: serverTimestamp(),
             photos: photoURLs,
         });
@@ -97,10 +79,10 @@ async function createAdAction(
 
     } catch (error) {
         console.error("Error creating ad:", error);
-        const errorMessage = error instanceof Error ? error.message : 'जाहिरात तयार करण्यात अयशस्वी.';
-        return { success: false, message: errorMessage };
+        return { success: false, message: 'जाहिरात तयार करण्यात एक अनपेक्षित त्रुटी आली.' };
     }
 }
+
 
 const MAX_FILES = 5;
 
@@ -197,6 +179,7 @@ export default function AdForm() {
     
     setUploadProgress(0);
     const result = await createAdAction(data, user.uid, files, setUploadProgress);
+    setUploadProgress(100); // Mark as complete
 
     if(result.success) {
         toast({
@@ -206,10 +189,10 @@ export default function AdForm() {
         form.reset();
         setFiles([]);
         setPreviews([]);
-        setUploadProgress(null);
         
         setTimeout(() => {
             router.push('/my-ads');
+            setUploadProgress(null);
         }, 500);
 
     } else {
@@ -222,7 +205,7 @@ export default function AdForm() {
     }
   };
 
-  const isUploading = uploadProgress !== null;
+  const isSubmitting = uploadProgress !== null;
 
   return (
     <Form {...form}>
@@ -234,7 +217,7 @@ export default function AdForm() {
             <FormItem>
               <FormLabel>शीर्षक</FormLabel>
               <FormControl>
-                <Input placeholder="उदा. काळी म्हैस विक्रीसाठी" {...field} />
+                <Input placeholder="उदा. काळी म्हैस विक्रीसाठी" {...field} disabled={isSubmitting}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -247,13 +230,13 @@ export default function AdForm() {
             <FormItem>
               <FormLabel>वर्णन</FormLabel>
                 <div className="relative">
-                  <Textarea placeholder="तुमच्या उत्पादनाबद्दल सर्व माहिती लिहा..." {...field} className="pr-24" />
+                  <Textarea placeholder="तुमच्या उत्पादनाबद्दल सर्व माहिती लिहा..." {...field} className="pr-24" disabled={isSubmitting} />
                   <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={handleSuggestion}
-                      disabled={isAiLoading || isUploading}
+                      disabled={isAiLoading || isSubmitting}
                       className="absolute bottom-2 right-2 flex items-center gap-1 text-primary hover:text-primary"
                   >
                       {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -270,7 +253,7 @@ export default function AdForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>श्रेणी</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="एक श्रेणी निवडा" />
@@ -293,7 +276,7 @@ export default function AdForm() {
             <FormItem>
               <FormLabel>किंमत (₹)</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="उदा. १५०००" {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} />
+                <Input type="number" placeholder="उदा. १५०००" {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} disabled={isSubmitting}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -306,7 +289,7 @@ export default function AdForm() {
             <FormItem>
               <FormLabel>गाव</FormLabel>
               <FormControl>
-                <Input placeholder="तुमच्या गावाचे नाव" {...field} />
+                <Input placeholder="तुमच्या गावाचे नाव" {...field} disabled={isSubmitting}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -325,7 +308,7 @@ export default function AdForm() {
                                 size="icon"
                                 className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
                                 onClick={() => removeFile(index)}
-                                disabled={isUploading}
+                                disabled={isSubmitting}
                             >
                                 <XIcon className="h-4 w-4" />
                             </Button>
@@ -335,8 +318,11 @@ export default function AdForm() {
             )}
             <FormControl>
                 <div 
-                    className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:border-primary hover:bg-secondary"
-                    onClick={() => !isUploading && fileInputRef.current?.click()}
+                    className={cn(
+                        "flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+                        !isSubmitting && "cursor-pointer hover:border-primary hover:bg-secondary"
+                    )}
+                    onClick={() => !isSubmitting && fileInputRef.current?.click()}
                 >
                      <Upload className="h-8 w-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">फोटो अपलोड करण्यासाठी क्लिक करा</p>
@@ -348,23 +334,23 @@ export default function AdForm() {
                         accept="image/*" 
                         multiple 
                         onChange={handleFileChange} 
-                        disabled={files.length >= MAX_FILES || isUploading}
+                        disabled={files.length >= MAX_FILES || isSubmitting}
                     />
                 </div>
             </FormControl>
             <FormMessage />
         </FormItem>
 
-        {uploadProgress !== null && (
+        {isSubmitting && (
             <div className="space-y-1">
-                <p className="text-sm font-medium">अपलोड करत आहे... {Math.round(uploadProgress)}%</p>
+                <p className="text-sm font-medium">अपलोड करत आहे... {Math.round(uploadProgress!)}%</p>
                 <Progress value={uploadProgress} className="w-full" />
             </div>
         )}
 
-        <Button type="submit" className="w-full !mt-8" size="lg" disabled={isUploading}>
-            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isUploading ? 'पोस्ट करत आहे...' : 'जाहिरात पोस्ट करा'}
+        <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isSubmitting ? 'पोस्ट करत आहे...' : 'जाहिरात पोस्ट करा'}
         </Button>
       </form>
     </Form>
