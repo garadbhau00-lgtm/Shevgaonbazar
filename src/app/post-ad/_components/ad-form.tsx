@@ -47,42 +47,23 @@ async function createAdAction(
     }
 
     try {
-        const photoURLs = await new Promise<string[]>((resolve, reject) => {
-            const uploadStates = new Array(files.length).fill(0);
-            const urls = new Array(files.length);
-            let uploadedCount = 0;
-            const totalBytes = files.reduce((acc, file) => acc + file.size, 0);
+        const uploadPromises = files.map(file => {
+            const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
 
-            const updateTotalProgress = () => {
-                const totalBytesTransferred = uploadStates.reduce((acc, bytes) => acc + bytes, 0);
-                const progress = (totalBytesTransferred / totalBytes) * 100;
-                onProgress(progress);
-            };
-
-            files.forEach((file, index) => {
-                const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-                const uploadTask = uploadBytesResumable(storageRef, file);
-
+            return new Promise<string>((resolve, reject) => {
                 uploadTask.on('state_changed',
-                    (snapshot) => {
-                        uploadStates[index] = snapshot.bytesTransferred;
-                        updateTotalProgress();
+                    () => {
+                        // Progress is handled globally below, so this is intentionally left empty
                     },
                     (error) => {
-                        console.error(`Upload failed for file ${index}:`, error);
-                        // In a real app, you might want to cancel all uploads here.
-                        // For now, we'll just reject the whole operation.
-                        uploadTask.cancel();
-                        reject(new Error('एक किंवा अधिक फोटो अपलोड करण्यात अयशस्वी.'));
+                        console.error(`Upload failed for file ${file.name}:`, error);
+                        reject(new Error(`'${file.name}' अपलोड करण्यात अयशस्वी.`));
                     },
                     async () => {
                         try {
                             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                            urls[index] = downloadURL;
-                            uploadedCount++;
-                            if (uploadedCount === files.length) {
-                                resolve(urls.filter(url => url));
-                            }
+                            resolve(downloadURL);
                         } catch (error) {
                              reject(new Error('फोटो URL मिळवण्यात अयशस्वी.'));
                         }
@@ -91,9 +72,19 @@ async function createAdAction(
             });
         });
 
-        if (photoURLs.length !== files.length) {
-             throw new Error('सर्व फोटो अपलोड झाले नाहीत.');
-        }
+        const uploadTasks = files.map(file => uploadBytesResumable(ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`), file));
+
+        uploadTasks.forEach(task => {
+            task.on('state_changed', () => {
+                const totalBytes = uploadTasks.reduce((acc, t) => acc + t.snapshot.totalBytes, 0);
+                const bytesTransferred = uploadTasks.reduce((acc, t) => acc + t.snapshot.bytesTransferred, 0);
+                if (totalBytes > 0) {
+                  onProgress((bytesTransferred / totalBytes) * 100);
+                }
+            });
+        });
+        
+        const photoURLs = await Promise.all(uploadTasks.map(task => task.then(snapshot => getDownloadURL(snapshot.ref))));
 
         await addDoc(collection(db, 'ads'), {
             ...data,
@@ -209,8 +200,6 @@ export default function AdForm() {
     
     setUploadProgress(0);
     const result = await createAdAction(data, user.uid, files, setUploadProgress);
-    setUploadProgress(null);
-
 
     if(result.success) {
         toast({
@@ -220,12 +209,14 @@ export default function AdForm() {
         form.reset();
         setFiles([]);
         setPreviews([]);
+        setUploadProgress(null);
         
         setTimeout(() => {
             router.push('/my-ads');
         }, 500);
 
     } else {
+        setUploadProgress(null);
         toast({
             variant: "destructive",
             title: "त्रुटी!",
