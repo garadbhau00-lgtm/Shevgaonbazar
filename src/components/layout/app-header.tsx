@@ -1,5 +1,6 @@
-import { Bell, UserCircle } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 type AppHeaderProps = {
     showUserOptions?: boolean;
@@ -15,9 +16,8 @@ export default function AppHeader({ showUserOptions = true }: AppHeaderProps) {
             <Bell className="h-6 w-6" />
             <span className="sr-only">सूचना</span>
           </Button>
-          <Button variant="ghost" size="icon">
-            <UserCircle className="h-6 w-6" />
-            <span className="sr-only">प्रोफाइल</span>
+          <Button asChild variant="outline">
+            <Link href="/login">लॉगिन करा</Link>
           </Button>
         </div>
       )}

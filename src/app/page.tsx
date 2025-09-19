@@ -1,10 +1,11 @@
-import { Bell, Search, UserCircle } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
 import { mockAds } from '@/lib/data';
 import AdCard from '@/components/ad-card';
+import Link from 'next/link';
 
 const categories = ['सर्व', 'पशुधन', 'शेती उत्पादन', 'उपकरणे'];
 
@@ -47,9 +48,8 @@ export default function Home() {
                     <Bell className="h-5 w-5" />
                     <span className="sr-only">सूचना</span>
                 </Button>
-                <Button variant="ghost" size="icon">
-                    <UserCircle className="h-5 w-5" />
-                    <span className="sr-only">प्रोफाइल</span>
+                <Button asChild variant="outline">
+                    <Link href="/login">लॉगिन करा</Link>
                 </Button>
             </div>
         </div>
