@@ -1,3 +1,40 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "ad1",
+      "description": "A healthy black goat.",
+      "imageUrl": "https://picsum.photos/seed/ad1/600/400",
+      "imageHint": "black goat"
+    },
+    {
+      "id": "ad2",
+      "description": "A pile of fresh onions.",
+      "imageUrl": "https://picsum.photos/seed/ad2/600/400",
+      "imageHint": "fresh onions"
+    },
+    {
+      "id": "ad3",
+      "description": "A red tractor in a field.",
+      "imageUrl": "https://picsum.photos/seed/ad3/600/400",
+      "imageHint": "red tractor"
+    },
+    {
+      "id": "ad4",
+      "description": "A white cow.",
+      "imageUrl": "https://picsum.photos/seed/ad4/600/400",
+      "imageHint": "white cow"
+    },
+    {
+      "id": "ad5",
+      "description": "A basket of fresh tomatoes.",
+      "imageUrl": "https://picsum.photos/seed/ad5/600/400",
+      "imageHint": "fresh tomatoes"
+    },
+    {
+      "id": "ad6",
+      "description": "A modern farming plough.",
+      "imageUrl": "https://picsum.photos/seed/ad6/600/400",
+      "imageHint": "farming plough"
+    }
+  ]
 }
