@@ -46,12 +46,15 @@ async function createAdAction(
     }
 
     try {
-        const uploadPromises = files.map(file => {
-            const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-            return uploadBytes(storageRef, file).then(uploadTask => getDownloadURL(uploadTask.ref));
-        });
+        const photoURLs: string[] = [];
 
-        const photoURLs = await Promise.all(uploadPromises);
+        // Upload files sequentially for better reliability
+        for (const file of files) {
+            const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
+            const uploadTask = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(uploadTask.ref);
+            photoURLs.push(downloadURL);
+        }
 
         await addDoc(collection(db, 'ads'), {
             ...data,
@@ -65,7 +68,7 @@ async function createAdAction(
 
     } catch (error) {
         console.error("Error creating ad:", error);
-        return { success: false, message: 'जाहिरात तयार करण्यात एक अनपेक्षित त्रुटी आली.' };
+        return { success: false, message: 'जाहिरात तयार करण्यात एक अनपेक्षित त्रुटी आली. कृपया तुमच्या स्टोरेज नियमांची तपासणी करा.' };
     }
 }
 
@@ -327,5 +330,3 @@ export default function AdForm() {
     </Form>
   );
 }
-
-    
