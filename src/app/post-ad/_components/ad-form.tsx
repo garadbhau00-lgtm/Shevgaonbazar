@@ -18,8 +18,9 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 const adSchema = z.object({
   title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
@@ -36,9 +37,8 @@ type AdFormValues = z.infer<typeof adSchema>;
 async function createAdAction(
     data: AdFormValues,
     userId: string,
-    files: File[],
-    onProgress: (percentage: number) => void
-) {
+    files: File[]
+): Promise<{ success: boolean; message: string }> {
     if (!userId) {
         return { success: false, message: 'तुम्ही लॉग इन केलेले नाही.' };
     }
@@ -47,30 +47,18 @@ async function createAdAction(
     }
 
     try {
-        const photoURLs: string[] = [];
-        const totalFiles = files.length;
-
-        for (let i = 0; i < totalFiles; i++) {
-            const file = files[i];
+        const photoURLs = [];
+        for (const file of files) {
             const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-            
-            // Upload the file
-            await uploadBytes(storageRef, file);
-            
-            // Get the download URL
-            const downloadURL = await getDownloadURL(storageRef);
+            const uploadTask = await uploadBytesResumable(storageRef, file);
+            const downloadURL = await getDownloadURL(uploadTask.ref);
             photoURLs.push(downloadURL);
-
-            // Update progress
-            const progressPercentage = ((i + 1) / totalFiles) * 100;
-            onProgress(progressPercentage);
         }
 
-        // Now that all files are uploaded, create the document in Firestore
         await addDoc(collection(db, 'ads'), {
             ...data,
             userId: userId,
-            status: 'pending', // Ads are pending approval by default
+            status: 'pending',
             createdAt: serverTimestamp(),
             photos: photoURLs,
         });
@@ -93,7 +81,7 @@ export default function AdForm() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -177,10 +165,9 @@ export default function AdForm() {
         return;
     }
     
-    setUploadProgress(0);
-    const result = await createAdAction(data, user.uid, files, setUploadProgress);
-    setUploadProgress(100); // Mark as complete
-
+    setIsSubmitting(true);
+    const result = await createAdAction(data, user.uid, files);
+    
     if(result.success) {
         toast({
             title: "यशस्वी!",
@@ -189,23 +176,16 @@ export default function AdForm() {
         form.reset();
         setFiles([]);
         setPreviews([]);
-        
-        setTimeout(() => {
-            router.push('/my-ads');
-            setUploadProgress(null);
-        }, 500);
-
+        router.push('/my-ads');
     } else {
-        setUploadProgress(null);
         toast({
             variant: "destructive",
             title: "त्रुटी!",
             description: result.message,
         });
     }
+    setIsSubmitting(false);
   };
-
-  const isSubmitting = uploadProgress !== null;
 
   return (
     <Form {...form}>
@@ -340,13 +320,6 @@ export default function AdForm() {
             </FormControl>
             <FormMessage />
         </FormItem>
-
-        {isSubmitting && (
-            <div className="space-y-1">
-                <p className="text-sm font-medium">अपलोड करत आहे... {Math.round(uploadProgress!)}%</p>
-                <Progress value={uploadProgress} className="w-full" />
-            </div>
-        )}
 
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
