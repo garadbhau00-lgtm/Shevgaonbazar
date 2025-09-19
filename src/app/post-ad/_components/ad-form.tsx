@@ -47,22 +47,22 @@ async function createAdAction(
     }
 
     try {
+        let totalUploaded = 0;
         const photoURLs = await Promise.all(
-            files.map(async (file, index) => {
+            files.map(async (file) => {
                 const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
                 return new Promise<string>((resolve, reject) => {
                     uploadTask.on('state_changed',
                         (snapshot) => {
-                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            // Calculate combined progress
-                            const totalProgress = (index / files.length) * 100 + progress / files.length;
-                            onProgress(totalProgress);
+                            // This part is tricky for multiple uploads. We will simplify.
                         },
                         (error) => reject(error),
                         async () => {
                             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            totalUploaded++;
+                            onProgress((totalUploaded / files.length) * 100);
                             resolve(downloadURL);
                         }
                     );
@@ -70,8 +70,6 @@ async function createAdAction(
             })
         );
         
-        onProgress(100);
-
         await addDoc(collection(db, 'ads'), {
             ...data,
             userId: userId,
@@ -97,7 +95,7 @@ export default function AdForm() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
 
   const form = useForm<AdFormValues>({
@@ -181,33 +179,29 @@ export default function AdForm() {
         return;
     }
     setUploadProgress(0);
-    try {
-        const result = await createAdAction(data, user.uid, files, setUploadProgress);
-        if(result.success) {
-            toast({
-                title: "यशस्वी!",
-                description: result.message,
-            });
-            form.reset();
-            setFiles([]);
-            setPreviews([]);
-            setUploadProgress(0);
-            router.push('/my-ads');
-        } else {
-            toast({
-                variant: "destructive",
-                title: "त्रुटी!",
-                description: result.message,
-            });
-        }
-    } catch (error) {
+    const result = await createAdAction(data, user.uid, files, setUploadProgress);
+    
+    if(result.success) {
+        toast({
+            title: "यशस्वी!",
+            description: result.message,
+        });
+        form.reset();
+        setFiles([]);
+        setPreviews([]);
+        setUploadProgress(null);
+        router.push('/my-ads');
+    } else {
         toast({
             variant: "destructive",
             title: "त्रुटी!",
-            description: "काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.",
+            description: result.message,
         });
+        setUploadProgress(null);
     }
   };
+
+  const isUploading = isSubmitting;
 
   return (
     <Form {...form}>
@@ -238,7 +232,7 @@ export default function AdForm() {
                       variant="ghost"
                       size="sm"
                       onClick={handleSuggestion}
-                      disabled={isAiLoading || isSubmitting}
+                      disabled={isAiLoading || isUploading}
                       className="absolute bottom-2 right-2 flex items-center gap-1 text-primary hover:text-primary"
                   >
                       {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -310,6 +304,7 @@ export default function AdForm() {
                                 size="icon"
                                 className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
                                 onClick={() => removeFile(index)}
+                                disabled={isUploading}
                             >
                                 <XIcon className="h-4 w-4" />
                             </Button>
@@ -332,20 +327,22 @@ export default function AdForm() {
                         accept="image/*" 
                         multiple 
                         onChange={handleFileChange} 
-                        disabled={files.length >= MAX_FILES}
+                        disabled={files.length >= MAX_FILES || isUploading}
                     />
                 </div>
             </FormControl>
             <FormMessage />
         </FormItem>
 
-        {isSubmitting && <Progress value={uploadProgress} className="w-full" />}
+        {uploadProgress !== null && <Progress value={uploadProgress} className="w-full" />}
 
-        <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting || authLoading}>
-            {(isSubmitting || authLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            जाहिरात पोस्ट करा
+        <Button type="submit" className="w-full !mt-8" size="lg" disabled={isUploading}>
+            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isUploading ? 'पोस्ट करत आहे...' : 'जाहिरात पोस्ट करा'}
         </Button>
       </form>
     </Form>
   );
 }
+
+    
