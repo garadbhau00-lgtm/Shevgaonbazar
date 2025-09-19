@@ -2,9 +2,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +16,7 @@ import { Leaf, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { auth, db } from '@/lib/firebase';
 
 function GoogleIcon() {
     return (
@@ -36,6 +40,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
     const { toast } = useToast();
+    const router = useRouter();
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
@@ -48,14 +53,33 @@ export default function SignupPage() {
     const { isSubmitting } = form.formState;
 
     async function onSubmit(data: SignupFormValues) {
-        console.log(data);
-        // Mock API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        toast({
-            title: "खाते तयार झाले!",
-            description: "तुम्ही आता लॉग इन करू शकता.",
-        });
-        form.reset();
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+            const user = userCredential.user;
+
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                email: user.email,
+                role: 'Farmer',
+                createdAt: new Date(),
+            });
+
+            toast({
+                title: "खाते तयार झाले!",
+                description: "तुम्ही आता लॉग इन करू शकता.",
+            });
+            router.push('/login');
+        } catch (error: any) {
+            let message = "खाते तयार करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
+            if (error.code === 'auth/email-already-in-use') {
+                message = "हा ईमेल पत्ता आधीच वापरलेला आहे.";
+            }
+            toast({
+                variant: "destructive",
+                title: "त्रुटी!",
+                description: message,
+            });
+        }
     }
 
 

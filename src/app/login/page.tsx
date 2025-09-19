@@ -2,9 +2,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +16,7 @@ import { Leaf, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { auth } from '@/lib/firebase';
 
 function GoogleIcon() {
     return (
@@ -32,6 +35,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
     const { toast } = useToast();
+    const router = useRouter();
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -43,14 +47,20 @@ export default function LoginPage() {
     const { isSubmitting } = form.formState;
 
     async function onSubmit(data: LoginFormValues) {
-        console.log(data);
-        // Mock API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        toast({
-            title: "लॉगिन यशस्वी!",
-            description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
-        });
-        form.reset();
+        try {
+            await signInWithEmailAndPassword(auth, data.email, data.password);
+            toast({
+                title: "लॉगिन यशस्वी!",
+                description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+            });
+            router.push('/');
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "लॉगिन अयशस्वी",
+                description: "कृपया तुमचा ईमेल आणि पासवर्ड तपासा.",
+            });
+        }
     }
 
     return (
