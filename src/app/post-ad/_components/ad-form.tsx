@@ -18,7 +18,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 
 const adSchema = z.object({
@@ -37,7 +37,6 @@ async function createAdAction(
     data: AdFormValues,
     userId: string,
     files: File[],
-    onProgress: (percentage: number) => void
 ) {
     if (!userId) {
         return { success: false, message: 'तुम्ही लॉग इन केलेले नाही.' };
@@ -48,25 +47,11 @@ async function createAdAction(
 
     try {
         const uploadPromises = files.map(file => {
-            return new Promise<string>((resolve, reject) => {
-                const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-                const uploadTask = uploadBytesResumable(storageRef, file);
-
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        // This will be called for each file, so we calculate total progress in onSubmit
-                    },
-                    (error) => reject(error),
-                    async () => {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        resolve(downloadURL);
-                    }
-                );
-            });
+            const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
+            return uploadBytes(storageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
         });
 
         const photoURLs = await Promise.all(uploadPromises);
-        onProgress(100);
 
         await addDoc(collection(db, 'ads'), {
             ...data,
@@ -93,7 +78,6 @@ export default function AdForm() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
 
   const form = useForm<AdFormValues>({
@@ -176,24 +160,10 @@ export default function AdForm() {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
         return;
     }
-    setUploadProgress(0);
-    // Simulate progress for UX
-    const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-            if (prev === null || prev >= 95) {
-                clearInterval(progressInterval);
-                return prev;
-            }
-            return prev + 5;
-        });
-    }, 200);
-
-    const result = await createAdAction(data, user.uid, files, (p) => setUploadProgress(p));
-    
-    clearInterval(progressInterval);
+   
+    const result = await createAdAction(data, user.uid, files);
 
     if(result.success) {
-        setUploadProgress(100);
         toast({
             title: "यशस्वी!",
             description: result.message,
@@ -202,9 +172,7 @@ export default function AdForm() {
         setFiles([]);
         setPreviews([]);
         
-        // Wait a bit before clearing progress and redirecting
         setTimeout(() => {
-            setUploadProgress(null);
             router.push('/my-ads');
         }, 500);
 
@@ -214,7 +182,6 @@ export default function AdForm() {
             title: "त्रुटी!",
             description: result.message,
         });
-        setUploadProgress(null);
     }
   };
 
@@ -351,8 +318,6 @@ export default function AdForm() {
             <FormMessage />
         </FormItem>
 
-        {uploadProgress !== null && <Progress value={uploadProgress} className="w-full" />}
-
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isUploading}>
             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {isUploading ? 'पोस्ट करत आहे...' : 'जाहिरात पोस्ट करा'}
@@ -361,5 +326,3 @@ export default function AdForm() {
     </Form>
   );
 }
-
-    
