@@ -6,26 +6,32 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // USERS
-    // Allow users to read their own user document and admins to read/write any user document.
+    // Allow users to read/update their own profile.
+    // Admins can read/write any user profile.
     match /users/{userId} {
       allow read, update: if request.auth != null && request.auth.uid == userId;
       allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
+    // Admins can list all users.
      match /users/{document=**} {
       allow list: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
     // ADS
     // Allow anyone to read approved ads.
-    // Allow authenticated users to create new ads.
-    // Allow owners to update/delete their own ads.
+    // Logged-in users can read their own ads regardless of status.
+    // Logged-in users can create ads.
+    // Owners can update/delete their own ads.
+    // Admins can read/write any ad.
     match /ads/{adId} {
-      allow read: if resource.data.status == 'approved';
+      allow read: if resource.data.status == 'approved'
+                   || (request.auth != null && resource.data.userId == request.auth.uid)
+                   || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      // Admins can read/write any ad
-      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
+    // Logged-in users can list all ads (will be filtered on the client).
      match /ads/{document=**} {
         allow list: if request.auth != null;
     }
