@@ -17,6 +17,8 @@ import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
+import { useEffect } from 'react';
 
 function GoogleIcon() {
     return (
@@ -36,6 +38,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const { toast } = useToast();
     const router = useRouter();
+    const { user, handleGoogleSignIn } = useAuth();
+    
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -45,6 +49,12 @@ export default function LoginPage() {
     });
 
     const { isSubmitting } = form.formState;
+
+    useEffect(() => {
+        if (user) {
+            router.push('/');
+        }
+    }, [user, router]);
 
     async function onSubmit(data: LoginFormValues) {
         try {
@@ -62,6 +72,11 @@ export default function LoginPage() {
             });
         }
     }
+
+    const onGoogleSignIn = async () => {
+        await handleGoogleSignIn();
+        // The useEffect will handle the redirect
+    };
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
@@ -122,7 +137,7 @@ export default function LoginPage() {
                         <span className="mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>
                         <Separator className="flex-1" />
                     </div>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={onGoogleSignIn}>
                         <GoogleIcon />
                         Sign in with Google
                     </Button>

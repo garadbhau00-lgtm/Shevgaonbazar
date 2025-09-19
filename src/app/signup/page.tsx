@@ -17,6 +17,8 @@ import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
+import { useEffect } from 'react';
 
 function GoogleIcon() {
     return (
@@ -41,6 +43,8 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function SignupPage() {
     const { toast } = useToast();
     const router = useRouter();
+    const { user, handleGoogleSignIn } = useAuth();
+    
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
@@ -52,6 +56,12 @@ export default function SignupPage() {
     
     const { isSubmitting } = form.formState;
 
+    useEffect(() => {
+        if (user) {
+            router.push('/');
+        }
+    }, [user, router]);
+
     async function onSubmit(data: SignupFormValues) {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
@@ -62,7 +72,7 @@ export default function SignupPage() {
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 email: user.email,
-                name: data.email.split('@')[0], // Using email prefix as name
+                name: data.email.split('@')[0],
                 role: userRole,
                 disabled: false,
                 createdAt: serverTimestamp(),
@@ -85,6 +95,11 @@ export default function SignupPage() {
             });
         }
     }
+
+    const onGoogleSignIn = async () => {
+        await handleGoogleSignIn();
+        // The useEffect will handle the redirect
+    };
 
 
     return (
@@ -154,7 +169,7 @@ export default function SignupPage() {
                         <span className="mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>
                         <Separator className="flex-1" />
                     </div>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={onGoogleSignIn}>
                         <GoogleIcon />
                         Sign up with Google
                     </Button>
