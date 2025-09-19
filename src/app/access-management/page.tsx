@@ -22,25 +22,36 @@ export default function AccessManagementPage() {
     const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                const usersList = querySnapshot.docs.map(doc => doc.data() as UserProfile);
+                setUsers(usersList);
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                toast({ variant: 'destructive', title: 'त्रुटी', description: 'वापरकर्त्यांची सूची आणण्यात अयशस्वी. कृपया तुमच्या फायरस्टोअर नियमांची तपासणी करा.' });
+            } finally {
+                setPageLoading(false);
+            }
+        };
+
         if (!authLoading) {
             if (userProfile?.role !== 'Admin') {
                 toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'तुमच्याकडे ही संसाधने पाहण्याची परवानगी नाही.' });
                 router.push('/more');
                 return;
             }
-            // Temporarily disable user fetching to prevent permission errors.
-            setPageLoading(false);
+            fetchUsers();
         }
     }, [authLoading, userProfile, router, toast]);
 
 
     const handleToggle = async (uid: string, currentStatus: boolean) => {
-        const newStatus = !currentStatus;
         try {
             const userDoc = doc(db, 'users', uid);
-            await updateDoc(userDoc, { disabled: newStatus });
-            setUsers(users.map(u => u.uid === uid ? { ...u, disabled: newStatus } : u));
-            toast({ title: 'यशस्वी', description: `वापरकर्ता यशस्वीरित्या ${newStatus ? 'अक्षम' : 'सक्षम'} झाला आहे.` });
+            await updateDoc(userDoc, { disabled: currentStatus });
+            setUsers(users.map(u => u.uid === uid ? { ...u, disabled: currentStatus } : u));
+            toast({ title: 'यशस्वी', description: `वापरकर्ता यशस्वीरित्या ${!currentStatus ? 'अक्षम' : 'सक्षम'} झाला आहे.` });
         } catch (error) {
             console.error("Error updating user status:", error);
             toast({ variant: 'destructive', title: 'त्रुटी', description: 'वापरकर्त्याची स्थिती अद्यतनित करण्यात अयशस्वी.' });
@@ -85,7 +96,7 @@ export default function AccessManagementPage() {
                                 </span>
                                 <Switch
                                     checked={!user.disabled}
-                                    onCheckedChange={() => handleToggle(user.uid, !user.disabled)}
+                                    onCheckedChange={(checked) => handleToggle(user.uid, !checked)}
                                     disabled={userProfile?.uid === user.uid} // Admin can't disable themselves
                                     aria-label={`Toggle user ${user.email}`}
                                 />
@@ -93,7 +104,7 @@ export default function AccessManagementPage() {
                         </div>
                     )) : (
                         <div className="text-center text-muted-foreground mt-8">
-                            वापरकर्त्यांची सूची लोड करण्यात अक्षम. कृपया तुमच्या फायरस्टोअर नियमांची तपासणी करा.
+                            कोणतेही वापरकर्ते आढळले नाहीत.
                         </div>
                     )}
                 </div>
