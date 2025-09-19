@@ -32,10 +32,6 @@ export default function SignupPage() {
                 <CardContent>
                     <form className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">पूर्ण नाव</Label>
-                            <Input id="name" placeholder="तुमचे नाव" required />
-                        </div>
-                        <div className="space-y-2">
                             <Label htmlFor="email">ईमेल</Label>
                             <Input id="email" type="email" placeholder="तुमचा ईमेल पत्ता" required />
                         </div>
