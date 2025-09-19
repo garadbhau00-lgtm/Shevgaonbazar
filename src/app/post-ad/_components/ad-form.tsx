@@ -18,8 +18,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { Progress } from '@/components/ui/progress';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 
 const adSchema = z.object({
@@ -47,13 +46,12 @@ async function createAdAction(
     }
 
     try {
-        const photoURLs = [];
-        for (const file of files) {
+        const uploadPromises = files.map(file => {
             const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-            const uploadTask = await uploadBytesResumable(storageRef, file);
-            const downloadURL = await getDownloadURL(uploadTask.ref);
-            photoURLs.push(downloadURL);
-        }
+            return uploadBytes(storageRef, file).then(uploadTask => getDownloadURL(uploadTask.ref));
+        });
+
+        const photoURLs = await Promise.all(uploadPromises);
 
         await addDoc(collection(db, 'ads'), {
             ...data,
@@ -329,3 +327,5 @@ export default function AdForm() {
     </Form>
   );
 }
+
+    
