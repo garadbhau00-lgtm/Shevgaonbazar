@@ -43,7 +43,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function SignupPage() {
     const { toast } = useToast();
     const router = useRouter();
-    const { user, handleGoogleSignIn } = useAuth();
+    const { user, loading, handleGoogleSignIn } = useAuth();
     
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
@@ -57,10 +57,10 @@ export default function SignupPage() {
     const { isSubmitting } = form.formState;
 
     useEffect(() => {
-        if (user) {
+        if (!loading && user) {
             router.push('/');
         }
-    }, [user, router]);
+    }, [user, loading, router]);
 
     async function onSubmit(data: SignupFormValues) {
         try {
@@ -72,7 +72,7 @@ export default function SignupPage() {
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 email: user.email,
-                name: data.email.split('@')[0],
+                name: user.displayName || data.email.split('@')[0],
                 role: userRole,
                 disabled: false,
                 createdAt: serverTimestamp(),
@@ -80,7 +80,7 @@ export default function SignupPage() {
 
             toast({
                 title: "खाते तयार झाले!",
-                description: `तुम्ही आता '${userRole}' म्हणून लॉग इन करू शकता.`,
+                description: `तुम्ही आता लॉग इन करू शकता.`,
             });
             router.push('/login');
         } catch (error: any) {
@@ -95,11 +95,14 @@ export default function SignupPage() {
             });
         }
     }
-
-    const onGoogleSignIn = async () => {
-        await handleGoogleSignIn();
-        // The useEffect will handle the redirect
-    };
+    
+    if (loading || user) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        )
+    }
 
 
     return (
@@ -169,7 +172,7 @@ export default function SignupPage() {
                         <span className="mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>
                         <Separator className="flex-1" />
                     </div>
-                    <Button variant="outline" className="w-full" onClick={onGoogleSignIn}>
+                    <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
                         <GoogleIcon />
                         Sign up with Google
                     </Button>

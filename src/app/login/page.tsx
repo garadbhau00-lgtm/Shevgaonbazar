@@ -38,7 +38,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const { toast } = useToast();
     const router = useRouter();
-    const { user, handleGoogleSignIn } = useAuth();
+    const { user, userProfile, loading, handleGoogleSignIn } = useAuth();
     
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -51,19 +51,15 @@ export default function LoginPage() {
     const { isSubmitting } = form.formState;
 
     useEffect(() => {
-        if (user) {
+        if (!loading && user) {
             router.push('/');
         }
-    }, [user, router]);
+    }, [user, loading, router]);
 
     async function onSubmit(data: LoginFormValues) {
         try {
             await signInWithEmailAndPassword(auth, data.email, data.password);
-            toast({
-                title: "लॉगिन यशस्वी!",
-                description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
-            });
-            router.push('/');
+            // The onAuthStateChanged listener in useAuth will handle the redirect and toast.
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -73,10 +69,13 @@ export default function LoginPage() {
         }
     }
 
-    const onGoogleSignIn = async () => {
-        await handleGoogleSignIn();
-        // The useEffect will handle the redirect
-    };
+    if (loading || user) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
@@ -137,7 +136,7 @@ export default function LoginPage() {
                         <span className="mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>
                         <Separator className="flex-1" />
                     </div>
-                    <Button variant="outline" className="w-full" onClick={onGoogleSignIn}>
+                    <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
                         <GoogleIcon />
                         Sign in with Google
                     </Button>

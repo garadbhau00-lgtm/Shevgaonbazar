@@ -2,9 +2,9 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, signOut, signInWithPopup } from 'firebase/auth';
-import { doc, onSnapshot, Unsubscribe, DocumentData, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { useToast } from './use-toast';
 
@@ -33,15 +33,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const handleLogout = useCallback(async () => {
         try {
             await signOut(auth);
-            toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
+            // This will trigger the onAuthStateChanged listener, which will update state.
         } catch (error) {
+            console.error("Logout error", error);
             toast({ variant: 'destructive', title: 'लॉगआउट अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
         }
     }, [toast]);
 
     const handleGoogleSignIn = useCallback(async () => {
+        const provider = new GoogleAuthProvider();
         try {
-            const result = await signInWithPopup(auth, googleProvider);
+            const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
             const userDocRef = doc(db, 'users', user.uid);
@@ -67,9 +69,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Google sign-in error", error);
-            toast({ variant: 'destructive', title: 'Google साइन-इन अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
+            if (error.code === 'auth/popup-closed-by-user') {
+                 toast({
+                    variant: "destructive",
+                    title: 'Google साइन-इन रद्द केले',
+                    description: 'तुम्ही साइन-इन विंडो बंद केली आहे.',
+                });
+            } else {
+                toast({ variant: 'destructive', title: 'Google साइन-इन अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
+            }
         }
     }, [toast]);
 
@@ -83,17 +93,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (firebaseUser) {
-                setUser(firebaseUser);
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
                 unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
+                    setUser(firebaseUser);
                     if (docSnap.exists()) {
-                        setUserProfile(docSnap.data() as UserProfile);
+                        const profileData = docSnap.data() as UserProfile;
+                        setUserProfile(profileData);
+                        if (profileData.disabled) {
+                            toast({ variant: 'destructive', title: 'खाते अक्षम केले आहे', description: 'तुमचे खाते प्रशासकाने अक्षम केले आहे.' });
+                            handleLogout();
+                        }
                     } else {
+                        // This case can happen if user exists in Auth but not in Firestore.
+                        // For a consistent state, we can treat them as not fully logged in.
                         setUserProfile(null);
                     }
                     setLoading(false);
                 }, (error) => {
                     console.error("Error in snapshot listener:", error);
+                    setUser(null);
                     setUserProfile(null);
                     setLoading(false);
                 });
@@ -101,6 +119,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(null);
                 setUserProfile(null);
                 setLoading(false);
+                if (user) { // Only toast on actual logout, not initial load
+                    toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
+                }
             }
         });
 
@@ -110,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 unsubscribeSnapshot();
             }
         };
-    }, []);
+    }, [handleLogout, user, toast]);
 
     return (
         <AuthContext.Provider value={{ user, userProfile, loading, handleLogout, handleGoogleSignIn }}>
