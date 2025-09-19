@@ -18,7 +18,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 
 const adSchema = z.object({
@@ -37,6 +37,7 @@ async function createAdAction(
     data: AdFormValues,
     userId: string,
     files: File[],
+    onProgress: (percentage: number) => void
 ) {
     if (!userId) {
         return { success: false, message: 'तुम्ही लॉग इन केलेले नाही.' };
@@ -46,12 +47,46 @@ async function createAdAction(
     }
 
     try {
-        const uploadPromises = files.map(file => {
-            const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-            return uploadBytes(storageRef, file).then(snapshot => getDownloadURL(snapshot.ref));
-        });
+        const photoURLs = await new Promise<string[]>((resolve, reject) => {
+            const urls: string[] = [];
+            let uploadedCount = 0;
+            let totalBytesTransferred = 0;
+            const totalBytes = files.reduce((acc, file) => acc + file.size, 0);
 
-        const photoURLs = await Promise.all(uploadPromises);
+            files.forEach((file, index) => {
+                const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
+                const uploadTask = uploadBytesResumable(storageRef, file);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        // This handler is called multiple times for each file.
+                        // We need a way to track total progress across all files.
+                        // For simplicity now, we will just update a global progress.
+                        // A more robust solution might track each file's progress individually.
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log(`Upload is ${progress}% done for file ${index}`);
+                    },
+                    (error) => {
+                        console.error("Upload failed for a file:", error);
+                        reject(new Error('एक किंवा अधिक फोटो अपलोड करण्यात अयशस्वी.'));
+                    },
+                    async () => {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        urls[index] = downloadURL; // Keep order
+                        uploadedCount++;
+
+                        // Track total progress
+                        totalBytesTransferred += files[index].size;
+                        const overallProgress = (totalBytesTransferred / totalBytes) * 100;
+                        onProgress(overallProgress);
+
+                        if (uploadedCount === files.length) {
+                            resolve(urls);
+                        }
+                    }
+                );
+            });
+        });
 
         await addDoc(collection(db, 'ads'), {
             ...data,
@@ -62,11 +97,14 @@ async function createAdAction(
         });
 
         return { success: true, message: 'तुमची जाहिरात समीक्षेसाठी पाठवली आहे.' };
+
     } catch (error) {
         console.error("Error creating ad:", error);
-        return { success: false, message: 'जाहिरात तयार करण्यात अयशस्वी.' };
+        const errorMessage = error instanceof Error ? error.message : 'जाहिरात तयार करण्यात अयशस्वी.';
+        return { success: false, message: errorMessage };
     }
 }
+
 
 const MAX_FILES = 5;
 
@@ -77,6 +115,7 @@ export default function AdForm() {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -160,8 +199,11 @@ export default function AdForm() {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
         return;
     }
-   
-    const result = await createAdAction(data, user.uid, files);
+    
+    setUploadProgress(0);
+    const result = await createAdAction(data, user.uid, files, setUploadProgress);
+    setUploadProgress(null);
+
 
     if(result.success) {
         toast({
@@ -318,6 +360,13 @@ export default function AdForm() {
             <FormMessage />
         </FormItem>
 
+        {uploadProgress !== null && (
+            <div className="space-y-1">
+                <p className="text-sm font-medium">अपलोड करत आहे...</p>
+                <Progress value={uploadProgress} className="w-full" />
+            </div>
+        )}
+
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isUploading}>
             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {isUploading ? 'पोस्ट करत आहे...' : 'जाहिरात पोस्ट करा'}
@@ -326,3 +375,5 @@ export default function AdForm() {
     </Form>
   );
 }
+
+    
