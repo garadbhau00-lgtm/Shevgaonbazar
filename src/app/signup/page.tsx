@@ -27,7 +27,6 @@ function GoogleIcon() {
 }
 
 const signupSchema = z.object({
-    name: z.string().min(1, { message: 'नाव आवश्यक आहे.' }),
     email: z.string().email({ message: 'कृपया वैध ईमेल पत्ता प्रविष्ट करा.' }),
     password: z.string().min(6, { message: 'पासवर्ड किमान ६ वर्णांचा असावा.' }),
     confirmPassword: z.string()
@@ -45,7 +44,6 @@ export default function SignupPage() {
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
-            name: '',
             email: '',
             password: '',
             confirmPassword: '',
@@ -59,18 +57,20 @@ export default function SignupPage() {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const user = userCredential.user;
 
+            const userRole = data.email === 'admin@test.com' ? 'Admin' : 'Farmer';
+
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 email: user.email,
-                name: data.name,
-                role: 'Farmer',
+                name: data.email.split('@')[0], // Using email prefix as name
+                role: userRole,
                 disabled: false,
                 createdAt: serverTimestamp(),
             });
 
             toast({
                 title: "खाते तयार झाले!",
-                description: "तुम्ही आता लॉग इन करू शकता.",
+                description: `तुम्ही आता '${userRole}' म्हणून लॉग इन करू शकता.`,
             });
             router.push('/login');
         } catch (error: any) {
@@ -104,19 +104,6 @@ export default function SignupPage() {
                 <CardContent>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>पूर्ण नाव</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="तुमचे पूर्ण नाव" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
                             <FormField
                                 control={form.control}
                                 name="email"
