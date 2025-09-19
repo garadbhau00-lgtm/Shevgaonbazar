@@ -18,7 +18,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytesResumable, type UploadTaskSnapshot } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 
 const adSchema = z.object({
@@ -47,14 +47,20 @@ async function createAdAction(
     }
 
     try {
-        const uploadPromises = files.map(file => {
+        const photoURLs: string[] = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
-            return new Promise<string>((resolve, reject) => {
+            // This promise will resolve when a single file is uploaded
+            const downloadURL = await new Promise<string>((resolve, reject) => {
                 uploadTask.on('state_changed',
-                    () => {
-                        // Progress is handled globally below, so this is intentionally left empty
+                    (snapshot) => {
+                        // This progress is for a single file, so we adjust it based on which file is currently uploading.
+                        const singleFileProgress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        const totalProgress = ((i + (singleFileProgress / 100)) / files.length) * 100;
+                        onProgress(totalProgress);
                     },
                     (error) => {
                         console.error(`Upload failed for file ${file.name}:`, error);
@@ -62,29 +68,16 @@ async function createAdAction(
                     },
                     async () => {
                         try {
-                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                            resolve(downloadURL);
+                            const url = await getDownloadURL(uploadTask.snapshot.ref);
+                            resolve(url);
                         } catch (error) {
                              reject(new Error('फोटो URL मिळवण्यात अयशस्वी.'));
                         }
                     }
                 );
             });
-        });
-
-        const uploadTasks = files.map(file => uploadBytesResumable(ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`), file));
-
-        uploadTasks.forEach(task => {
-            task.on('state_changed', () => {
-                const totalBytes = uploadTasks.reduce((acc, t) => acc + t.snapshot.totalBytes, 0);
-                const bytesTransferred = uploadTasks.reduce((acc, t) => acc + t.snapshot.bytesTransferred, 0);
-                if (totalBytes > 0) {
-                  onProgress((bytesTransferred / totalBytes) * 100);
-                }
-            });
-        });
-        
-        const photoURLs = await Promise.all(uploadTasks.map(task => task.then(snapshot => getDownloadURL(snapshot.ref))));
+            photoURLs.push(downloadURL);
+        }
 
         await addDoc(collection(db, 'ads'), {
             ...data,
