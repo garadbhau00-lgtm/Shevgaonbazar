@@ -10,6 +10,15 @@ export type Ad = {
   userId: string;
 };
 
+export type UserProfile = {
+    uid: string;
+    email: string;
+    name?: string;
+    role: 'Farmer' | 'Admin';
+    disabled: boolean;
+    createdAt: any; // Firestore timestamp
+};
+
 export type User = {
     id: string;
     name: string;

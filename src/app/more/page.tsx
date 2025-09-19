@@ -1,43 +1,85 @@
+
+'use client';
+
+import { useAuth } from '@/hooks/use-auth';
 import AppHeader from "@/components/layout/app-header";
-import { ChevronRight, HelpCircle, LogIn, LogOut, Settings, User, UserPlus } from "lucide-react";
+import { ChevronRight, HelpCircle, LogIn, LogOut, Settings, User, UserPlus, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
-const menuItemsLoggedIn = [
-    { label: "माझे प्रोफाइल", icon: User, href: "#" },
+
+const baseMenuItems = [
     { label: "सेटिंग्स", icon: Settings, href: "#" },
     { label: "मदत केंद्र", icon: HelpCircle, href: "#" },
-    { label: "लॉगआउट", icon: LogOut, href: "#" },
 ];
 
-const menuItemsLoggedOut = [
-    { label: "लॉगिन करा", icon: LogIn, href: "/login" },
-    { label: "साइन अप करा", icon: UserPlus, href: "/signup" },
-    { label: "मदत केंद्र", icon: HelpCircle, href: "#" },
-];
-
-
-// This is a mock. In a real app, you'd get this from your auth state.
-const isLoggedIn = false;
-
+const adminMenuItem = { label: "प्रवेश व्यवस्थापन", icon: ShieldCheck, href: "/access-management" };
 
 export default function MorePage() {
-    const menuItems = isLoggedIn ? menuItemsLoggedIn : menuItemsLoggedOut;
-    
+    const { user, userProfile, loading } = useAuth();
+    const router = useRouter();
+    const { toast } = useToast();
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
+            router.push('/login');
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'लॉगआउट अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
+        }
+    };
+
+    const getMenuItems = () => {
+        if (loading) return [];
+        if (user) {
+            const menu = [
+                { label: "माझे प्रोफाइल", icon: User, href: "#" },
+                ...baseMenuItems
+            ];
+            if (userProfile?.role === 'Admin') {
+                menu.push(adminMenuItem);
+            }
+            menu.push({ label: "लॉगआउट", icon: LogOut, href: "#", action: handleLogout });
+            return menu;
+        } else {
+            return [
+                { label: "लॉगिन करा", icon: LogIn, href: "/login" },
+                { label: "साइन अप करा", icon: UserPlus, href: "/signup" },
+                ...baseMenuItems,
+            ];
+        }
+    };
+
+    const menuItems = getMenuItems();
+
+    if (loading) {
+        return (
+            <div>
+                <AppHeader showUserOptions={false} />
+                <div className="p-4 text-center">लोड होत आहे...</div>
+            </div>
+        )
+    }
+
     return (
         <div>
             <AppHeader showUserOptions={false} />
             <main className="p-4">
-                {isLoggedIn ? (
+                {user && userProfile ? (
                     <div className="flex items-center gap-4 rounded-lg bg-card p-4 shadow-sm">
                         <Avatar className="h-16 w-16">
-                            <AvatarImage src="https://picsum.photos/seed/user1/100" alt="User" />
-                            <AvatarFallback>RP</AvatarFallback>
+                            <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} alt="User" />
+                            <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <h2 className="text-xl font-bold">राम पाटील</h2>
-                            <p className="text-muted-foreground">९८७६५४३२१०</p>
+                            <h2 className="text-xl font-bold">{userProfile.name || 'वापरकर्ता'}</h2>
+                            <p className="text-muted-foreground">{user.email}</p>
                         </div>
                     </div>
                 ) : (
@@ -57,15 +99,26 @@ export default function MorePage() {
 
 
                 <div className="mt-6 space-y-2">
-                    {menuItems.map((item) => (
-                        <Link href={item.href} key={item.label} className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary">
-                            <div className="flex items-center gap-4">
-                                <item.icon className="h-5 w-5 text-primary" />
-                                <span className="font-medium">{item.label}</span>
-                            </div>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        </Link>
-                    ))}
+                    {menuItems.map((item) => {
+                        const isLink = !!item.href && !item.action;
+                        const Component = isLink ? Link : 'div';
+
+                        return (
+                            <Component
+                                href={item.href || '#'}
+                                key={item.label}
+                                className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary"
+                                onClick={item.action}
+                                style={{ cursor: item.action ? 'pointer' : 'default' }}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <item.icon className="h-5 w-5 text-primary" />
+                                    <span className="font-medium">{item.label}</span>
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            </Component>
+                        )
+                    })}
                 </div>
             </main>
         </div>
