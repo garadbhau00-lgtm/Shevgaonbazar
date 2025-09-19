@@ -8,6 +8,7 @@ export type Ad = {
   photos: string[]; // image urls
   status: 'pending' | 'approved' | 'rejected';
   userId: string;
+  createdAt: any; // Firestore timestamp
 };
 
 export type UserProfile = {

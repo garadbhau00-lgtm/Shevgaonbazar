@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -12,6 +13,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Loader2, Sparkles } from 'lucide-react';
 import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 const adSchema = z.object({
   title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
@@ -25,15 +30,31 @@ const adSchema = z.object({
 
 type AdFormValues = z.infer<typeof adSchema>;
 
-async function createAdAction(data: AdFormValues) {
-    console.log('Submitting data:', data);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    return { success: true, message: 'तुमची जाहिरात समीक्षेसाठी पाठवली आहे.' };
+async function createAdAction(data: AdFormValues, userId: string) {
+    if (!userId) {
+        return { success: false, message: 'तुम्ही लॉग इन केलेले नाही.' };
+    }
+    try {
+        await addDoc(collection(db, 'ads'), {
+            ...data,
+            userId: userId,
+            status: 'pending',
+            createdAt: serverTimestamp(),
+            // TODO: Add photo upload functionality
+            photos: ['https://picsum.photos/seed/newad/600/400'],
+        });
+        return { success: true, message: 'तुमची जाहिरात समीक्षेसाठी पाठवली आहे.' };
+    } catch (error) {
+        console.error("Error creating ad:", error);
+        return { success: false, message: 'जाहिरात तयार करण्यात अयशस्वी.' };
+    }
 }
 
 export default function AdForm() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const form = useForm<AdFormValues>({
     resolver: zodResolver(adSchema),
@@ -46,6 +67,24 @@ export default function AdForm() {
   });
 
   const { isSubmitting } = form.formState;
+
+  if (authLoading) {
+      return (
+          <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      )
+  }
+
+  if (!user) {
+    router.push('/login');
+    toast({
+        variant: 'destructive',
+        title: 'प्रवेश प्रतिबंधित',
+        description: 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.'
+    })
+    return null;
+  }
 
   const handleSuggestion = async () => {
     const description = form.getValues('description');
@@ -68,13 +107,20 @@ export default function AdForm() {
 
   const onSubmit = async (data: AdFormValues) => {
     try {
-        const result = await createAdAction(data);
+        const result = await createAdAction(data, user.uid);
         if(result.success) {
             toast({
                 title: "यशस्वी!",
                 description: result.message,
             });
             form.reset();
+            router.push('/my-ads');
+        } else {
+            toast({
+                variant: "destructive",
+                title: "त्रुटी!",
+                description: result.message,
+            });
         }
     } catch (error) {
         toast({
@@ -184,8 +230,8 @@ export default function AdForm() {
             <FormMessage />
         </FormItem>
 
-        <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting || authLoading}>
+            {(isSubmitting || authLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             जाहिरात पोस्ट करा
         </Button>
       </form>
