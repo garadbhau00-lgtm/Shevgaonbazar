@@ -3,7 +3,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
+import { doc, onSnapshot, Unsubscribe, DocumentData } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 
@@ -25,19 +25,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        let unsubscribeSnapshot: Unsubscribe | undefined;
+
+        const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+            // Clean up previous snapshot listener if it exists
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
+                unsubscribeSnapshot = undefined;
+            }
+
             if (firebaseUser) {
                 setUser(firebaseUser);
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
-                const unsubSnapshot = onSnapshot(userDocRef, (docSnap) => {
+                unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         setUserProfile(docSnap.data() as UserProfile);
                     } else {
                         setUserProfile(null);
                     }
                     setLoading(false);
+                }, (error) => {
+                    console.error("Error in snapshot listener:", error);
+                    setUserProfile(null);
+                    setLoading(false);
                 });
-                return () => unsubSnapshot();
             } else {
                 setUser(null);
                 setUserProfile(null);
@@ -45,7 +56,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
+            }
+        };
     }, []);
 
     return (
