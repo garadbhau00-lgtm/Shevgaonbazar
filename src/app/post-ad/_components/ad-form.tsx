@@ -120,7 +120,6 @@ export default function AdForm() {
     },
   });
 
-  const { isSubmitting } = form.formState;
 
   if (authLoading) {
       return (
@@ -218,7 +217,7 @@ export default function AdForm() {
     }
   };
 
-  const isUploading = form.formState.isSubmitting;
+  const isUploading = uploadProgress !== null;
 
   return (
     <Form {...form}>
@@ -289,7 +288,7 @@ export default function AdForm() {
             <FormItem>
               <FormLabel>किंमत (₹)</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="उदा. १५०००" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} value={field.value ?? ''} />
+                <Input type="number" placeholder="उदा. १५०००" {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -332,7 +331,7 @@ export default function AdForm() {
             <FormControl>
                 <div 
                     className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:border-primary hover:bg-secondary"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => !isUploading && fileInputRef.current?.click()}
                 >
                      <Upload className="h-8 w-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">फोटो अपलोड करण्यासाठी क्लिक करा</p>
