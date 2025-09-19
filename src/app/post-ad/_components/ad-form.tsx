@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,13 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Upload, X as XIcon } from 'lucide-react';
 import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { Progress } from '@/components/ui/progress';
 
 const adSchema = z.object({
   title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
@@ -30,19 +33,42 @@ const adSchema = z.object({
 
 type AdFormValues = z.infer<typeof adSchema>;
 
-async function createAdAction(data: AdFormValues, userId: string) {
+async function createAdAction(data: AdFormValues, userId: string, files: File[]) {
     if (!userId) {
         return { success: false, message: 'तुम्ही लॉग इन केलेले नाही.' };
     }
+    if (files.length === 0) {
+        return { success: false, message: 'कृपया किमान एक फोटो अपलोड करा.' };
+    }
+
     try {
+        const photoURLs: string[] = [];
+        // Sequential upload, can be parallelized
+        for (const file of files) {
+            const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+            
+            const url = await new Promise<string>((resolve, reject) => {
+                 uploadTask.on('state_changed',
+                    () => { /* progress can be monitored here */ },
+                    (error) => reject(error),
+                    async () => {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        resolve(downloadURL);
+                    }
+                );
+            });
+            photoURLs.push(url);
+        }
+
         await addDoc(collection(db, 'ads'), {
             ...data,
             userId: userId,
             status: 'pending',
             createdAt: serverTimestamp(),
-            // TODO: Add photo upload functionality
-            photos: ['https://picsum.photos/seed/newad/600/400'],
+            photos: photoURLs,
         });
+
         return { success: true, message: 'तुमची जाहिरात समीक्षेसाठी पाठवली आहे.' };
     } catch (error) {
         console.error("Error creating ad:", error);
@@ -50,18 +76,25 @@ async function createAdAction(data: AdFormValues, userId: string) {
     }
 }
 
+const MAX_FILES = 5;
+
 export default function AdForm() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
 
   const form = useForm<AdFormValues>({
     resolver: zodResolver(adSchema),
     defaultValues: {
       title: '',
       description: '',
-      price: '' as any, // Initialize with empty string to avoid uncontrolled input error
+      price: '',
       location: '',
     },
   });
@@ -85,6 +118,32 @@ export default function AdForm() {
     })
     return null;
   }
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      if (files.length + newFiles.length > MAX_FILES) {
+        toast({ variant: 'destructive', title: `तुम्ही कमाल ${MAX_FILES} फोटो निवडू शकता.` });
+        return;
+      }
+      const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
+      setFiles(prev => [...prev, ...newFiles]);
+      setPreviews(prev => [...prev, ...newFilePreviews]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => {
+        const newPreviews = prev.filter((_, i) => i !== index);
+        // Revoke the object URL to free up memory
+        URL.revokeObjectURL(previews[index]);
+        return newPreviews;
+    });
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
 
   const handleSuggestion = async () => {
     const description = form.getValues('description');
@@ -106,14 +165,20 @@ export default function AdForm() {
   };
 
   const onSubmit = async (data: AdFormValues) => {
+    if (files.length === 0) {
+        toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
+        return;
+    }
     try {
-        const result = await createAdAction(data, user.uid);
+        const result = await createAdAction(data, user.uid, files);
         if(result.success) {
             toast({
                 title: "यशस्वी!",
                 description: result.message,
             });
             form.reset();
+            setFiles([]);
+            setPreviews([]);
             router.push('/my-ads');
         } else {
             toast({
@@ -221,14 +286,47 @@ export default function AdForm() {
         />
         <FormItem>
             <FormLabel>फोटो</FormLabel>
+            {previews.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                    {previews.map((src, index) => (
+                        <div key={index} className="relative aspect-square">
+                            <Image src={src} alt={`Preview ${index}`} fill className="rounded-md object-cover" />
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                                onClick={() => removeFile(index)}
+                            >
+                                <XIcon className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            )}
             <FormControl>
-                <div className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:border-primary hover:bg-secondary">
+                <div 
+                    className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:border-primary hover:bg-secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                     <Upload className="h-8 w-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">फोटो अपलोड करण्यासाठी क्लिक करा</p>
-                    <p className="text-xs text-muted-foreground">(कमाल ५)</p>
+                    <p className="text-xs text-muted-foreground">(कमाल {MAX_FILES})</p>
+                    <Input 
+                        ref={fileInputRef}
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*" 
+                        multiple 
+                        onChange={handleFileChange} 
+                        disabled={files.length >= MAX_FILES}
+                    />
                 </div>
             </FormControl>
             <FormMessage />
         </FormItem>
+
+        {isSubmitting && <Progress value={uploadProgress} className="w-full" />}
 
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting || authLoading}>
             {(isSubmitting || authLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
