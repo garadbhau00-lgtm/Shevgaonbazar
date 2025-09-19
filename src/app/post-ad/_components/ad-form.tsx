@@ -33,7 +33,12 @@ const adSchema = z.object({
 
 type AdFormValues = z.infer<typeof adSchema>;
 
-async function createAdAction(data: AdFormValues, userId: string, files: File[]) {
+async function createAdAction(
+    data: AdFormValues,
+    userId: string,
+    files: File[],
+    onProgress: (percentage: number) => void
+) {
     if (!userId) {
         return { success: false, message: 'तुम्ही लॉग इन केलेले नाही.' };
     }
@@ -42,24 +47,30 @@ async function createAdAction(data: AdFormValues, userId: string, files: File[])
     }
 
     try {
-        const photoURLs: string[] = [];
-        // Sequential upload, can be parallelized
-        for (const file of files) {
-            const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
-            
-            const url = await new Promise<string>((resolve, reject) => {
-                 uploadTask.on('state_changed',
-                    () => { /* progress can be monitored here */ },
-                    (error) => reject(error),
-                    async () => {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        resolve(downloadURL);
-                    }
-                );
-            });
-            photoURLs.push(url);
-        }
+        const photoURLs = await Promise.all(
+            files.map(async (file, index) => {
+                const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
+                const uploadTask = uploadBytesResumable(storageRef, file);
+
+                return new Promise<string>((resolve, reject) => {
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            // Calculate combined progress
+                            const totalProgress = (index / files.length) * 100 + progress / files.length;
+                            onProgress(totalProgress);
+                        },
+                        (error) => reject(error),
+                        async () => {
+                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            resolve(downloadURL);
+                        }
+                    );
+                });
+            })
+        );
+        
+        onProgress(100);
 
         await addDoc(collection(db, 'ads'), {
             ...data,
@@ -169,8 +180,9 @@ export default function AdForm() {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
         return;
     }
+    setUploadProgress(0);
     try {
-        const result = await createAdAction(data, user.uid, files);
+        const result = await createAdAction(data, user.uid, files, setUploadProgress);
         if(result.success) {
             toast({
                 title: "यशस्वी!",
@@ -179,6 +191,7 @@ export default function AdForm() {
             form.reset();
             setFiles([]);
             setPreviews([]);
+            setUploadProgress(0);
             router.push('/my-ads');
         } else {
             toast({
@@ -265,7 +278,7 @@ export default function AdForm() {
             <FormItem>
               <FormLabel>किंमत (₹)</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="उदा. १५०००" {...field} />
+                <Input type="number" placeholder="उदा. १५०००" {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
