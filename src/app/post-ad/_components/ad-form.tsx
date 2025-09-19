@@ -48,19 +48,13 @@ async function createAdAction(
 
     try {
         const photoURLs = await new Promise<string[]>((resolve, reject) => {
-            const uploadStates: UploadTaskSnapshot[] = new Array(files.length);
-            const urls: string[] = new Array(files.length);
+            const uploadStates = new Array(files.length).fill(0);
+            const urls = new Array(files.length);
             let uploadedCount = 0;
             const totalBytes = files.reduce((acc, file) => acc + file.size, 0);
 
-            const checkCompletion = () => {
-                if (uploadedCount === files.length) {
-                    resolve(urls.filter(url => url));
-                }
-            };
-
             const updateTotalProgress = () => {
-                const totalBytesTransferred = uploadStates.reduce((acc, snapshot) => acc + (snapshot?.bytesTransferred ?? 0), 0);
+                const totalBytesTransferred = uploadStates.reduce((acc, bytes) => acc + bytes, 0);
                 const progress = (totalBytesTransferred / totalBytes) * 100;
                 onProgress(progress);
             };
@@ -71,13 +65,14 @@ async function createAdAction(
 
                 uploadTask.on('state_changed',
                     (snapshot) => {
-                        uploadStates[index] = snapshot;
+                        uploadStates[index] = snapshot.bytesTransferred;
                         updateTotalProgress();
                     },
                     (error) => {
                         console.error(`Upload failed for file ${index}:`, error);
                         // In a real app, you might want to cancel all uploads here.
                         // For now, we'll just reject the whole operation.
+                        uploadTask.cancel();
                         reject(new Error('एक किंवा अधिक फोटो अपलोड करण्यात अयशस्वी.'));
                     },
                     async () => {
@@ -85,9 +80,11 @@ async function createAdAction(
                             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                             urls[index] = downloadURL;
                             uploadedCount++;
-                            checkCompletion();
+                            if (uploadedCount === files.length) {
+                                resolve(urls.filter(url => url));
+                            }
                         } catch (error) {
-                            reject(new Error('फोटो URL मिळवण्यात अयशस्वी.'));
+                             reject(new Error('फोटो URL मिळवण्यात अयशस्वी.'));
                         }
                     }
                 );
@@ -237,7 +234,7 @@ export default function AdForm() {
     }
   };
 
-  const isUploading = isSubmitting;
+  const isUploading = form.formState.isSubmitting;
 
   return (
     <Form {...form}>
@@ -372,7 +369,7 @@ export default function AdForm() {
 
         {uploadProgress !== null && (
             <div className="space-y-1">
-                <p className="text-sm font-medium">अपलोड करत आहे...</p>
+                <p className="text-sm font-medium">अपलोड करत आहे... {Math.round(uploadProgress)}%</p>
                 <Progress value={uploadProgress} className="w-full" />
             </div>
         )}
