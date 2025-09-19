@@ -49,20 +49,18 @@ async function createAdAction(
     try {
         const photoURLs: string[] = [];
         const totalFiles = files.length;
+        let filesUploaded = 0;
 
-        for (let i = 0; i < totalFiles; i++) {
-            const file = files[i];
+        // Use Promise.all to upload all files in parallel
+        const uploadPromises = files.map(file => {
             const storageRef = ref(storage, `ad-photos/${userId}/${Date.now()}-${file.name}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
-            // Await the completion of each upload
-            await new Promise<void>((resolve, reject) => {
+            return new Promise<string>((resolve, reject) => {
                 uploadTask.on('state_changed',
                     (snapshot) => {
-                        // Calculate progress for the current file and update total progress
-                        const currentFileProgress = (snapshot.bytesTransferred / snapshot.totalBytes);
-                        const totalProgress = ((i + currentFileProgress) / totalFiles) * 100;
-                        onProgress(totalProgress);
+                        // This part is for individual file progress, which we won't show for simplicity.
+                        // The overall progress is simpler to manage.
                     },
                     (error) => {
                         console.error(`Upload failed for file ${file.name}:`, error);
@@ -71,15 +69,20 @@ async function createAdAction(
                     async () => {
                         try {
                             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                            photoURLs.push(downloadURL);
-                            resolve(); // Resolve the promise for this file upload
+                            filesUploaded++;
+                            onProgress((filesUploaded / totalFiles) * 100);
+                            resolve(downloadURL);
                         } catch (error) {
                              reject(new Error('फोटो URL मिळवण्यात अयशस्वी.'));
                         }
                     }
                 );
             });
-        }
+        });
+
+        // Wait for all uploads to complete
+        const uploadedUrls = await Promise.all(uploadPromises);
+        photoURLs.push(...uploadedUrls);
 
         // Now that all files are uploaded, create the document in Firestore
         await addDoc(collection(db, 'ads'), {
@@ -98,7 +101,6 @@ async function createAdAction(
         return { success: false, message: errorMessage };
     }
 }
-
 
 const MAX_FILES = 5;
 
