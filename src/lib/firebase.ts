@@ -1,3 +1,38 @@
+// CORRECT FIRESTORE RULES
+// It is recommended that you copy and paste these rules into your Firebase project's
+// Firestore rules editor to ensure the app works correctly.
+/*
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // USERS
+    // Allow users to read their own user document and admins to read/write any user document.
+    match /users/{userId} {
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
+     match /users/{document=**} {
+      allow list: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
+
+    // ADS
+    // Allow anyone to read approved ads.
+    // Allow authenticated users to create new ads.
+    // Allow owners to update/delete their own ads.
+    match /ads/{adId} {
+      allow read: if resource.data.status == 'approved';
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Admins can read/write any ad
+      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
+     match /ads/{document=**} {
+        allow list: if request.auth != null;
+    }
+  }
+}
+*/
+
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
