@@ -61,7 +61,7 @@ export default function AdForm() {
     defaultValues: {
       title: '',
       description: '',
-      price: undefined,
+      price: '' as any, // Initialize with empty string to avoid uncontrolled input error
       location: '',
     },
   });
