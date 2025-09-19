@@ -43,6 +43,10 @@ export default function SignupPage() {
                             <Label htmlFor="password">पासवर्ड</Label>
                             <Input id="password" type="password" required />
                         </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirm-password">पासवर्डची पुष्टी करा</Label>
+                            <Input id="confirm-password" type="password" required />
+                        </div>
                         <Button type="submit" className="w-full">
                            खाते तयार करा
                         </Button>
