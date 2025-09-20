@@ -18,7 +18,7 @@ import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/fi
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import type { Ad } from '@/lib/types';
@@ -76,7 +76,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
     setPreviews([...existingPhotos, ...newFilePreviews]);
 
-    // Cleanup blob URLs on unmount
     return () => {
         newFilePreviews.forEach(p => URL.revokeObjectURL(p));
     }
@@ -146,11 +145,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
 
-    // Helper function to upload files and track progress
-    const uploadFiles = (
-        files: File[],
-        userId: string,
-    ): Promise<string[]> => {
+    const uploadFiles = (files: File[], userId: string): Promise<string[]> => {
+        setUploadProgress(0);
         const uploadPromises = files.map((file) => {
             return new Promise<string>((resolve, reject) => {
                 const fileName = `${userId}-${Date.now()}-${file.name}`;
@@ -158,9 +154,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
                 uploadTask.on('state_changed',
-                    (snapshot: UploadTaskSnapshot) => {
-                         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                         console.log(`Upload is ${progress}% done`);
+                    (snapshot) => {
+                        // Progress function ...
                     },
                     (error) => {
                         console.error("Upload failed for a file:", error);
@@ -179,7 +174,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
             });
         });
 
-        // This is a simple way to track overall progress
         let completed = 0;
         uploadPromises.forEach(p => {
             p.then(() => {
@@ -199,8 +193,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
     
     setIsSubmitting(true);
-    setUploadProgress(0);
-
+    
     try {
         let uploadedUrls: string[] = [];
         
@@ -397,7 +390,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
-
-    
-
-    
