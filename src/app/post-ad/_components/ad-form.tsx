@@ -120,7 +120,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
         setNewFiles(current => current.filter((_, i) => i !== newFileIndex));
     }
     
-    // Reset the file input so the user can select the same file again
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -148,16 +147,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
   const onSubmit = async (data: AdFormValues) => {
     if (!user) return;
+    
+    setIsSubmitting(true);
 
     if (newFiles.length === 0 && existingPhotos.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
+        setIsSubmitting(false);
         return;
     }
 
-    setIsSubmitting(true);
-
     try {
-        // WORKAROUND: Generate picsum.photos URLs based on file properties
         const generatedUrls = newFiles.map(file => {
             const seed = `${file.name}${file.size}`.replace(/[^a-zA-Z0-9]/g, '');
             return `https://picsum.photos/seed/${seed}/600/400`;
@@ -170,7 +169,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             await updateDoc(adDocRef, {
                 ...data,
                 photos: finalPhotoURLs,
-                status: 'pending',
+                status: 'pending', // Reset status on edit
                 rejectionReason: '',
             });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
@@ -345,5 +344,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
 
     
