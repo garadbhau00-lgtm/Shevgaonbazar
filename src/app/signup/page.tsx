@@ -77,9 +77,11 @@ export default function SignupPage() {
                 disabled: false,
                 createdAt: serverTimestamp(),
             });
-
-            // No toast here, useAuth will handle it.
-            // No redirect here, useAuth will handle it.
+            toast({
+                title: "खाते तयार झाले!",
+                description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+            });
+            // The onAuthStateChanged listener in useAuth will handle the redirect.
             
         } catch (error: any) {
             let message = "खाते तयार करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
@@ -94,7 +96,7 @@ export default function SignupPage() {
         }
     }
     
-    if (loading || user) {
+    if (loading) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -102,6 +104,13 @@ export default function SignupPage() {
         )
     }
 
+    if (user) {
+         return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">

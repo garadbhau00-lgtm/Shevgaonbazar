@@ -59,7 +59,11 @@ export default function LoginPage() {
     async function onSubmit(data: LoginFormValues) {
         try {
             await signInWithEmailAndPassword(auth, data.email, data.password);
-            // The onAuthStateChanged listener in useAuth will handle the redirect and toast.
+            toast({
+                title: "लॉगिन यशस्वी!",
+                description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+            });
+            // The onAuthStateChanged listener in useAuth will handle the redirect.
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -69,14 +73,23 @@ export default function LoginPage() {
         }
     }
 
-    if (loading || user) {
-        // Still show loader if auth state is loading or user is found, to allow for redirect.
+    if (loading) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         )
     }
+    
+    // If user is already logged in, redirecting...
+    if (user) {
+         return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        )
+    }
+
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
