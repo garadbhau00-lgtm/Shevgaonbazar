@@ -4,26 +4,26 @@ import { Button } from '@/components/ui/button';
 import type { Ad } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-type AdCardProps = {
-  ad: Ad;
-};
-
-function getAdImageHint(adPhotoUrl: string) {
+function getAdImageHint(adPhotoUrl?: string) {
+    if (!adPhotoUrl) return 'agriculture';
     const foundImage = PlaceHolderImages.find((p) => p.imageUrl === adPhotoUrl);
     return foundImage ? foundImage.imageHint : 'agriculture';
 }
 
 export default function AdCard({ ad }: AdCardProps) {
+  const adPhotoUrl = ad.photos?.[0];
+  const imageHint = getAdImageHint(adPhotoUrl);
+
   return (
     <Card className="flex flex-col overflow-hidden shadow-md transition-shadow hover:shadow-lg">
       <div className="relative aspect-[4/3]">
-        {ad.photos && ad.photos.length > 0 && (
+        {adPhotoUrl && (
             <Image
-              src={ad.photos[0]}
+              src={adPhotoUrl}
               alt={ad.title}
               fill
               className="object-cover"
-              data-ai-hint={getAdImageHint(ad.photos[0])}
+              data-ai-hint={imageHint}
             />
         )}
       </div>
@@ -40,3 +40,7 @@ export default function AdCard({ ad }: AdCardProps) {
     </Card>
   );
 }
+
+type AdCardProps = {
+  ad: Ad;
+};
