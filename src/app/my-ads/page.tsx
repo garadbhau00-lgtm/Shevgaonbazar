@@ -54,8 +54,10 @@ export default function MyAdsPage() {
 
         const q = query(
             collection(db, 'ads'),
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
+            where('userId', '==', user.uid)
+            // NOTE: orderBy('createdAt', 'desc') was removed to prevent a crash.
+            // A composite index is required for this query.
+            // Please create the index in your Firebase console using the link from the error.
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
