@@ -119,7 +119,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     const removedPreview = newPreviews.splice(index, 1)[0];
     setPreviews(newPreviews);
 
-    // If the removed preview was a newly added file (blob URL)
     if (removedPreview.startsWith('blob:')) {
         const fileIndex = files.findIndex(file => URL.createObjectURL(file) === removedPreview);
         if (fileIndex !== -1) {
@@ -129,8 +128,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         }
         URL.revokeObjectURL(removedPreview);
     }
-    // No special handling needed for existing URLs (http), they are just removed from the preview state
-    // and will be excluded from finalPhotoURLs during submission.
+    
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -166,11 +164,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setUploadProgress(0);
 
     try {
-        // Keep existing photos that are still in the previews array
         let finalPhotoURLs = isEditMode ? existingAd.photos.filter(p => previews.includes(p)) : [];
 
-        // Identify new files to upload
-        const newFilesToUpload = files.filter(file => previews.includes(URL.createObjectURL(file)));
+        const newFilesToUpload = files.filter(file => {
+            const blobUrl = URL.createObjectURL(file);
+            const included = previews.includes(blobUrl);
+            URL.revokeObjectURL(blobUrl); // Clean up blob URL after checking
+            return included;
+        });
 
         if (newFilesToUpload.length > 0) {
             const uploadPromises: Promise<string>[] = newFilesToUpload.map((file, index) => {
@@ -181,8 +182,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     uploadTask.on('state_changed',
                         (snapshot) => {
                             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            // A more accurate progress calculation for multiple files
-                            const overallProgress = ((finalPhotoURLs.length + index + (progress / 100)) / (finalPhotoURLs.length + newFilesToUpload.length)) * 100;
+                            const existingPhotosCount = finalPhotoURLs.length;
+                            const overallProgress = ((existingPhotosCount + index + (progress / 100)) / (existingPhotosCount + newFilesToUpload.length)) * 100;
                             setUploadProgress(overallProgress);
                         },
                         (error) => {
@@ -210,8 +211,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
             await updateDoc(adDocRef, {
                 ...data,
                 photos: finalPhotoURLs,
-                status: 'pending', // Reset status for re-approval
-                rejectionReason: '', // Clear previous rejection reason
+                status: 'pending', 
+                rejectionReason: '', 
             });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
 
