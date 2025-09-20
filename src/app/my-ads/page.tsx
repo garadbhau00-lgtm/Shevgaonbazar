@@ -55,17 +55,20 @@ export default function MyAdsPage() {
 
         const q = query(
             collection(db, 'ads'),
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
+            where('userId', '==', user.uid)
+            // The orderBy clause is commented out to prevent crashing while the index is being built.
+            // orderBy('createdAt', 'desc')
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const adsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ad));
+            // Manual sort on the client as a temporary workaround
+            adsData.sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0));
             setMyAds(adsData);
             setAdsLoading(false);
         }, (error) => {
             console.error("Error fetching user ads: ", error);
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमच्या जाहिराती आणण्यात अयशस्वी.' });
+            toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमच्या जाहिराती आणण्यात अयशस्वी. कृपया फायरस्टोअर इंडेक्स तपासा.' });
             setAdsLoading(false);
         });
 
@@ -115,7 +118,7 @@ export default function MyAdsPage() {
                                         </Badge>
                                     </CardContent>
                                     <CardFooter className="p-3 space-x-2">
-                                        <Button variant="ghost" size="icon">
+                                        <Button variant="ghost" size="icon" disabled={ad.status !== 'rejected'}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
                                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
