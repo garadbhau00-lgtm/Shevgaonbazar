@@ -38,7 +38,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const { toast } = useToast();
     const router = useRouter();
-    const { user, userProfile, loading, handleGoogleSignIn } = useAuth();
+    const { user, loading, handleGoogleSignIn } = useAuth();
     
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -70,6 +70,7 @@ export default function LoginPage() {
     }
 
     if (loading || user) {
+        // Still show loader if auth state is loading or user is found, to allow for redirect.
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />

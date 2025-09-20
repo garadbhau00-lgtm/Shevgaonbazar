@@ -7,6 +7,7 @@ import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp } from 'f
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { useToast } from './use-toast';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
     user: FirebaseUser | null;
@@ -29,6 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const router = useRouter();
 
     const handleLogout = useCallback(async () => {
         try {
@@ -95,20 +97,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (firebaseUser) {
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
                 unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
-                    setUser(firebaseUser);
                     if (docSnap.exists()) {
                         const profileData = docSnap.data() as UserProfile;
-                        setUserProfile(profileData);
                         if (profileData.disabled) {
                             toast({ variant: 'destructive', title: 'खाते अक्षम केले आहे', description: 'तुमचे खाते प्रशासकाने अक्षम केले आहे.' });
-                            handleLogout();
+                            handleLogout(); // This will log the user out
+                        } else {
+                            setUser(firebaseUser);
+                            setUserProfile(profileData);
+                            setLoading(false);
                         }
                     } else {
-                        // This case can happen if user exists in Auth but not in Firestore.
-                        // For a consistent state, we can treat them as not fully logged in.
                         setUserProfile(null);
+                        setLoading(false);
                     }
-                    setLoading(false);
                 }, (error) => {
                     console.error("Error in snapshot listener:", error);
                     setUser(null);
@@ -119,7 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(null);
                 setUserProfile(null);
                 setLoading(false);
-                if (user) { // Only toast on actual logout, not initial load
+                if (user) { 
                     toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
                 }
             }
@@ -131,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 unsubscribeSnapshot();
             }
         };
-    }, [handleLogout, user, toast]);
+    }, [handleLogout, user, toast, router]);
 
     return (
         <AuthContext.Provider value={{ user, userProfile, loading, handleLogout, handleGoogleSignIn }}>
