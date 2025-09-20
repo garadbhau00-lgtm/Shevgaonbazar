@@ -18,7 +18,7 @@ import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/fi
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import type { Ad } from '@/lib/types';
@@ -51,6 +51,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [previews, setPreviews] = useState<string[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!existingAd;
@@ -145,58 +146,89 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
   
-  const onSubmit = async (data: AdFormValues) => {
-    if (!user) return;
-    
-    setIsSubmitting(true);
+    const uploadFile = (file: File, userId: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const fileName = `${userId}-${Date.now()}-${file.name}`;
+            const storageRef = ref(storage, `ad-photos/${fileName}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
 
-    if (newFiles.length === 0 && existingPhotos.length === 0) {
-        toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
-        setIsSubmitting(false);
-        return;
-    }
-
-    try {
-        const generatedUrls = newFiles.map(file => {
-            const seed = `${file.name}${file.size}`.replace(/[^a-zA-Z0-9]/g, '');
-            return `https://picsum.photos/seed/${seed}/600/400`;
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                },
+                (error) => {
+                    console.error("Upload failed for a file:", error);
+                    reject(error);
+                },
+                async () => {
+                    try {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        resolve(downloadURL);
+                    } catch (error) {
+                        console.error("Failed to get download URL:", error);
+                        reject(error);
+                    }
+                }
+            );
         });
-        
-        const finalPhotoURLs = [...existingPhotos, ...generatedUrls];
+    };
 
-        if (isEditMode && existingAd) {
-            const adDocRef = doc(db, 'ads', existingAd.id);
-            await updateDoc(adDocRef, {
-                ...data,
-                photos: finalPhotoURLs,
-                status: 'pending', // Reset status on edit
-                rejectionReason: '',
-            });
-            toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
-        } else {
-            await addDoc(collection(db, 'ads'), {
-                ...data,
-                photos: finalPhotoURLs,
-                status: 'pending',
-                rejectionReason: '',
-                userId: user.uid,
-                createdAt: serverTimestamp(),
-            });
-            toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
+    const onSubmit = async (data: AdFormValues) => {
+        if (!user) return;
+
+        if (newFiles.length === 0 && existingPhotos.length === 0) {
+            toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
+            return;
         }
-        router.push('/my-ads');
-    } catch (error) {
-        console.error("Submission failed:", error);
-        toast({
-            variant: "destructive",
-            title: "त्रुटी!",
-            description: "जाहिरात सबमिट करण्यात अयशस्वी.",
-        });
-    } finally {
-        setIsSubmitting(false);
-    }
-};
+        
+        setIsSubmitting(true);
+        setUploadProgress(0);
 
+        try {
+            const uploadedUrls: string[] = [];
+            
+            for (let i = 0; i < newFiles.length; i++) {
+                const file = newFiles[i];
+                const url = await uploadFile(file, user.uid);
+                uploadedUrls.push(url);
+                setUploadProgress(((i + 1) / newFiles.length) * 100);
+            }
+
+            const finalPhotoURLs = [...existingPhotos, ...uploadedUrls];
+
+            if (isEditMode && existingAd) {
+                const adDocRef = doc(db, 'ads', existingAd.id);
+                await updateDoc(adDocRef, {
+                    ...data,
+                    photos: finalPhotoURLs,
+                    status: 'pending', // Reset status on edit
+                    rejectionReason: '',
+                });
+                toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
+            } else {
+                await addDoc(collection(db, 'ads'), {
+                    ...data,
+                    photos: finalPhotoURLs,
+                    status: 'pending',
+                    rejectionReason: '',
+                    userId: user.uid,
+                    createdAt: serverTimestamp(),
+                });
+                toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
+            }
+            router.push('/my-ads');
+        } catch (error) {
+            console.error("Submission failed:", error);
+            toast({
+                variant: "destructive",
+                title: "त्रुटी!",
+                description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया तुमच्या स्टोरेज नियमांची तपासणी करा.",
+            });
+        } finally {
+            setIsSubmitting(false);
+            setUploadProgress(0);
+        }
+    };
 
   const MAX_FILES = 5;
 
@@ -336,15 +368,20 @@ export default function AdForm({ existingAd }: AdFormProps) {
             <FormMessage />
         </FormItem>
         
+        {isSubmitting && (
+            <div className="space-y-2">
+                <p className="text-sm font-medium text-center">फोटो अपलोड करत आहे... {Math.round(uploadProgress)}%</p>
+                <Progress value={uploadProgress} className="w-full" />
+            </div>
+        )}
+
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
+            {isSubmitting ? 'पोस्ट करत आहे...' : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
         </Button>
       </form>
     </Form>
   );
 }
-
-    
 
     
