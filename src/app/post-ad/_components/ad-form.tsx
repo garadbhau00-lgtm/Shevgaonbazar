@@ -62,6 +62,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isEditMode = !!existingAd;
 
   const form = useForm<AdFormValues>({
@@ -81,7 +86,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   });
   
   useEffect(() => {
-    // Set initial previews from existing ad on client-side only
     if (existingAd?.photos) {
       setPhotoPreviews(existingAd.photos);
     }
@@ -92,15 +96,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
       
-      // Cleanup object URLs on unmount
       return () => {
         objectUrls.forEach(url => URL.revokeObjectURL(url));
       };
     } else if (existingAd?.photos) {
-      // If new files are removed, revert to existing ad photos
       setPhotoPreviews(existingAd.photos);
     } else {
-      // If no new files and no existing ad, clear previews
       setPhotoPreviews([]);
     }
   }, [newFiles, existingAd]);
@@ -182,7 +183,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
             const compressedFiles = await Promise.all(
                 newFiles.map(async (file) => {
-                    // Check if the file is an image and needs compression
                     if (file.type.startsWith('image/') && file.size > 1024 * 1024) { 
                         try {
                             const compressedFile = await imageCompression(file, options);
@@ -325,7 +325,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         <FormItem>
             <FormLabel>फोटो</FormLabel>
             <div className="flex flex-wrap gap-4">
-                {photoPreviews.map((preview, index) => (
+                {mounted && photoPreviews.map((preview, index) => (
                     <div key={index} className="relative w-32 aspect-square">
                         <Image src={preview} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
                         <Button
@@ -341,7 +341,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     </div>
                 ))}
 
-                {photoPreviews.length < MAX_FILES && (
+                {mounted && photoPreviews.length < MAX_FILES && (
                     <FormControl>
                         <div 
                             className={cn(
@@ -377,5 +377,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
-
-    
