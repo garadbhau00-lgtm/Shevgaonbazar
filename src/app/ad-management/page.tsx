@@ -143,7 +143,9 @@ export default function AdManagementPage() {
                     {ads.length > 0 ? ads.map((ad) => (
                         <Card key={ad.id} className="overflow-hidden">
                             <div className="relative h-40 w-full">
-                                <Image src={ad.photos[0]} alt={ad.title} fill className="object-cover" />
+                                {ad.photos && ad.photos.length > 0 && (
+                                    <Image src={ad.photos[0]} alt={ad.title} fill className="object-cover" />
+                                )}
                                 <Badge variant={getStatusVariant(ad.status)} className="absolute top-2 right-2">
                                     {statusTranslations[ad.status]}
                                 </Badge>
