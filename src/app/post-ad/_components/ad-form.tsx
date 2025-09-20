@@ -15,10 +15,9 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytes, uploadBytesResumable } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import type { Ad } from '@/lib/types';
@@ -146,30 +145,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
   
-    const uploadFile = (file: File, userId: string): Promise<string> => {
+    const fileToDataUri = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
-            const fileName = `${userId}-${Date.now()}-${file.name}`;
-            const storageRef = ref(storage, `ad-photos/${fileName}`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
-
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                },
-                (error) => {
-                    console.error("Upload failed for a file:", error);
-                    reject(error);
-                },
-                async () => {
-                    try {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        resolve(downloadURL);
-                    } catch (error) {
-                        console.error("Failed to get download URL:", error);
-                        reject(error);
-                    }
-                }
-            );
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
     };
 
@@ -185,16 +166,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
         setUploadProgress(0);
 
         try {
-            const uploadedUrls: string[] = [];
-            
-            for (let i = 0; i < newFiles.length; i++) {
-                const file = newFiles[i];
-                const url = await uploadFile(file, user.uid);
-                uploadedUrls.push(url);
-                setUploadProgress(((i + 1) / newFiles.length) * 100);
-            }
+            const dataUriPromises = newFiles.map(fileToDataUri);
+            const dataUris = await Promise.all(dataUriPromises);
 
-            const finalPhotoURLs = [...existingPhotos, ...uploadedUrls];
+            const finalPhotoURLs = [...existingPhotos, ...dataUris];
 
             if (isEditMode && existingAd) {
                 const adDocRef = doc(db, 'ads', existingAd.id);
@@ -222,11 +197,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
             toast({
                 variant: "destructive",
                 title: "त्रुटी!",
-                description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया तुमच्या स्टोरेज नियमांची तपासणी करा.",
+                description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
             });
         } finally {
             setIsSubmitting(false);
-            setUploadProgress(0);
         }
     };
 
@@ -368,7 +342,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             <FormMessage />
         </FormItem>
         
-        {isSubmitting && (
+        {isSubmitting && uploadProgress > 0 && (
             <div className="space-y-2">
                 <p className="text-sm font-medium text-center">फोटो अपलोड करत आहे... {Math.round(uploadProgress)}%</p>
                 <Progress value={uploadProgress} className="w-full" />
