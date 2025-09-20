@@ -127,7 +127,7 @@ export default function MyAdsPage() {
                                         </Badge>
                                     </CardContent>
                                     <CardFooter className="p-3 space-x-2">
-                                        <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)} disabled={ad.status === 'approved' || ad.status === 'pending'}>
+                                        <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)} disabled={ad.status === 'approved'}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
                                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
