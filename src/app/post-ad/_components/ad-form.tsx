@@ -79,7 +79,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             price: existingAd.price,
             location: existingAd.location,
         });
-        setPreviews(existingAd.photos);
+        setPreviews(existingAd.photos || []);
     }
   }, [isEditMode, existingAd, form]);
 
@@ -120,12 +120,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setPreviews(newPreviews);
 
     if (removedPreview.startsWith('blob:')) {
-        const fileIndex = files.findIndex(file => URL.createObjectURL(file) === removedPreview);
-        if (fileIndex !== -1) {
+        // Find the corresponding file in the `files` array and remove it
+        const fileIndexToRemove = files.findIndex(file => URL.createObjectURL(file) === removedPreview);
+        if (fileIndexToRemove > -1) {
             const newFiles = [...files];
-            newFiles.splice(fileIndex, 1);
+            newFiles.splice(fileIndexToRemove, 1);
             setFiles(newFiles);
         }
+    }
+    
+    // Revoke the object URL to free up memory
+    if (removedPreview.startsWith('blob:')) {
         URL.revokeObjectURL(removedPreview);
     }
     
@@ -164,17 +169,15 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setUploadProgress(0);
 
     try {
-        let finalPhotoURLs = isEditMode ? existingAd.photos.filter(p => previews.includes(p)) : [];
+        let finalPhotoURLs: string[] = [];
 
-        const newFilesToUpload = files.filter(file => {
-            const blobUrl = URL.createObjectURL(file);
-            const included = previews.includes(blobUrl);
-            URL.revokeObjectURL(blobUrl); // Clean up blob URL after checking
-            return included;
-        });
+        // In edit mode, start with the existing photos that are still in the preview array
+        if (isEditMode) {
+             finalPhotoURLs = existingAd.photos.filter(p => previews.includes(p));
+        }
 
-        if (newFilesToUpload.length > 0) {
-            const uploadPromises: Promise<string>[] = newFilesToUpload.map((file, index) => {
+        if (files.length > 0) {
+            const uploadPromises: Promise<string>[] = files.map((file, index) => {
                 const storageRef = ref(storage, `ad-photos/${user.uid}/${Date.now()}-${file.name}`);
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -182,8 +185,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     uploadTask.on('state_changed',
                         (snapshot) => {
                             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            const existingPhotosCount = finalPhotoURLs.length;
-                            const overallProgress = ((existingPhotosCount + index + (progress / 100)) / (existingPhotosCount + newFilesToUpload.length)) * 100;
+                            const overallProgress = ((index + (progress / 100)) / files.length) * 100;
                             setUploadProgress(overallProgress);
                         },
                         (error) => {
