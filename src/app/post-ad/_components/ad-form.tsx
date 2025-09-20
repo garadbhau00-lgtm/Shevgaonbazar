@@ -48,6 +48,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const router = useRouter();
   
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,7 +73,30 @@ export default function AdForm({ existingAd }: AdFormProps) {
       location: '',
     },
   });
+
+  useEffect(() => {
+    if (isEditMode && existingAd) {
+      form.reset({
+          title: existingAd.title,
+          description: existingAd.description,
+          category: existingAd.category,
+          price: existingAd.price,
+          location: existingAd.location,
+      });
+      setExistingPhotos(existingAd.photos || []);
+    }
+  }, [isEditMode, existingAd, form]);
   
+  useEffect(() => {
+    const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
+    setPreviews([...existingPhotos, ...newFilePreviews]);
+
+    // Cleanup blob URLs on unmount
+    return () => {
+        newFilePreviews.forEach(p => URL.revokeObjectURL(p));
+    }
+  }, [existingPhotos, newFiles]);
+
   useEffect(() => {
     if (Object.keys(progresses).length > 0) {
       const totalProgress = Object.values(progresses).reduce((acc, p) => acc + p, 0);
@@ -80,30 +104,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
       setUploadProgress(averageProgress);
     }
   }, [progresses]);
-
-  useEffect(() => {
-    if (isEditMode && existingAd) {
-        form.reset({
-            title: existingAd.title,
-            description: existingAd.description,
-            category: existingAd.category,
-            price: existingAd.price,
-            location: existingAd.location,
-        });
-        setPreviews(existingAd.photos || []);
-    }
-  }, [isEditMode, existingAd, form]);
-
-  useEffect(() => {
-    // Cleanup blob URLs on unmount
-    return () => {
-        previews.forEach(p => {
-            if (p.startsWith('blob:')) {
-                URL.revokeObjectURL(p);
-            }
-        });
-    }
-  }, [previews]);
 
   if (authLoading) {
       return (
@@ -130,27 +130,19 @@ export default function AdForm({ existingAd }: AdFormProps) {
         toast({ variant: 'destructive', title: `तुम्ही कमाल ${MAX_FILES} फोटो निवडू शकता.` });
         return;
       }
-      
-      const newFilePreviews = incomingFiles.map(file => URL.createObjectURL(file));
       setNewFiles(prev => [...prev, ...incomingFiles]);
-      setPreviews(prev => [...prev, ...newFilePreviews]);
     }
   };
 
   const removeFile = (index: number) => {
-    const removedPreview = previews[index];
-    
-    // Find the corresponding new file to remove if it's a blob URL
-    if (removedPreview.startsWith('blob:')) {
-        const blobPreviews = previews.filter(p => p.startsWith('blob:'));
-        const blobIndexToRemove = blobPreviews.indexOf(removedPreview);
-        if (blobIndexToRemove !== -1) {
-            setNewFiles(currentFiles => currentFiles.filter((_, i) => i !== blobIndexToRemove));
-        }
-        URL.revokeObjectURL(removedPreview);
+    if (index < existingPhotos.length) {
+        // This is an existing photo
+        setExistingPhotos(current => current.filter((_, i) => i !== index));
+    } else {
+        // This is a new file
+        const newFileIndex = index - existingPhotos.length;
+        setNewFiles(current => current.filter((_, i) => i !== newFileIndex));
     }
-    
-    setPreviews(currentPreviews => currentPreviews.filter((_, i) => i !== index));
     
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -191,8 +183,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
         
         if (newFiles.length > 0) {
             const uploadPromises = newFiles.map((file) => {
-                const fileName = `${Date.now()}-${file.name}`;
-                const storageRef = ref(storage, `ad-photos/${user.uid}/${fileName}`);
+                const fileName = `${user.uid}-${Date.now()}-${file.name}`;
+                const storageRef = ref(storage, `ad-photos/${fileName}`);
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
                 return new Promise<string>((resolve, reject) => {
@@ -212,13 +204,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             uploadedUrls = await Promise.all(uploadPromises);
         }
         
-        setUploadProgress(100);
-
-        const existingKeptUrls = isEditMode 
-            ? previews.filter(p => !p.startsWith('blob:')) 
-            : [];
-        
-        const finalPhotoURLs = [...existingKeptUrls, ...uploadedUrls];
+        const finalPhotoURLs = [...existingPhotos, ...uploadedUrls];
 
 
         if (isEditMode && existingAd) {
@@ -246,6 +232,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         form.reset();
         setNewFiles([]);
         setPreviews([]);
+        setExistingPhotos([]);
         router.push('/my-ads');
 
     } catch (error) {
@@ -400,7 +387,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             <FormMessage />
         </FormItem>
         
-        {isSubmitting && uploadProgress !== null && (
+        {isSubmitting && uploadProgress !== null && newFiles.length > 0 && (
             <div className="space-y-2">
                 <Label>{`फोटो अपलोड करत आहे... ${Math.round(uploadProgress)}%`}</Label>
                 <Progress value={uploadProgress} />
@@ -415,3 +402,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
