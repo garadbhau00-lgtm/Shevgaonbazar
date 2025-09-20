@@ -15,12 +15,12 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { Ad } from '@/lib/types';
+import imageCompression from 'browser-image-compression';
 
 
 const adSchema = z.object({
@@ -41,14 +41,23 @@ type AdFormProps = {
 
 const MAX_FILES = 1;
 
+const fileToDataUri = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
 export default function AdForm({ existingAd }: AdFormProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
-  const [photoPreview, setPhotoPreview] = useState<string | null>(existingAd?.photos?.[0] || null);
-  const [newFile, setNewFile] = useState<File | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>(existingAd?.photos || []);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,12 +81,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
   });
   
   useEffect(() => {
-    if (newFile) {
-        const newPreview = URL.createObjectURL(newFile);
-        setPhotoPreview(newPreview);
-        return () => URL.revokeObjectURL(newPreview);
+    if (newFiles.length > 0) {
+        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        setPhotoPreviews(newPreviews);
+        return () => {
+            newPreviews.forEach(url => URL.revokeObjectURL(url));
+        };
+    } else {
+        setPhotoPreviews(existingAd?.photos || []);
     }
-  }, [newFile]);
+  }, [newFiles, existingAd?.photos]);
 
   if (authLoading) {
       return (
@@ -98,15 +111,18 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setNewFile(e.target.files[0]);
+    if (e.target.files) {
+      const files = Array.from(e.target.files).slice(0, MAX_FILES - photoPreviews.length + newFiles.length);
+      setNewFiles(files);
     }
   };
 
-  const removePhoto = () => {
-    setNewFile(null);
-    setPhotoPreview(null);
-    if(fileInputRef.current) {
+  const removePhoto = (index: number) => {
+    const newFileArray = [...newFiles];
+    newFileArray.splice(index, 1);
+    setNewFiles(newFileArray);
+
+    if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
   };
@@ -133,7 +149,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
  const onSubmit = async (data: AdFormValues) => {
     if (!user) return;
 
-    if (!newFile && !photoPreview) {
+    if (newFiles.length === 0 && photoPreviews.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
         return;
     }
@@ -141,18 +157,39 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let finalPhotoURL: string | null = photoPreview;
+        let finalPhotoUrls: string[] = [...photoPreviews.filter(p => !p.startsWith('blob:'))];
 
-        if (newFile) {
-            const uniqueFileName = `${user.uid}-${Date.now()}-${newFile.name}`;
-            const storageRef = ref(storage, `ad-photos/${uniqueFileName}`);
-            await uploadBytes(storageRef, newFile);
-            finalPhotoURL = await getDownloadURL(storageRef);
+        if (newFiles.length > 0) {
+             const options = {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+            };
+
+            const compressedFiles = await Promise.all(
+                newFiles.map(async (file) => {
+                    if (file.size > 1024 * 1024) { // If file size is greater than 1MB
+                        try {
+                            const compressedFile = await imageCompression(file, options);
+                            toast({ title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला', description: `फोटोचा आकार ${(compressedFile.size / 1024).toFixed(2)} KB पर्यंत कमी झाला आहे.` });
+                            return compressedFile;
+                        } catch (compressionError) {
+                            console.error('Image compression failed:', compressionError);
+                            toast({ variant: 'destructive', title: 'फोटो कॉम्प्रेशन अयशस्वी', description: 'मूळ फोटो वापरला जाईल.' });
+                            return file;
+                        }
+                    }
+                    return file;
+                })
+            );
+
+            const dataUris = await Promise.all(compressedFiles.map(file => fileToDataUri(file)));
+            finalPhotoUrls.push(...dataUris);
         }
        
         const adData = {
             ...data,
-            photos: finalPhotoURL ? [finalPhotoURL] : [],
+            photos: finalPhotoUrls,
             status: 'pending' as const,
             rejectionReason: '',
         };
@@ -172,15 +209,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
         router.push('/my-ads');
     } catch (error: any) {
         console.error("Submission failed:", error);
-        let description = "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
-        // Check for specific Firebase Storage errors if needed.
-        if (error.code === 'storage/unauthorized') {
-            description = "फोटो अपलोड करण्याची परवानगी नाही. कृपया तुमच्या फायरबेस सुरक्षा नियमांची तपासणी करा.";
-        }
         toast({
             variant: "destructive",
             title: "त्रुटी!",
-            description: description,
+            description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
         });
     } finally {
         setIsSubmitting(false);
@@ -278,23 +310,23 @@ export default function AdForm({ existingAd }: AdFormProps) {
         <FormItem>
             <FormLabel>फोटो</FormLabel>
             <div className="flex flex-wrap gap-4">
-                {photoPreview && (
-                    <div className="relative w-32 aspect-square">
-                        <Image src={photoPreview} alt="Preview" fill className="rounded-md object-cover" />
+                {photoPreviews.map((preview, index) => (
+                    <div key={index} className="relative w-32 aspect-square">
+                        <Image src={preview} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
                         <Button
                             type="button"
                             variant="destructive"
                             size="icon"
                             className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                            onClick={removePhoto}
+                            onClick={() => removePhoto(index)}
                             disabled={isSubmitting}
                         >
                             <XIcon className="h-4 w-4" />
                         </Button>
                     </div>
-                )}
+                ))}
 
-                {!photoPreview && (
+                {photoPreviews.length < MAX_FILES && (
                     <FormControl>
                         <div 
                             className={cn(
@@ -312,6 +344,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                                 accept="image/*" 
                                 onChange={handleFileChange} 
                                 disabled={isSubmitting}
+                                multiple={false}
                             />
                         </div>
                     </FormControl>
@@ -329,5 +362,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
-
-    
