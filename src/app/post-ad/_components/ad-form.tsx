@@ -76,6 +76,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
     setPreviews([...existingPhotos, ...newFilePreviews]);
 
+    // Cleanup function
     return () => {
         newFilePreviews.forEach(p => URL.revokeObjectURL(p));
     }
@@ -120,6 +121,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         setNewFiles(current => current.filter((_, i) => i !== newFileIndex));
     }
     
+    // Reset the file input so the user can select the same file again
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -155,7 +157,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
                 uploadTask.on('state_changed',
                     (snapshot) => {
-                        // Progress function ...
+                        // Progress function can be implemented here if needed in the future
                     },
                     (error) => {
                         console.error("Upload failed for a file:", error);
@@ -187,6 +189,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
     };
 
   const onSubmit = async (data: AdFormValues) => {
+    if (!user) return; // Should not happen due to the check above
+    
     if (existingPhotos.length + newFiles.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
         return;
@@ -209,8 +213,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
             await updateDoc(adDocRef, {
                 ...data,
                 photos: finalPhotoURLs,
-                status: 'pending', 
-                rejectionReason: '', 
+                status: 'pending', // Reset status to pending on any edit
+                rejectionReason: '', // Clear rejection reason on resubmit
             });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
 
@@ -378,7 +382,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             <FormMessage />
         </FormItem>
 
-        {isSubmitting && newFiles.length > 0 && (
+        {isSubmitting && (newFiles.length > 0 || isEditMode) && (
           <Progress value={uploadProgress} className="w-full" />
         )}
         
