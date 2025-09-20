@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, updateDoc, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, updateDoc, orderBy, where } from 'firebase/firestore';
 import Image from 'next/image';
 import { db } from '@/lib/firebase';
 import type { Ad } from '@/lib/types';
@@ -48,7 +48,12 @@ export default function AdManagementPage() {
                 return;
             }
 
-            const q = query(collection(db, "ads"), orderBy('createdAt', 'desc'));
+            const q = query(
+                collection(db, "ads"), 
+                where('status', '==', 'pending'), 
+                orderBy('createdAt', 'desc')
+            );
+
             const unsubscribe = onSnapshot(q, (querySnapshot) => {
                 const adsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ad));
                 setAds(adsList);
@@ -123,7 +128,6 @@ export default function AdManagementPage() {
                                     variant="destructive"
                                     size="sm"
                                     onClick={() => handleUpdateStatus(ad.id, 'rejected')}
-                                    disabled={ad.status === 'rejected'}
                                 >
                                     <X className="mr-1 h-4 w-4" /> नाकारा
                                 </Button>
@@ -131,7 +135,6 @@ export default function AdManagementPage() {
                                     variant="default"
                                     size="sm"
                                     onClick={() => handleUpdateStatus(ad.id, 'approved')}
-                                    disabled={ad.status === 'approved'}
                                 >
                                     <Check className="mr-1 h-4 w-4" /> स्वीकृत करा
                                 </Button>
@@ -139,7 +142,7 @@ export default function AdManagementPage() {
                         </Card>
                     )) : (
                         <div className="text-center text-muted-foreground mt-8 rounded-lg border-2 border-dashed py-12">
-                            <p className="text-lg font-semibold">कोणत्याही जाहिराती आढळल्या नाहीत.</p>
+                            <p className="text-lg font-semibold">कोणत्याही प्रलंबित जाहिराती नाहीत.</p>
                             <p className="text-sm">जेव्हा वापरकर्ते जाहिराती सबमिट करतील, तेव्हा त्या येथे दिसतील.</p>
                         </div>
                     )}
