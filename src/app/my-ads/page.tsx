@@ -122,12 +122,13 @@ export default function MyAdsPage() {
                                     <CardContent className="flex-grow p-3">
                                         <h3 className="font-semibold">{ad.title}</h3>
                                         <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
+
                                         <Badge variant={getStatusVariant(ad.status)} className="mt-1">
                                             {statusTranslations[ad.status]}
                                         </Badge>
                                     </CardContent>
                                     <CardFooter className="p-3 space-x-2">
-                                        <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)} disabled={ad.status === 'approved'}>
+                                        <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
                                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
