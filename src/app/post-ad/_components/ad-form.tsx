@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Label } from '@/components/ui/label';
 import { Loader2, Sparkles, Upload, X as XIcon } from 'lucide-react';
 import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +18,7 @@ import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/fi
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import type { Ad } from '@/lib/types';
@@ -41,6 +40,46 @@ type AdFormProps = {
     existingAd?: Ad;
 };
 
+// Helper function to upload files and track progress
+const uploadFiles = (
+    files: File[],
+    userId: string,
+    onProgress: (progress: number) => void
+): Promise<string[]> => {
+    const uploadPromises = files.map((file) => {
+        const fileName = `${userId}-${Date.now()}-${file.name}`;
+        const storageRef = ref(storage, `ad-photos/${fileName}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        return new Promise<string>((resolve, reject) => {
+            uploadTask.on('state_changed',
+                (snapshot: UploadTaskSnapshot) => {
+                    // This is for individual file progress, which we can use to calculate total progress
+                },
+                (error) => reject(error),
+                async () => {
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    resolve(downloadURL);
+                }
+            );
+        });
+    });
+
+    // Simple progress tracking
+    let completed = 0;
+    uploadPromises.forEach(p => {
+        p.then(() => {
+            completed++;
+            const progress = (completed / files.length) * 100;
+            onProgress(progress);
+        });
+    });
+
+
+    return Promise.all(uploadPromises);
+};
+
+
 export default function AdForm({ existingAd }: AdFormProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
@@ -50,6 +89,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -127,10 +167,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const removeFile = (index: number) => {
     if (index < existingPhotos.length) {
-        // This is an existing photo
         setExistingPhotos(current => current.filter((_, i) => i !== index));
     } else {
-        // This is a new file
         const newFileIndex = index - existingPhotos.length;
         setNewFiles(current => current.filter((_, i) => i !== newFileIndex));
     }
@@ -167,31 +205,15 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
     
     setIsSubmitting(true);
+    setUploadProgress(0);
 
     try {
         let uploadedUrls: string[] = [];
         
         if (newFiles.length > 0) {
-            const uploadPromises = newFiles.map((file) => {
-                const fileName = `${user.uid}-${Date.now()}-${file.name}`;
-                const storageRef = ref(storage, `ad-photos/${fileName}`);
-                const uploadTask = uploadBytesResumable(storageRef, file);
-
-                return new Promise<string>((resolve, reject) => {
-                    uploadTask.on('state_changed',
-                        (snapshot) => {
-                           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                           // This state update was causing the hang, so it's removed.
-                        },
-                        (error) => reject(error),
-                        async () => {
-                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                            resolve(downloadURL);
-                        }
-                    );
-                });
+            uploadedUrls = await uploadFiles(newFiles, user.uid, (progress) => {
+                setUploadProgress(progress);
             });
-            uploadedUrls = await Promise.all(uploadPromises);
         }
         
         const finalPhotoURLs = [...existingPhotos, ...uploadedUrls];
@@ -202,8 +224,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
             await updateDoc(adDocRef, {
                 ...data,
                 photos: finalPhotoURLs,
-                status: 'pending', // Always reset to pending on update
-                rejectionReason: '', // Clear any previous rejection reason
+                status: 'pending', 
+                rejectionReason: '', 
             });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
 
@@ -219,10 +241,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
         }
         
-        form.reset();
-        setNewFiles([]);
-        setPreviews([]);
-        setExistingPhotos([]);
         router.push('/my-ads');
 
     } catch (error) {
@@ -374,6 +392,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
             </FormControl>
             <FormMessage />
         </FormItem>
+
+        {isSubmitting && newFiles.length > 0 && (
+          <Progress value={uploadProgress} className="w-full" />
+        )}
         
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
