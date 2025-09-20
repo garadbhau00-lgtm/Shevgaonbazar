@@ -104,12 +104,14 @@ export default function MyAdsPage() {
                                 <div className='flex items-center w-full'>
                                     <CardHeader className="flex-shrink-0 p-2">
                                         <div className="relative h-20 w-20">
-                                            <Image
-                                                src={ad.photos[0]}
-                                                alt={ad.title}
-                                                fill
-                                                className="rounded-md object-cover"
-                                            />
+                                            {ad.photos && ad.photos.length > 0 && (
+                                                <Image
+                                                    src={ad.photos[0]}
+                                                    alt={ad.title}
+                                                    fill
+                                                    className="rounded-md object-cover"
+                                                />
+                                            )}
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex-grow p-3">
