@@ -17,13 +17,15 @@ export default function AdCard({ ad }: AdCardProps) {
   return (
     <Card className="flex flex-col overflow-hidden shadow-md transition-shadow hover:shadow-lg">
       <div className="relative aspect-[4/3]">
-        <Image
-          src={ad.photos[0]}
-          alt={ad.title}
-          fill
-          className="object-cover"
-          data-ai-hint={getAdImageHint(ad.photos[0])}
-        />
+        {ad.photos && ad.photos.length > 0 && (
+            <Image
+              src={ad.photos[0]}
+              alt={ad.title}
+              fill
+              className="object-cover"
+              data-ai-hint={getAdImageHint(ad.photos[0])}
+            />
+        )}
       </div>
       <CardContent className="flex-grow p-3">
         <h3 className="font-semibold truncate">{ad.title}</h3>
