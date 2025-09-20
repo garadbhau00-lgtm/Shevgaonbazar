@@ -221,21 +221,22 @@ export default function AdForm({ existingAd }: AdFormProps) {
         const finalPhotoURLs = [...existingKeptUrls, ...uploadedUrls];
 
 
-        const adData = {
-            ...data,
-            photos: finalPhotoURLs,
-            status: 'pending', // Always reset to pending on create/update
-            rejectionReason: '', // Clear any previous rejection reason
-        };
-
         if (isEditMode && existingAd) {
             const adDocRef = doc(db, 'ads', existingAd.id);
-            await updateDoc(adDocRef, adData);
+            await updateDoc(adDocRef, {
+                ...data,
+                photos: finalPhotoURLs,
+                status: 'pending', // Always reset to pending on update
+                rejectionReason: '', // Clear any previous rejection reason
+            });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
 
         } else {
              await addDoc(collection(db, 'ads'), {
-                ...adData,
+                ...data,
+                photos: finalPhotoURLs,
+                status: 'pending',
+                rejectionReason: '',
                 userId: user.uid,
                 createdAt: serverTimestamp(),
             });
