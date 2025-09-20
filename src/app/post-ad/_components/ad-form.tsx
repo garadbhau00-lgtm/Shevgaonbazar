@@ -56,7 +56,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const form = useForm<AdFormValues>({
     resolver: zodResolver(adSchema),
-    defaultValues: {
+    defaultValues: isEditMode ? {
+        title: existingAd.title,
+        description: existingAd.description,
+        category: existingAd.category,
+        price: existingAd.price,
+        location: existingAd.location,
+    } : {
       title: '',
       description: '',
       price: undefined,
@@ -73,6 +79,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             price: existingAd.price,
             location: existingAd.location,
         });
+        setPreviews(existingAd.photos);
     }
   }, [isEditMode, existingAd, form]);
 
@@ -107,22 +114,28 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
 
-  const removeFile = (index: number, isExisting: boolean) => {
-    if (isExisting) {
-        setPreviews(prev => prev.filter((_, i) => i !== index));
-    } else {
-        const fileIndex = index - (previews.length - files.length);
-        setFiles(prev => prev.filter((_, i) => i !== fileIndex));
-        setPreviews(prev => {
-            const newPreviews = prev.filter((_, i) => i !== index);
-            URL.revokeObjectURL(previews[index]);
-            return newPreviews;
-        });
+  const removeFile = (index: number) => {
+    const newPreviews = [...previews];
+    const removedPreview = newPreviews.splice(index, 1)[0];
+    setPreviews(newPreviews);
+
+    // If the removed preview was a newly added file (blob URL)
+    if (removedPreview.startsWith('blob:')) {
+        const fileIndex = files.findIndex(file => URL.createObjectURL(file) === removedPreview);
+        if (fileIndex !== -1) {
+            const newFiles = [...files];
+            newFiles.splice(fileIndex, 1);
+            setFiles(newFiles);
+        }
+        URL.revokeObjectURL(removedPreview);
     }
+    // No special handling needed for existing URLs (http), they are just removed from the preview state
+    // and will be excluded from finalPhotoURLs during submission.
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
   };
+
 
   const handleSuggestion = async () => {
     const description = form.getValues('description');
@@ -153,10 +166,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setUploadProgress(0);
 
     try {
-        let finalPhotoURLs = existingAd?.photos.filter(p => previews.includes(p)) || [];
-        
-        if (files.length > 0) {
-            const uploadPromises: Promise<string>[] = files.map((file, index) => {
+        // Keep existing photos that are still in the previews array
+        let finalPhotoURLs = isEditMode ? existingAd.photos.filter(p => previews.includes(p)) : [];
+
+        // Identify new files to upload
+        const newFilesToUpload = files.filter(file => previews.includes(URL.createObjectURL(file)));
+
+        if (newFilesToUpload.length > 0) {
+            const uploadPromises: Promise<string>[] = newFilesToUpload.map((file, index) => {
                 const storageRef = ref(storage, `ad-photos/${user.uid}/${Date.now()}-${file.name}`);
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -164,8 +181,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     uploadTask.on('state_changed',
                         (snapshot) => {
                             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            const totalProgress = ((finalPhotoURLs.length + index + (progress / 100)) / (finalPhotoURLs.length + files.length)) * 100;
-                            setUploadProgress(totalProgress);
+                            // A more accurate progress calculation for multiple files
+                            const overallProgress = ((finalPhotoURLs.length + index + (progress / 100)) / (finalPhotoURLs.length + newFilesToUpload.length)) * 100;
+                            setUploadProgress(overallProgress);
                         },
                         (error) => {
                             console.error(`Upload failed for ${file.name}:`, error);
@@ -186,7 +204,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
             const newPhotoURLs = await Promise.all(uploadPromises);
             finalPhotoURLs = [...finalPhotoURLs, ...newPhotoURLs];
         }
-
 
         if (isEditMode) {
             const adDocRef = doc(db, 'ads', existingAd.id);
@@ -322,7 +339,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
             {previews.length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
                     {previews.map((src, index) => {
-                        const isExisting = src.startsWith('https');
                         return (
                             <div key={index} className="relative aspect-square">
                                 <Image src={src} alt={`Preview ${index}`} fill className="rounded-md object-cover" />
@@ -331,7 +347,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                                     variant="destructive"
                                     size="icon"
                                     className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                                    onClick={() => removeFile(index, isExisting)}
+                                    onClick={() => removeFile(index)}
                                     disabled={isSubmitting}
                                 >
                                     <XIcon className="h-4 w-4" />
@@ -381,3 +397,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
