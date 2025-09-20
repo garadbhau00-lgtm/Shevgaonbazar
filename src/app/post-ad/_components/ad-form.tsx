@@ -103,13 +103,15 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      if (previews.length + newFiles.length > MAX_FILES) {
+      const newFilesArray = Array.from(e.target.files);
+      if (previews.length + newFilesArray.length > MAX_FILES) {
         toast({ variant: 'destructive', title: `तुम्ही कमाल ${MAX_FILES} फोटो निवडू शकता.` });
         return;
       }
-      const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
-      setFiles(prev => [...prev, ...newFiles]);
+      
+      const newFilePreviews = newFilesArray.map(file => URL.createObjectURL(file));
+      
+      setFiles(prev => [...prev, ...newFilesArray]);
       setPreviews(prev => [...prev, ...newFilePreviews]);
     }
   };
@@ -119,9 +121,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
     const removedPreview = newPreviews.splice(index, 1)[0];
     setPreviews(newPreviews);
 
+    // This checks if the removed preview was a blob URL (a new file) or an existing URL
     if (removedPreview.startsWith('blob:')) {
-        // Find the corresponding file in the `files` array and remove it
-        const fileIndexToRemove = files.findIndex(file => URL.createObjectURL(file) === removedPreview);
+        // Find the corresponding file in the `files` state by finding the preview URL that matches.
+        const fileIndexToRemove = previews.indexOf(removedPreview) - (previews.length - files.length);
+
         if (fileIndexToRemove > -1) {
             const newFiles = [...files];
             newFiles.splice(fileIndexToRemove, 1);
@@ -134,6 +138,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         URL.revokeObjectURL(removedPreview);
     }
     
+    // Reset the file input so the same file can be re-selected if needed
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -169,18 +174,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setUploadProgress(0);
 
     try {
-        let finalPhotoURLs: string[] = [];
-
-        // In edit mode, start with the existing photos that are still in the preview array
-        if (isEditMode) {
-             finalPhotoURLs = previews.filter(p => !p.startsWith('blob:'));
-        }
+        // Start with existing photos if in edit mode, filtering out any that were removed
+        let finalPhotoURLs: string[] = isEditMode ? previews.filter(p => !p.startsWith('blob:')) : [];
 
         const newFilesToUpload = files;
 
         if (newFilesToUpload.length > 0) {
-            const individualProgress: { [key: string]: number } = {};
-            const totalFiles = newFilesToUpload.length;
+            const totalSize = newFilesToUpload.reduce((acc, file) => acc + file.size, 0);
+            let uploadedSize = 0;
 
             const uploadPromises: Promise<string>[] = newFilesToUpload.map((file) => {
                 const storageRef = ref(storage, `ad-photos/${user.uid}/${Date.now()}-${file.name}`);
@@ -189,9 +190,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 return new Promise((resolve, reject) => {
                     uploadTask.on('state_changed',
                         (snapshot) => {
-                            individualProgress[file.name] = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            const totalProgress = Object.values(individualProgress).reduce((acc, prog) => acc + prog, 0);
-                            setUploadProgress(totalProgress / totalFiles);
+                            // This part is tricky to get right for multiple files.
+                            // A simpler approach is to update progress on file completion.
                         },
                         (error) => {
                             console.error(`Upload failed for ${file.name}:`, error);
@@ -200,6 +200,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                         async () => {
                             try {
                                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                                uploadedSize += file.size;
+                                setUploadProgress((uploadedSize / totalSize) * 100);
                                 resolve(downloadURL);
                             } catch(error) {
                                 reject(error);
@@ -212,23 +214,25 @@ export default function AdForm({ existingAd }: AdFormProps) {
             const newPhotoURLs = await Promise.all(uploadPromises);
             finalPhotoURLs = [...finalPhotoURLs, ...newPhotoURLs];
         }
+        
+        setUploadProgress(100);
+
+        const adData = {
+            ...data,
+            photos: finalPhotoURLs,
+            status: 'pending', // Always reset to pending on create/update
+            rejectionReason: '', // Clear any previous rejection reason
+        };
 
         if (isEditMode) {
             const adDocRef = doc(db, 'ads', existingAd.id);
-            await updateDoc(adDocRef, {
-                ...data,
-                photos: finalPhotoURLs,
-                status: 'pending', 
-                rejectionReason: '', 
-            });
+            await updateDoc(adDocRef, adData);
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
 
         } else {
              await addDoc(collection(db, 'ads'), {
-                ...data,
+                ...adData,
                 userId: user.uid,
-                photos: finalPhotoURLs,
-                status: 'pending',
                 createdAt: serverTimestamp(),
             });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
@@ -407,4 +411,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
 }
 
     
+    
+
     
