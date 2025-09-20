@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -39,7 +39,7 @@ type AdFormProps = {
     existingAd?: Ad;
 };
 
-const MAX_FILES = 2;
+const MAX_FILES = 1;
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -47,9 +47,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
-  const [existingPhotos, setExistingPhotos] = useState<string[]>(existingAd?.photos || []);
-  const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(existingAd?.photos?.[0] || null);
+  const [newFile, setNewFile] = useState<File | null>(null);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,16 +70,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
       location: '',
     },
   });
-
+  
   useEffect(() => {
-    const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
-    setPreviews([...existingPhotos, ...newFilePreviews]);
-
-    return () => {
-        newFilePreviews.forEach(p => URL.revokeObjectURL(p));
+    if (newFile) {
+        const newPreview = URL.createObjectURL(newFile);
+        setPhotoPreview(newPreview);
+        return () => URL.revokeObjectURL(newPreview);
     }
-  }, [existingPhotos, newFiles]);
-
+  }, [newFile]);
 
   if (authLoading) {
       return (
@@ -101,26 +98,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const incomingFiles = Array.from(e.target.files);
-      if (existingPhotos.length + newFiles.length + incomingFiles.length > MAX_FILES) {
-        toast({
-          variant: 'destructive',
-          title: 'फोटो मर्यादा ओलांडली',
-          description: `तुम्ही केवळ ${MAX_FILES} फोटो अपलोड करू शकता.`,
-        });
-        return;
-      }
-      setNewFiles(prev => [...prev, ...incomingFiles]);
+    if (e.target.files && e.target.files.length > 0) {
+      setNewFile(e.target.files[0]);
     }
   };
 
-  const removePhoto = (index: number) => {
-    if (index < existingPhotos.length) {
-        setExistingPhotos(prev => prev.filter((_, i) => i !== index));
-    } else {
-        setNewFiles(prev => prev.filter((_, i) => i !== (index - existingPhotos.length)));
-    }
+  const removePhoto = () => {
+    setNewFile(null);
+    setPhotoPreview(null);
   };
 
   const handleSuggestion = async () => {
@@ -143,43 +128,58 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
   
     const uploadImage = async (file: File): Promise<string> => {
-        const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-        return downloadURL;
+        return new Promise((resolve, reject) => {
+            const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}_${file.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    // Optional: handle progress
+                },
+                (error) => {
+                    console.error("Upload failed:", error);
+                    reject(error);
+                },
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then(downloadURL => {
+                        resolve(downloadURL);
+                    }).catch(reject);
+                }
+            );
+        });
     };
 
     const onSubmit = async (data: AdFormValues) => {
         if (!user) return;
 
-        if (newFiles.length === 0 && existingPhotos.length === 0) {
-            toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
+        if (!newFile && !photoPreview) {
+            toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
             return;
         }
         
         setIsSubmitting(true);
         
         try {
-            const uploadPromises = newFiles.map(file => uploadImage(file));
-            const newPhotoUrls = await Promise.all(uploadPromises);
+            let finalPhotoURL = photoPreview;
 
-            const finalPhotoURLs = [...existingPhotos, ...newPhotoUrls];
+            if (newFile) {
+                 finalPhotoURL = await uploadImage(newFile);
+            }
+           
+            const adData = {
+                ...data,
+                photos: finalPhotoURL ? [finalPhotoURL] : [],
+                status: 'pending' as const,
+                rejectionReason: '',
+            };
 
             if (isEditMode && existingAd) {
                 const adDocRef = doc(db, 'ads', existingAd.id);
-                await updateDoc(adDocRef, {
-                    ...data,
-                    photos: finalPhotoURLs,
-                    status: 'pending', 
-                    rejectionReason: '',
-                });
+                await updateDoc(adDocRef, adData);
                 toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
             } else {
                 await addDoc(collection(db, 'ads'), {
-                    ...data,
-                    photos: finalPhotoURLs,
-                    status: 'pending',
-                    rejectionReason: '',
+                    ...adData,
                     userId: user.uid,
                     createdAt: serverTimestamp(),
                 });
@@ -289,23 +289,23 @@ export default function AdForm({ existingAd }: AdFormProps) {
         <FormItem>
             <FormLabel>फोटो</FormLabel>
             <div className="flex flex-wrap gap-4">
-                {previews.map((src, index) => (
-                    <div key={index} className="relative w-32 aspect-square">
-                        <Image src={src} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
+                {photoPreview && (
+                    <div className="relative w-32 aspect-square">
+                        <Image src={photoPreview} alt="Preview" fill className="rounded-md object-cover" />
                         <Button
                             type="button"
                             variant="destructive"
                             size="icon"
                             className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                            onClick={() => removePhoto(index)}
+                            onClick={removePhoto}
                             disabled={isSubmitting}
                         >
                             <XIcon className="h-4 w-4" />
                         </Button>
                     </div>
-                ))}
+                )}
 
-                {previews.length < MAX_FILES && (
+                {!photoPreview && (
                     <FormControl>
                         <div 
                             className={cn(
@@ -318,8 +318,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                             <p className="mt-2 text-sm text-muted-foreground text-center">फोटो अपलोड करा</p>
                             <Input 
                                 ref={fileInputRef}
-                                type="file" 
-                                multiple
+                                type="file"
                                 className="hidden" 
                                 accept="image/*" 
                                 onChange={handleFileChange} 
@@ -329,7 +328,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     </FormControl>
                 )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">तुम्ही {MAX_FILES} पर्यंत फोटो अपलोड करू शकता.</p>
+            <p className="text-xs text-muted-foreground mt-1">तुम्ही {MAX_FILES} फोटो अपलोड करू शकता.</p>
             <FormMessage />
         </FormItem>
 
