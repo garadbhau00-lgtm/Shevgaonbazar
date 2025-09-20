@@ -40,6 +40,15 @@ type AdFormProps = {
 
 const MAX_FILES = 1;
 
+const fileToDataUri = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
 export default function AdForm({ existingAd }: AdFormProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
@@ -137,12 +146,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let finalPhotoURL = photoPreview;
+        let finalPhotoURL: string | null = photoPreview;
 
         if (newFile) {
-            // Create a unique seed from file name and size for a consistent placeholder
-            const seed = `${newFile.name}${newFile.size}`.replace(/[^a-zA-Z0-9]/g, '');
-            finalPhotoURL = `https://picsum.photos/seed/${seed}/600/400`;
+            finalPhotoURL = await fileToDataUri(newFile);
         }
        
         const adData = {
@@ -165,12 +172,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
         }
         router.push('/my-ads');
-    } catch (error) {
+    } catch (error: any) {
         console.error("Submission failed:", error);
+        let description = "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
+        if (error.message && error.message.includes('longer than 1048487 bytes')) {
+            description = "फोटो खूप मोठा आहे. कृपया 1MB पेक्षा लहान फोटो अपलोड करा.";
+        }
         toast({
             variant: "destructive",
             title: "त्रुटी!",
-            description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+            description: description,
         });
     } finally {
         setIsSubmitting(false);
