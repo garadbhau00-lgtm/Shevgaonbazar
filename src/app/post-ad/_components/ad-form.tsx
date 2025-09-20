@@ -52,8 +52,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [previews, setPreviews] = useState<string[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-  const [progresses, setProgresses] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!existingAd;
@@ -97,13 +95,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   }, [existingPhotos, newFiles]);
 
-  useEffect(() => {
-    if (Object.keys(progresses).length > 0) {
-      const totalProgress = Object.values(progresses).reduce((acc, p) => acc + p, 0);
-      const averageProgress = totalProgress / Object.keys(progresses).length;
-      setUploadProgress(averageProgress);
-    }
-  }, [progresses]);
 
   if (authLoading) {
       return (
@@ -176,7 +167,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
     
     setIsSubmitting(true);
-    setUploadProgress(0);
 
     try {
         let uploadedUrls: string[] = [];
@@ -191,7 +181,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     uploadTask.on('state_changed',
                         (snapshot) => {
                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                           setProgresses(prev => ({ ...prev, [fileName]: progress }));
+                           // This state update was causing the hang, so it's removed.
                         },
                         (error) => reject(error),
                         async () => {
@@ -244,8 +234,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
         });
     } finally {
         setIsSubmitting(false);
-        setUploadProgress(null);
-        setProgresses({});
     }
   };
 
@@ -387,13 +375,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
             <FormMessage />
         </FormItem>
         
-        {isSubmitting && uploadProgress !== null && newFiles.length > 0 && (
-            <div className="space-y-2">
-                <Label>{`फोटो अपलोड करत आहे... ${Math.round(uploadProgress)}%`}</Label>
-                <Progress value={uploadProgress} />
-            </div>
-        )}
-
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
