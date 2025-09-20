@@ -346,6 +346,4 @@ export default function AdForm({ existingAd }: AdFormProps) {
   );
 }
 
-  
-
     
