@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const handleLogout = useCallback(async () => {
         try {
             await signOut(auth);
-            // This will trigger the onAuthStateChanged listener, which will update state.
+            // The onAuthStateChanged listener will handle state updates and toasts.
         } catch (error) {
             console.error("Logout error", error);
             toast({ variant: 'destructive', title: 'लॉगआउट अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
@@ -56,21 +56,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 await setDoc(userDocRef, {
                     uid: user.uid,
                     email: user.email,
-                    name: user.displayName,
+                    name: user.displayName || user.email?.split('@')[0],
                     role: userRole,
                     disabled: false,
                     createdAt: serverTimestamp(),
                 });
-                toast({
-                    title: "खाते तयार झाले!",
-                    description: `तुम्ही आता '${userRole}' म्हणून लॉग इन आहात.`,
-                });
-            } else {
-                 toast({
-                    title: "लॉगिन यशस्वी!",
-                    description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
-                });
             }
+            // The onAuthStateChanged listener will handle toast and redirects
         } catch (error: any) {
             console.error("Google sign-in error", error);
             if (error.code === 'auth/popup-closed-by-user') {
@@ -89,51 +81,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let unsubscribeSnapshot: Unsubscribe | undefined;
 
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+            // First, cleanup any existing snapshot listener
             if (unsubscribeSnapshot) {
                 unsubscribeSnapshot();
                 unsubscribeSnapshot = undefined;
             }
-
+            
+            // If a user is logged in
             if (firebaseUser) {
+                const wasAlreadyLoggedIn = !!user; // Check if there was a user before this change
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
+
                 unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const profileData = docSnap.data() as UserProfile;
                         if (profileData.disabled) {
                             toast({ variant: 'destructive', title: 'खाते अक्षम केले आहे', description: 'तुमचे खाते प्रशासकाने अक्षम केले आहे.' });
-                            handleLogout(); // This will log the user out
+                            handleLogout(); // This will trigger another auth state change to logged out
                         } else {
                             setUser(firebaseUser);
                             setUserProfile(profileData);
                             setLoading(false);
+                            if (!wasAlreadyLoggedIn) { // Only toast on new login
+                                 toast({
+                                    title: "लॉगिन यशस्वी!",
+                                    description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+                                });
+                            }
                         }
                     } else {
-                        setUserProfile(null);
-                        setLoading(false);
+                        // This case can happen if the user's record is deleted from Firestore while they are logged in.
+                        handleLogout();
                     }
                 }, (error) => {
-                    console.error("Error in snapshot listener:", error);
-                    setUser(null);
-                    setUserProfile(null);
-                    setLoading(false);
+                    console.error("Error in profile snapshot listener:", error);
+                    handleLogout();
                 });
-            } else {
+
+            } else { // If user is logged out
+                if (user) { // Only show toast if there was a user before
+                    toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
+                }
                 setUser(null);
                 setUserProfile(null);
                 setLoading(false);
-                if (user) { 
-                    toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
-                }
             }
         });
 
+        // Cleanup function for the auth listener
         return () => {
             unsubscribeAuth();
             if (unsubscribeSnapshot) {
                 unsubscribeSnapshot();
             }
         };
-    }, [handleLogout, user, toast, router]);
+    // The dependency array is intentionally sparse. 
+    // We want this to run once and handle its own state.
+    // handleLogout is memoized with useCallback.
+    // `user` is added to correctly toast on logout.
+    }, [user, handleLogout, toast]);
 
     return (
         <AuthContext.Provider value={{ user, userProfile, loading, handleLogout, handleGoogleSignIn }}>

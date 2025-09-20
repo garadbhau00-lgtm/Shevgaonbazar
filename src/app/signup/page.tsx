@@ -78,11 +78,9 @@ export default function SignupPage() {
                 createdAt: serverTimestamp(),
             });
 
-            toast({
-                title: "खाते तयार झाले!",
-                description: `तुम्ही आता लॉग इन करू शकता.`,
-            });
-            router.push('/login');
+            // No toast here, useAuth will handle it.
+            // No redirect here, useAuth will handle it.
+            
         } catch (error: any) {
             let message = "खाते तयार करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
             if (error.code === 'auth/email-already-in-use') {
