@@ -173,20 +173,25 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
         // In edit mode, start with the existing photos that are still in the preview array
         if (isEditMode) {
-             finalPhotoURLs = existingAd.photos.filter(p => previews.includes(p));
+             finalPhotoURLs = previews.filter(p => !p.startsWith('blob:'));
         }
 
-        if (files.length > 0) {
-            const uploadPromises: Promise<string>[] = files.map((file, index) => {
+        const newFilesToUpload = files;
+
+        if (newFilesToUpload.length > 0) {
+            const individualProgress: { [key: string]: number } = {};
+            const totalFiles = newFilesToUpload.length;
+
+            const uploadPromises: Promise<string>[] = newFilesToUpload.map((file) => {
                 const storageRef = ref(storage, `ad-photos/${user.uid}/${Date.now()}-${file.name}`);
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
                 return new Promise((resolve, reject) => {
                     uploadTask.on('state_changed',
                         (snapshot) => {
-                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            const overallProgress = ((index + (progress / 100)) / files.length) * 100;
-                            setUploadProgress(overallProgress);
+                            individualProgress[file.name] = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            const totalProgress = Object.values(individualProgress).reduce((acc, prog) => acc + prog, 0);
+                            setUploadProgress(totalProgress / totalFiles);
                         },
                         (error) => {
                             console.error(`Upload failed for ${file.name}:`, error);
@@ -401,4 +406,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
   );
 }
 
+    
     
