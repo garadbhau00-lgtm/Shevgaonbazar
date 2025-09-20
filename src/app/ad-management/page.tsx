@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, updateDoc, orderBy, where } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, updateDoc, where } from 'firebase/firestore';
 import Image from 'next/image';
 import { db } from '@/lib/firebase';
 import type { Ad } from '@/lib/types';
@@ -56,12 +56,13 @@ export default function AdManagementPage() {
 
             const q = query(
                 collection(db, "ads"), 
-                where('status', '==', 'pending'), 
-                orderBy('createdAt', 'desc')
+                where('status', '==', 'pending')
             );
 
             const unsubscribe = onSnapshot(q, (querySnapshot) => {
-                const adsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ad));
+                const adsList = querySnapshot.docs
+                  .map(doc => ({ id: doc.id, ...doc.data() } as Ad))
+                  .sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
                 setAds(adsList);
                 setPageLoading(false);
             }, (error) => {

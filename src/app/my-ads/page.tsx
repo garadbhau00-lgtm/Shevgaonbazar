@@ -11,7 +11,7 @@ import { Edit, Loader2, Trash2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -55,12 +55,13 @@ export default function MyAdsPage() {
 
         const q = query(
             collection(db, 'ads'),
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
+            where('userId', '==', user.uid)
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const adsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ad));
+            const adsData = querySnapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as Ad))
+                .sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
             setMyAds(adsData);
             setAdsLoading(false);
         }, (error) => {
