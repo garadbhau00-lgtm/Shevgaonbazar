@@ -19,7 +19,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytesResumable, UploadTask } from 'firebase/storage';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 
@@ -149,18 +149,39 @@ export default function AdForm() {
     setUploadProgress(0);
 
     try {
-        const photoURLs: string[] = [];
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
+        const uploadPromises: Promise<string>[] = files.map((file, index) => {
             const storageRef = ref(storage, `ad-photos/${user.uid}/${Date.now()}-${file.name}`);
-            
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
-            photoURLs.push(downloadURL);
-            
-            // Update progress after each file upload
-            setUploadProgress(((i + 1) / files.length) * 100);
-        }
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            return new Promise((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        // This logic calculates the total progress for all files.
+                        // It assumes each file contributes equally to the total progress.
+                        // We update a general progress, not per file.
+                        // A simple approach is to show the progress of the current file being uploaded,
+                        // or average it out. Let's average it.
+                        const totalProgress = (index + (progress / 100)) / files.length * 100;
+                        setUploadProgress(totalProgress);
+                    },
+                    (error) => {
+                        console.error(`Upload failed for ${file.name}:`, error);
+                        reject(error);
+                    },
+                    async () => {
+                        try {
+                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            resolve(downloadURL);
+                        } catch(error) {
+                            reject(error);
+                        }
+                    }
+                );
+            });
+        });
+        
+        const photoURLs = await Promise.all(uploadPromises);
 
         const result = await createAd({
             ...data,
@@ -343,3 +364,5 @@ export default function AdForm() {
     </Form>
   );
 }
+
+    
