@@ -101,25 +101,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const incomingFiles = Array.from(e.target.files);
-      const totalFiles = existingPhotos.length + newFiles.length + incomingFiles.length;
-      if (totalFiles > MAX_FILES) {
-        toast({ variant: 'destructive', title: `तुम्ही कमाल ${MAX_FILES} फोटो निवडू शकता.` });
-        return;
-      }
-      setNewFiles(prev => [...prev, ...incomingFiles]);
+    if (e.target.files && e.target.files.length > 0) {
+      const incomingFile = e.target.files[0];
+      setExistingPhotos([]); // Clear existing photos
+      setNewFiles([incomingFile]); // Set the new file
     }
   };
 
-  const removeFile = (index: number) => {
-    if (index < existingPhotos.length) {
-        setExistingPhotos(current => current.filter((_, i) => i !== index));
-    } else {
-        const newFileIndex = index - existingPhotos.length;
-        setNewFiles(current => current.filter((_, i) => i !== newFileIndex));
-    }
-    
+  const removeFile = () => {
+    setExistingPhotos([]);
+    setNewFiles([]);
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -158,7 +149,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         if (!user) return;
 
         if (newFiles.length === 0 && existingPhotos.length === 0) {
-            toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
+            toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
             return;
         }
         
@@ -204,7 +195,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         }
     };
 
-  const MAX_FILES = 5;
+  const MAX_FILES = 1;
 
   return (
     <Form {...form}>
@@ -296,49 +287,43 @@ export default function AdForm({ existingAd }: AdFormProps) {
         />
         <FormItem>
             <FormLabel>फोटो</FormLabel>
-            {previews.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                    {previews.map((src, index) => {
-                        return (
-                            <div key={index} className="relative aspect-square">
-                                <Image src={src} alt={`Preview ${index}`} fill className="rounded-md object-cover" />
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                                    onClick={() => removeFile(index)}
-                                    disabled={isSubmitting}
-                                >
-                                    <XIcon className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        )
-                    })}
+            {previews.length > 0 ? (
+                <div className="relative w-40 aspect-square">
+                    <Image src={previews[0]} alt="Preview" fill className="rounded-md object-cover" />
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                        onClick={removeFile}
+                        disabled={isSubmitting}
+                    >
+                        <XIcon className="h-4 w-4" />
+                    </Button>
                 </div>
+            ) : (
+                <FormControl>
+                    <div 
+                        className={cn(
+                            "flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+                           isSubmitting ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
+                        )}
+                        onClick={() => !isSubmitting && fileInputRef.current?.click()}
+                    >
+                         <Upload className="h-8 w-8 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">फोटो अपलोड करण्यासाठी क्लिक करा</p>
+                        <p className="text-xs text-muted-foreground">(केवळ १ फोटो)</p>
+                        <Input 
+                            ref={fileInputRef}
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*" 
+                            onChange={handleFileChange} 
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                </FormControl>
             )}
-            <FormControl>
-                <div 
-                    className={cn(
-                        "flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
-                        (previews.length >= MAX_FILES || isSubmitting) ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
-                    )}
-                    onClick={() => !(previews.length >= MAX_FILES || isSubmitting) && fileInputRef.current?.click()}
-                >
-                     <Upload className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">फोटो अपलोड करण्यासाठी क्लिक करा</p>
-                    <p className="text-xs text-muted-foreground">(कमाल {MAX_FILES})</p>
-                    <Input 
-                        ref={fileInputRef}
-                        type="file" 
-                        className="hidden" 
-                        accept="image/*" 
-                        multiple 
-                        onChange={handleFileChange} 
-                        disabled={previews.length >= MAX_FILES || isSubmitting}
-                    />
-                </div>
-            </FormControl>
             <FormMessage />
         </FormItem>
         
@@ -357,5 +342,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
-
-    
