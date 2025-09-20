@@ -1,3 +1,4 @@
+
 // CORRECT FIRESTORE RULES
 // It is recommended that you copy and paste these rules into your Firebase project's
 // Firestore rules editor to ensure the app works correctly.

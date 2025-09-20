@@ -104,14 +104,18 @@ export default function MyAdsPage() {
                             <Card key={ad.id} className="flex flex-col">
                                 <div className='flex items-center w-full'>
                                     <CardHeader className="flex-shrink-0 p-2">
-                                        <div className="relative h-20 w-20">
-                                            {ad.photos && ad.photos.length > 0 && (
+                                        <div className="relative h-20 w-20 rounded-md overflow-hidden">
+                                            {ad.photos && ad.photos.length > 0 ? (
                                                 <Image
                                                     src={ad.photos[0]}
                                                     alt={ad.title}
                                                     fill
-                                                    className="rounded-md object-cover"
+                                                    className="object-cover"
                                                 />
+                                            ): (
+                                                <div className="h-full w-full bg-secondary flex items-center justify-center">
+                                                    <p className="text-xs text-muted-foreground">फोटो नाही</p>
+                                                </div>
                                             )}
                                         </div>
                                     </CardHeader>
