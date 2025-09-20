@@ -39,6 +39,8 @@ type AdFormProps = {
     existingAd?: Ad;
 };
 
+const MAX_FILES = 2;
+
 export default function AdForm({ existingAd }: AdFormProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
@@ -50,7 +52,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [previews, setPreviews] = useState<string[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!existingAd;
@@ -101,21 +102,30 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const incomingFile = e.target.files[0];
-      setExistingPhotos([]); // Clear existing photos
-      setNewFiles([incomingFile]); // Set the new file
+    if (e.target.files) {
+      const incomingFiles = Array.from(e.target.files);
+      const totalPhotos = existingPhotos.length + newFiles.length + incomingFiles.length;
+
+      if (totalPhotos > MAX_FILES) {
+        toast({
+          variant: 'destructive',
+          title: 'फोटो मर्यादा ओलांडली',
+          description: `तुम्ही केवळ ${MAX_FILES} फोटो अपलोड करू शकता.`,
+        });
+        return;
+      }
+      setNewFiles(prev => [...prev, ...incomingFiles]);
     }
   };
 
-  const removeFile = () => {
-    setExistingPhotos([]);
-    setNewFiles([]);
-    if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+  const removePhoto = (index: number) => {
+    const totalPhotos = existingPhotos.length + newFiles.length;
+    if (index < existingPhotos.length) {
+        setExistingPhotos(prev => prev.filter((_, i) => i !== index));
+    } else {
+        setNewFiles(prev => prev.filter((_, i) => i !== (index - existingPhotos.length)));
     }
   };
-
 
   const handleSuggestion = async () => {
     const description = form.getValues('description');
@@ -149,18 +159,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
         if (!user) return;
 
         if (newFiles.length === 0 && existingPhotos.length === 0) {
-            toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
+            toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
             return;
         }
         
         setIsSubmitting(true);
-        setUploadProgress(0);
-
+        
         try {
             const dataUriPromises = newFiles.map(fileToDataUri);
-            const dataUris = await Promise.all(dataUriPromises);
+            const newDataUris = await Promise.all(dataUriPromises);
 
-            const finalPhotoURLs = [...existingPhotos, ...dataUris];
+            const finalPhotoURLs = [...existingPhotos, ...newDataUris];
 
             if (isEditMode && existingAd) {
                 const adDocRef = doc(db, 'ads', existingAd.id);
@@ -194,8 +203,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
             setIsSubmitting(false);
         }
     };
-
-  const MAX_FILES = 1;
 
   return (
     <Form {...form}>
@@ -287,52 +294,50 @@ export default function AdForm({ existingAd }: AdFormProps) {
         />
         <FormItem>
             <FormLabel>फोटो</FormLabel>
-            {previews.length > 0 ? (
-                <div className="relative w-40 aspect-square">
-                    <Image src={previews[0]} alt="Preview" fill className="rounded-md object-cover" />
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                        onClick={removeFile}
-                        disabled={isSubmitting}
-                    >
-                        <XIcon className="h-4 w-4" />
-                    </Button>
-                </div>
-            ) : (
-                <FormControl>
-                    <div 
-                        className={cn(
-                            "flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
-                           isSubmitting ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
-                        )}
-                        onClick={() => !isSubmitting && fileInputRef.current?.click()}
-                    >
-                         <Upload className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">फोटो अपलोड करण्यासाठी क्लिक करा</p>
-                        <p className="text-xs text-muted-foreground">(केवळ १ फोटो)</p>
-                        <Input 
-                            ref={fileInputRef}
-                            type="file" 
-                            className="hidden" 
-                            accept="image/*" 
-                            onChange={handleFileChange} 
+            <div className="flex flex-wrap gap-4">
+                {previews.map((src, index) => (
+                    <div key={index} className="relative w-32 aspect-square">
+                        <Image src={src} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                            onClick={() => removePhoto(index)}
                             disabled={isSubmitting}
-                        />
+                        >
+                            <XIcon className="h-4 w-4" />
+                        </Button>
                     </div>
-                </FormControl>
-            )}
+                ))}
+
+                {previews.length < MAX_FILES && (
+                    <FormControl>
+                        <div 
+                            className={cn(
+                                "flex h-32 w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+                               isSubmitting ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
+                            )}
+                            onClick={() => !isSubmitting && fileInputRef.current?.click()}
+                        >
+                             <Upload className="h-8 w-8 text-muted-foreground" />
+                            <p className="mt-2 text-sm text-muted-foreground text-center">फोटो अपलोड करा</p>
+                            <Input 
+                                ref={fileInputRef}
+                                type="file" 
+                                multiple
+                                className="hidden" 
+                                accept="image/*" 
+                                onChange={handleFileChange} 
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    </FormControl>
+                )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">तुम्ही {MAX_FILES} पर्यंत फोटो अपलोड करू शकता.</p>
             <FormMessage />
         </FormItem>
-        
-        {isSubmitting && uploadProgress > 0 && (
-            <div className="space-y-2">
-                <p className="text-sm font-medium text-center">फोटो अपलोड करत आहे... {Math.round(uploadProgress)}%</p>
-                <Progress value={uploadProgress} className="w-full" />
-            </div>
-        )}
 
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -342,3 +347,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
