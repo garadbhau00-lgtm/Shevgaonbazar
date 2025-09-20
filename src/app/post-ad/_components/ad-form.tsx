@@ -15,8 +15,7 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -127,76 +126,56 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
   
-    const uploadImage = async (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}_${file.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
+  const onSubmit = async (data: AdFormValues) => {
+    if (!user) return;
 
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    // Optional: handle progress
-                },
-                (error) => {
-                    console.error("Upload failed:", error);
-                    reject(error);
-                },
-                () => {
-                    getDownloadURL(uploadTask.snapshot.ref).then(downloadURL => {
-                        resolve(downloadURL);
-                    }).catch(reject);
-                }
-            );
-        });
-    };
+    if (!newFile && !photoPreview) {
+        toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
+        return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+        let finalPhotoURL = photoPreview;
 
-    const onSubmit = async (data: AdFormValues) => {
-        if (!user) return;
-
-        if (!newFile && !photoPreview) {
-            toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
-            return;
+        if (newFile) {
+            // Create a unique seed from file name and size for a consistent placeholder
+            const seed = `${newFile.name}${newFile.size}`.replace(/[^a-zA-Z0-9]/g, '');
+            finalPhotoURL = `https://picsum.photos/seed/${seed}/600/400`;
         }
-        
-        setIsSubmitting(true);
-        
-        try {
-            let finalPhotoURL = photoPreview;
+       
+        const adData = {
+            ...data,
+            photos: finalPhotoURL ? [finalPhotoURL] : [],
+            status: 'pending' as const,
+            rejectionReason: '',
+        };
 
-            if (newFile) {
-                 finalPhotoURL = await uploadImage(newFile);
-            }
-           
-            const adData = {
-                ...data,
-                photos: finalPhotoURL ? [finalPhotoURL] : [],
-                status: 'pending' as const,
-                rejectionReason: '',
-            };
-
-            if (isEditMode && existingAd) {
-                const adDocRef = doc(db, 'ads', existingAd.id);
-                await updateDoc(adDocRef, adData);
-                toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
-            } else {
-                await addDoc(collection(db, 'ads'), {
-                    ...adData,
-                    userId: user.uid,
-                    createdAt: serverTimestamp(),
-                });
-                toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
-            }
-            router.push('/my-ads');
-        } catch (error) {
-            console.error("Submission failed:", error);
-            toast({
-                variant: "destructive",
-                title: "त्रुटी!",
-                description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया तुमच्या स्टोरेज नियमांची तपासणी करा.",
+        if (isEditMode && existingAd) {
+            const adDocRef = doc(db, 'ads', existingAd.id);
+            await updateDoc(adDocRef, adData);
+            toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
+        } else {
+            await addDoc(collection(db, 'ads'), {
+                ...adData,
+                userId: user.uid,
+                createdAt: serverTimestamp(),
             });
-        } finally {
-            setIsSubmitting(false);
+            toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
         }
-    };
+        router.push('/my-ads');
+    } catch (error) {
+        console.error("Submission failed:", error);
+        toast({
+            variant: "destructive",
+            title: "त्रुटी!",
+            description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
+};
 
   return (
     <Form {...form}>
