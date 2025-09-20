@@ -52,6 +52,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [progresses, setProgresses] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!existingAd;
@@ -71,6 +72,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
       location: '',
     },
   });
+  
+  useEffect(() => {
+    if (Object.keys(progresses).length > 0) {
+      const totalProgress = Object.values(progresses).reduce((acc, p) => acc + p, 0);
+      const averageProgress = totalProgress / Object.keys(progresses).length;
+      setUploadProgress(averageProgress);
+    }
+  }, [progresses]);
 
   useEffect(() => {
     if (isEditMode && existingAd) {
@@ -131,32 +140,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const removeFile = (index: number) => {
     const removedPreview = previews[index];
     
-    setPreviews(currentPreviews => currentPreviews.filter((_, i) => i !== index));
-
+    // Find the corresponding new file to remove if it's a blob URL
     if (removedPreview.startsWith('blob:')) {
-      // It's a new file that hasn't been uploaded yet
-      // We need to find which file in `newFiles` corresponds to this blob URL
-      const fileIndexToRemove = newFiles.findIndex(file => {
-        // This is a bit of a trick: create a temporary URL and see if it matches.
-        // It's not perfect but works for this controlled component. A more robust
-        // way would be to store { file, previewUrl } objects.
-        const url = URL.createObjectURL(file);
-        URL.revokeObjectURL(url); // clean up immediately
-        // This direct comparison won't work, we need a better link.
-        // Let's create an object array to manage files and their previews.
-        // For now, we'll assume the order is preserved.
-        // This part is tricky. A better approach is to manage an array of objects.
-      });
-
-      // Let's find the corresponding file and remove it. The order should be preserved.
-      // The index of the blob URL within the list of all blob URLs should match the index in newFiles.
-      const blobPreviews = previews.filter(p => p.startsWith('blob:'));
-      const blobIndexInBlobs = blobPreviews.indexOf(removedPreview);
-      if(blobIndexInBlobs !== -1) {
-          setNewFiles(currentFiles => currentFiles.filter((_, i) => i !== blobIndexInBlobs));
-      }
-      URL.revokeObjectURL(removedPreview);
+        const blobPreviews = previews.filter(p => p.startsWith('blob:'));
+        const blobIndexToRemove = blobPreviews.indexOf(removedPreview);
+        if (blobIndexToRemove !== -1) {
+            setNewFiles(currentFiles => currentFiles.filter((_, i) => i !== blobIndexToRemove));
+        }
+        URL.revokeObjectURL(removedPreview);
     }
+    
+    setPreviews(currentPreviews => currentPreviews.filter((_, i) => i !== index));
     
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -196,20 +190,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
         let uploadedUrls: string[] = [];
         
         if (newFiles.length > 0) {
-            const uploadPromises = newFiles.map((file, index) => {
-                const storageRef = ref(storage, `ad-photos/${user.uid}/${Date.now()}-${file.name}`);
+            const uploadPromises = newFiles.map((file) => {
+                const fileName = `${Date.now()}-${file.name}`;
+                const storageRef = ref(storage, `ad-photos/${user.uid}/${fileName}`);
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
                 return new Promise<string>((resolve, reject) => {
                     uploadTask.on('state_changed',
                         (snapshot) => {
                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                           // A simple progress update: average of all files' progress
-                           setUploadProgress(prev => {
-                               const currentTotal = (prev || 0) * (newFiles.length);
-                               const newTotal = currentTotal - (prev || 0) + progress;
-                               return newTotal / newFiles.length;
-                           });
+                           setProgresses(prev => ({ ...prev, [fileName]: progress }));
                         },
                         (error) => reject(error),
                         async () => {
@@ -267,6 +257,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     } finally {
         setIsSubmitting(false);
         setUploadProgress(null);
+        setProgresses({});
     }
   };
 
