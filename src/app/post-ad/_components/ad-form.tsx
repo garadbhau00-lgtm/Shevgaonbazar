@@ -40,54 +40,14 @@ type AdFormProps = {
     existingAd?: Ad;
 };
 
-// Helper function to upload files and track progress
-const uploadFiles = (
-    files: File[],
-    userId: string,
-    onProgress: (progress: number) => void
-): Promise<string[]> => {
-    const uploadPromises = files.map((file) => {
-        const fileName = `${userId}-${Date.now()}-${file.name}`;
-        const storageRef = ref(storage, `ad-photos/${fileName}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        return new Promise<string>((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot: UploadTaskSnapshot) => {
-                    // This is for individual file progress, which we can use to calculate total progress
-                },
-                (error) => reject(error),
-                async () => {
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    resolve(downloadURL);
-                }
-            );
-        });
-    });
-
-    // Simple progress tracking
-    let completed = 0;
-    uploadPromises.forEach(p => {
-        p.then(() => {
-            completed++;
-            const progress = (completed / files.length) * 100;
-            onProgress(progress);
-        });
-    });
-
-
-    return Promise.all(uploadPromises);
-};
-
-
 export default function AdForm({ existingAd }: AdFormProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
+  const [existingPhotos, setExistingPhotos] = useState<string[]>(existingAd?.photos || []);
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   
@@ -112,19 +72,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     },
   });
 
-  useEffect(() => {
-    if (isEditMode && existingAd) {
-      form.reset({
-          title: existingAd.title,
-          description: existingAd.description,
-          category: existingAd.category,
-          price: existingAd.price,
-          location: existingAd.location,
-      });
-      setExistingPhotos(existingAd.photos || []);
-    }
-  }, [isEditMode, existingAd, form]);
-  
   useEffect(() => {
     const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
     setPreviews([...existingPhotos, ...newFilePreviews]);
@@ -157,7 +104,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const incomingFiles = Array.from(e.target.files);
-      if (previews.length + incomingFiles.length > MAX_FILES) {
+      const totalFiles = existingPhotos.length + newFiles.length + incomingFiles.length;
+      if (totalFiles > MAX_FILES) {
         toast({ variant: 'destructive', title: `तुम्ही कमाल ${MAX_FILES} फोटो निवडू शकता.` });
         return;
       }
@@ -198,8 +146,54 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
 
+    // Helper function to upload files and track progress
+    const uploadFiles = (
+        files: File[],
+        userId: string,
+    ): Promise<string[]> => {
+        const uploadPromises = files.map((file) => {
+            return new Promise<string>((resolve, reject) => {
+                const fileName = `${userId}-${Date.now()}-${file.name}`;
+                const storageRef = ref(storage, `ad-photos/${fileName}`);
+                const uploadTask = uploadBytesResumable(storageRef, file);
+
+                uploadTask.on('state_changed',
+                    (snapshot: UploadTaskSnapshot) => {
+                         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                         console.log(`Upload is ${progress}% done`);
+                    },
+                    (error) => {
+                        console.error("Upload failed for a file:", error);
+                        reject(error);
+                    },
+                    async () => {
+                        try {
+                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            resolve(downloadURL);
+                        } catch (error) {
+                            console.error("Failed to get download URL:", error);
+                            reject(error);
+                        }
+                    }
+                );
+            });
+        });
+
+        // This is a simple way to track overall progress
+        let completed = 0;
+        uploadPromises.forEach(p => {
+            p.then(() => {
+                completed++;
+                const overallProgress = (completed / files.length) * 100;
+                setUploadProgress(overallProgress);
+            });
+        });
+
+        return Promise.all(uploadPromises);
+    };
+
   const onSubmit = async (data: AdFormValues) => {
-    if (previews.length === 0) {
+    if (existingPhotos.length + newFiles.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया किमान एक फोटो अपलोड करा.' });
         return;
     }
@@ -211,9 +205,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         let uploadedUrls: string[] = [];
         
         if (newFiles.length > 0) {
-            uploadedUrls = await uploadFiles(newFiles, user.uid, (progress) => {
-                setUploadProgress(progress);
-            });
+            uploadedUrls = await uploadFiles(newFiles, user.uid);
         }
         
         const finalPhotoURLs = [...existingPhotos, ...uploadedUrls];
@@ -405,5 +397,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
 
     
