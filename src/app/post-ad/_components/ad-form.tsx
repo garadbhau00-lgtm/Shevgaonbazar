@@ -86,12 +86,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   });
   
   useEffect(() => {
-    if (existingAd?.photos) {
-      setPhotoPreviews(existingAd.photos);
-    }
-  }, [existingAd]);
-
-  useEffect(() => {
+    // This effect runs only on the client, preventing hydration mismatch.
     if (newFiles.length > 0) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
@@ -164,7 +159,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
  const onSubmit = async (data: AdFormValues) => {
     if (!user) return;
 
-    if (newFiles.length === 0 && (!existingAd || existingAd.photos.length === 0)) {
+    if (newFiles.length === 0 && (!existingAd || !existingAd.photos || existingAd.photos.length === 0)) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
         return;
     }
