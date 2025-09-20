@@ -7,13 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import type { Ad } from '@/lib/types';
-import { Edit, Loader2, Trash2 } from 'lucide-react';
+import { Edit, Loader2, Trash2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'destructive' => {
   switch (status) {
@@ -94,32 +95,43 @@ export default function MyAdsPage() {
                 {myAds.length > 0 ? (
                     <div className="space-y-4">
                         {myAds.map(ad => (
-                            <Card key={ad.id} className="flex items-center">
-                                <CardHeader className="flex-shrink-0 p-2">
-                                    <div className="relative h-20 w-20">
-                                        <Image
-                                            src={ad.photos[0]}
-                                            alt={ad.title}
-                                            fill
-                                            className="rounded-md object-cover"
-                                        />
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="flex-grow p-3">
-                                    <h3 className="font-semibold">{ad.title}</h3>
-                                    <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
-                                    <Badge variant={getStatusVariant(ad.status)} className="mt-1">
-                                        {statusTranslations[ad.status]}
-                                    </Badge>
-                                </CardContent>
-                                <CardFooter className="p-3 space-x-2">
-                                    <Button variant="ghost" size="icon" disabled={ad.status === 'rejected'}>
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </CardFooter>
+                            <Card key={ad.id} className="flex flex-col">
+                                <div className='flex items-center w-full'>
+                                    <CardHeader className="flex-shrink-0 p-2">
+                                        <div className="relative h-20 w-20">
+                                            <Image
+                                                src={ad.photos[0]}
+                                                alt={ad.title}
+                                                fill
+                                                className="rounded-md object-cover"
+                                            />
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow p-3">
+                                        <h3 className="font-semibold">{ad.title}</h3>
+                                        <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
+                                        <Badge variant={getStatusVariant(ad.status)} className="mt-1">
+                                            {statusTranslations[ad.status]}
+                                        </Badge>
+                                    </CardContent>
+                                    <CardFooter className="p-3 space-x-2">
+                                        <Button variant="ghost" size="icon">
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </CardFooter>
+                                </div>
+                                {ad.status === 'rejected' && ad.rejectionReason && (
+                                    <Alert variant="destructive" className="m-4 mt-0">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>नाकारण्याचे कारण</AlertTitle>
+                                        <AlertDescription>
+                                            {ad.rejectionReason}
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
                             </Card>
                         ))}
                     </div>

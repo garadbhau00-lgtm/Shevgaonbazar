@@ -14,6 +14,9 @@ import { Loader2, Check, X, BadgeIndianRupee } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'destructive' => {
     switch (status) {
@@ -39,6 +42,9 @@ export default function AdManagementPage() {
 
     const [ads, setAds] = useState<Ad[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
+    const [adToReject, setAdToReject] = useState<Ad | null>(null);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const checkAdminAndFetchAds = () => {
@@ -73,16 +79,46 @@ export default function AdManagementPage() {
         }
     }, [authLoading, userProfile, router, toast]);
 
-    const handleUpdateStatus = async (id: string, status: Ad['status']) => {
+    const handleUpdateStatus = async (id: string, status: 'approved') => {
         try {
             const adDoc = doc(db, 'ads', id);
             await updateDoc(adDoc, { status });
-            toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या ${status === 'approved' ? 'स्वीकृत' : 'नाकारली'} झाली आहे.` });
+            toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या स्वीकृत झाली आहे.` });
         } catch (error) {
             console.error("Error updating ad status:", error);
             toast({ variant: 'destructive', title: 'त्रुटी', description: 'जाहिरातीची स्थिती अद्यतनित करण्यात अयशस्वी.' });
         }
     };
+
+    const handleOpenRejectDialog = (ad: Ad) => {
+        setAdToReject(ad);
+    }
+    
+    const handleCloseRejectDialog = () => {
+        setAdToReject(null);
+        setRejectionReason('');
+    }
+
+    const handleRejectSubmit = async () => {
+        if (!adToReject || !rejectionReason.trim()) {
+            toast({ variant: 'destructive', title: 'त्रुटी', description: 'कृपया नाकारण्याचे कारण नमूद करा.' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const adDoc = doc(db, 'ads', adToReject.id);
+            await updateDoc(adDoc, { status: 'rejected', rejectionReason: rejectionReason.trim() });
+            toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या नाकारली गेली आहे.` });
+            handleCloseRejectDialog();
+        } catch (error) {
+            console.error("Error rejecting ad:", error);
+            toast({ variant: 'destructive', title: 'त्रुटी', description: 'जाहिरात नाकारण्यात अयशस्वी.' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
 
     if (authLoading || pageLoading) {
         return (
@@ -127,7 +163,7 @@ export default function AdManagementPage() {
                                 <Button
                                     variant="destructive"
                                     size="sm"
-                                    onClick={() => handleUpdateStatus(ad.id, 'rejected')}
+                                    onClick={() => handleOpenRejectDialog(ad)}
                                 >
                                     <X className="mr-1 h-4 w-4" /> नाकारा
                                 </Button>
@@ -148,6 +184,33 @@ export default function AdManagementPage() {
                     )}
                 </div>
             </main>
+            <AlertDialog open={!!adToReject} onOpenChange={(open) => !open && handleCloseRejectDialog()}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>जाहिरात नाकारण्याची खात्री आहे का?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ही क्रिया पूर्ववत केली जाऊ शकत नाही. कृपया वापरकर्त्याला मदत करण्यासाठी नाकारण्याचे कारण द्या.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="grid w-full gap-1.5">
+                        <Label htmlFor="rejection-reason">नाकारण्याचे कारण</Label>
+                        <Textarea 
+                            id="rejection-reason"
+                            placeholder="येथे कारण टाइप करा..."
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={handleCloseRejectDialog} disabled={isSubmitting}>रद्द करा</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleRejectSubmit} disabled={isSubmitting || !rejectionReason.trim()}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            नाकारण्याची पुष्टी करा
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

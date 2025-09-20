@@ -9,6 +9,7 @@ export type Ad = {
   status: 'pending' | 'approved' | 'rejected';
   userId: string;
   createdAt: any; // Firestore timestamp
+  rejectionReason?: string;
 };
 
 export type UserProfile = {
