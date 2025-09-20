@@ -56,7 +56,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>(existingAd?.photos || []);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,16 +81,30 @@ export default function AdForm({ existingAd }: AdFormProps) {
   });
   
   useEffect(() => {
-    if (newFiles.length > 0) {
-        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-        setPhotoPreviews(newPreviews);
-        return () => {
-            newPreviews.forEach(url => URL.revokeObjectURL(url));
-        };
-    } else {
-        setPhotoPreviews(existingAd?.photos || []);
+    // Set initial previews from existing ad on client-side only
+    if (existingAd?.photos) {
+      setPhotoPreviews(existingAd.photos);
     }
-  }, [newFiles, existingAd?.photos]);
+  }, [existingAd]);
+
+  useEffect(() => {
+    if (newFiles.length > 0) {
+      const objectUrls = newFiles.map(file => URL.createObjectURL(file));
+      setPhotoPreviews(objectUrls);
+      
+      // Cleanup object URLs on unmount
+      return () => {
+        objectUrls.forEach(url => URL.revokeObjectURL(url));
+      };
+    } else if (existingAd?.photos) {
+      // If new files are removed, revert to existing ad photos
+      setPhotoPreviews(existingAd.photos);
+    } else {
+      // If no new files and no existing ad, clear previews
+      setPhotoPreviews([]);
+    }
+  }, [newFiles, existingAd]);
+
 
   if (authLoading) {
       return (
@@ -112,7 +126,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files).slice(0, MAX_FILES - photoPreviews.length + newFiles.length);
+      const files = Array.from(e.target.files).slice(0, MAX_FILES);
       setNewFiles(files);
     }
   };
@@ -149,7 +163,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
  const onSubmit = async (data: AdFormValues) => {
     if (!user) return;
 
-    if (newFiles.length === 0 && photoPreviews.length === 0) {
+    if (newFiles.length === 0 && (!existingAd || existingAd.photos.length === 0)) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
         return;
     }
@@ -157,7 +171,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let finalPhotoUrls: string[] = [...photoPreviews.filter(p => !p.startsWith('blob:'))];
+        let finalPhotoUrls: string[] = existingAd?.photos || [];
 
         if (newFiles.length > 0) {
              const options = {
@@ -168,7 +182,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
             const compressedFiles = await Promise.all(
                 newFiles.map(async (file) => {
-                    if (file.size > 1024 * 1024) { // If file size is greater than 1MB
+                    // Check if the file is an image and needs compression
+                    if (file.type.startsWith('image/') && file.size > 1024 * 1024) { 
                         try {
                             const compressedFile = await imageCompression(file, options);
                             toast({ title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला', description: `फोटोचा आकार ${(compressedFile.size / 1024).toFixed(2)} KB पर्यंत कमी झाला आहे.` });
@@ -184,7 +199,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             );
 
             const dataUris = await Promise.all(compressedFiles.map(file => fileToDataUri(file)));
-            finalPhotoUrls.push(...dataUris);
+            finalPhotoUrls = dataUris;
         }
        
         const adData = {
@@ -362,3 +377,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
