@@ -15,11 +15,11 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
 import type { Ad } from '@/lib/types';
 
 
@@ -76,7 +76,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     const newFilePreviews = newFiles.map(file => URL.createObjectURL(file));
     setPreviews([...existingPhotos, ...newFilePreviews]);
 
-    // Cleanup function
     return () => {
         newFilePreviews.forEach(p => URL.revokeObjectURL(p));
     }
@@ -104,9 +103,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const incomingFiles = Array.from(e.target.files);
-      const totalPhotos = existingPhotos.length + newFiles.length + incomingFiles.length;
-
-      if (totalPhotos > MAX_FILES) {
+      if (existingPhotos.length + newFiles.length + incomingFiles.length > MAX_FILES) {
         toast({
           variant: 'destructive',
           title: 'फोटो मर्यादा ओलांडली',
@@ -119,7 +116,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
 
   const removePhoto = (index: number) => {
-    const totalPhotos = existingPhotos.length + newFiles.length;
     if (index < existingPhotos.length) {
         setExistingPhotos(prev => prev.filter((_, i) => i !== index));
     } else {
@@ -146,13 +142,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
   
-    const fileToDataUri = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
+    const uploadImage = async (file: File): Promise<string> => {
+        const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+        return downloadURL;
     };
 
     const onSubmit = async (data: AdFormValues) => {
@@ -166,17 +160,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
         setIsSubmitting(true);
         
         try {
-            const dataUriPromises = newFiles.map(fileToDataUri);
-            const newDataUris = await Promise.all(dataUriPromises);
+            const uploadPromises = newFiles.map(file => uploadImage(file));
+            const newPhotoUrls = await Promise.all(uploadPromises);
 
-            const finalPhotoURLs = [...existingPhotos, ...newDataUris];
+            const finalPhotoURLs = [...existingPhotos, ...newPhotoUrls];
 
             if (isEditMode && existingAd) {
                 const adDocRef = doc(db, 'ads', existingAd.id);
                 await updateDoc(adDocRef, {
                     ...data,
                     photos: finalPhotoURLs,
-                    status: 'pending', // Reset status on edit
+                    status: 'pending', 
                     rejectionReason: '',
                 });
                 toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
@@ -197,7 +191,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             toast({
                 variant: "destructive",
                 title: "त्रुटी!",
-                description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+                description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया तुमच्या स्टोरेज नियमांची तपासणी करा.",
             });
         } finally {
             setIsSubmitting(false);
