@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import AppHeader from "@/components/layout/app-header";
-import { ChevronRight, HelpCircle, LogIn, LogOut, Settings, User, UserPlus, ShieldCheck } from "lucide-react";
+import { ChevronRight, HelpCircle, LogIn, LogOut, Settings, User, UserPlus, ShieldCheck, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,10 @@ const baseMenuItems = [
     { label: "मदत केंद्र", icon: HelpCircle, href: "#" },
 ];
 
-const adminMenuItem = { label: "प्रवेश व्यवस्थापन", icon: ShieldCheck, href: "/access-management" };
+const adminMenuItems = [
+    { label: "प्रवेश व्यवस्थापन", icon: ShieldCheck, href: "/access-management" },
+    { label: "जाहिरात व्यवस्थापन", icon: ListChecks, href: "/ad-management" }
+];
 
 export default function MorePage() {
     const { user, userProfile, loading, handleLogout } = useAuth();
@@ -34,7 +37,7 @@ export default function MorePage() {
                 ...baseMenuItems
             ];
             if (userProfile?.role === 'Admin') {
-                menu.push(adminMenuItem);
+                menu.push(...adminMenuItems);
             }
             menu.push({ label: "लॉगआउट", icon: LogOut, href: "#", action: onLogout });
             return menu;

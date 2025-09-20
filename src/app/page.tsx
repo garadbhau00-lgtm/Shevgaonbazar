@@ -58,10 +58,8 @@ export default function Home() {
   useEffect(() => {
     const q = query(
         collection(db, 'ads'), 
-        where('status', '==', 'approved')
-        // NOTE: orderBy('createdAt', 'desc') was removed to prevent a crash.
-        // A composite index is required for this query.
-        // Please create the index in your Firebase console using the link from the error.
+        where('status', '==', 'approved'),
+        orderBy('createdAt', 'desc')
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {

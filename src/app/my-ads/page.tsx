@@ -54,10 +54,8 @@ export default function MyAdsPage() {
 
         const q = query(
             collection(db, 'ads'),
-            where('userId', '==', user.uid)
-            // NOTE: orderBy('createdAt', 'desc') was removed to prevent a crash.
-            // A composite index is required for this query.
-            // Please create the index in your Firebase console using the link from the error.
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc')
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -115,7 +113,7 @@ export default function MyAdsPage() {
                                     </Badge>
                                 </CardContent>
                                 <CardFooter className="p-3 space-x-2">
-                                    <Button variant="ghost" size="icon">
+                                    <Button variant="ghost" size="icon" disabled={ad.status === 'rejected'}>
                                         <Edit className="h-4 w-4" />
                                     </Button>
                                     <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
