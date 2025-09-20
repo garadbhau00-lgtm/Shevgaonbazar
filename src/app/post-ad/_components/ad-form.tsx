@@ -15,7 +15,8 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -39,15 +40,6 @@ type AdFormProps = {
 };
 
 const MAX_FILES = 1;
-
-const fileToDataUri = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-};
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -114,6 +106,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const removePhoto = () => {
     setNewFile(null);
     setPhotoPreview(null);
+    if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
   };
 
   const handleSuggestion = async () => {
@@ -135,7 +130,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
   
-  const onSubmit = async (data: AdFormValues) => {
+ const onSubmit = async (data: AdFormValues) => {
     if (!user) return;
 
     if (!newFile && !photoPreview) {
@@ -149,7 +144,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
         let finalPhotoURL: string | null = photoPreview;
 
         if (newFile) {
-            finalPhotoURL = await fileToDataUri(newFile);
+            const uniqueFileName = `${user.uid}-${Date.now()}-${newFile.name}`;
+            const storageRef = ref(storage, `ad-photos/${uniqueFileName}`);
+            await uploadBytes(storageRef, newFile);
+            finalPhotoURL = await getDownloadURL(storageRef);
         }
        
         const adData = {
@@ -175,8 +173,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
     } catch (error: any) {
         console.error("Submission failed:", error);
         let description = "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
-        if (error.message && error.message.includes('longer than 1048487 bytes')) {
-            description = "फोटो खूप मोठा आहे. कृपया 1MB पेक्षा लहान फोटो अपलोड करा.";
+        // Check for specific Firebase Storage errors if needed.
+        if (error.code === 'storage/unauthorized') {
+            description = "फोटो अपलोड करण्याची परवानगी नाही. कृपया तुमच्या फायरबेस सुरक्षा नियमांची तपासणी करा.";
         }
         toast({
             variant: "destructive",
@@ -324,7 +323,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
         <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isSubmitting ? 'पोस्ट करत आहे...' : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
+            {isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
         </Button>
       </form>
     </Form>
