@@ -32,8 +32,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            setUser(firebaseUser);
-            setLoading(false);
+            if (firebaseUser) {
+                setUser(firebaseUser);
+                // Still loading until profile is fetched
+                setLoading(true); 
+            } else {
+                setUser(null);
+                setUserProfile(null);
+                setLoading(false);
+            }
         });
 
         return () => unsubscribeAuth();
@@ -43,7 +50,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let unsubscribeProfile: Unsubscribe | undefined;
 
         if (user) {
-            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -60,7 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     }
                 } else {
                     // This can happen briefly if the user document hasn't been created yet
-                    // especially during sign up.
                     setUserProfile(null);
                 }
                 setLoading(false);
@@ -71,7 +76,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setLoading(false);
             });
         } else {
-            setUserProfile(null);
+            // No user, not loading
+            setLoading(false);
         }
 
         return () => {
@@ -93,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, [toast]);
 
     const handleGoogleSignIn = useCallback(async () => {
+        setLoading(true);
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);
@@ -102,11 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
-                const usersQuery = query(collection(db, "users"));
-                const userSnapshot = await getDocs(usersQuery);
-                const isFirstUser = userSnapshot.empty;
-                const userRole = isFirstUser ? 'Admin' : 'Farmer';
-
+                const userRole = 'Farmer';
                 await setDoc(userDocRef, {
                     uid: signedInUser.uid,
                     email: signedInUser.email,
@@ -126,7 +129,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 });
             }
         } catch (error: any) {
-            console.error("Google sign-in error:", error);
             let title = 'Google साइन-इन अयशस्वी';
             let description = 'एक अनपेक्षित त्रुटी आली. कृपया पुन्हा प्रयत्न करा.';
 
@@ -156,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 description: description,
             });
         } finally {
-            setLoading(false);
+            // setLoading will be handled by the useEffect hooks
         }
     }, [toast]);
     

@@ -83,6 +83,32 @@ export default function Home() {
     router.push('/login');
   };
 
+  const renderUserOptions = () => {
+    if (authLoading) {
+      return <Loader2 className="h-6 w-6 animate-spin" />;
+    }
+    if (user && userProfile) {
+       return (
+          <div className="flex items-center gap-2">
+              <Link href="/more">
+                  <Avatar className="h-8 w-8 cursor-pointer">
+                      <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} />
+                      <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+              </Link>
+              <Button variant="ghost" size="icon" onClick={onLogout}>
+                  <LogOut className="h-5 w-5" />
+              </Button>
+          </div>
+      );
+    }
+    return (
+        <Button asChild variant="outline">
+            <Link href="/login">लॉगिन करा</Link>
+        </Button>
+    );
+  }
+
   return (
     <div>
       <header className="bg-card p-4 pb-0">
@@ -93,23 +119,7 @@ export default function Home() {
                     <Bell className="h-5 w-5" />
                     <span className="sr-only">सूचना</span>
                 </Button>
-                {authLoading ? null : user ? (
-                    <div className="flex items-center gap-2">
-                        <Link href="/more">
-                            <Avatar className="h-8 w-8 cursor-pointer">
-                                <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} />
-                                <AvatarFallback>{userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                        </Link>
-                        <Button variant="ghost" size="icon" onClick={onLogout}>
-                            <LogOut className="h-5 w-5" />
-                        </Button>
-                    </div>
-                ) : (
-                    <Button asChild variant="outline">
-                        <Link href="/login">लॉगिन करा</Link>
-                    </Button>
-                )}
+                {renderUserOptions()}
             </div>
         </div>
         <div className="mt-2 text-center">
