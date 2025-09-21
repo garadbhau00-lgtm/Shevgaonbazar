@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,16 +23,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, MessageSquare } from 'lucide-react';
 
 export default function AdCard({ ad }: AdCardProps) {
-  const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const adPhotoUrl = ad.photos?.[0];
 
@@ -129,7 +124,7 @@ export default function AdCard({ ad }: AdCardProps) {
   return (
     <Card className="flex flex-col overflow-hidden shadow-md transition-shadow hover:shadow-lg">
       <div className="relative aspect-[4/3] bg-secondary">
-        {mounted && adPhotoUrl ? (
+        {adPhotoUrl ? (
           <Image
             src={adPhotoUrl}
             alt={ad.title || ad.category}
@@ -138,7 +133,9 @@ export default function AdCard({ ad }: AdCardProps) {
             data-ai-hint={'agriculture item'}
           />
         ) : (
-          <div className="h-full w-full bg-secondary"></div>
+          <div className="flex h-full w-full items-center justify-center bg-secondary text-xs text-muted-foreground">
+            फोटो नाही
+          </div>
         )}
       </div>
       <CardContent className="flex-grow p-3">
