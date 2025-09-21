@@ -4,6 +4,8 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
+import Link from 'next/link';
+import { Separator } from '@/components/ui/separator';
 
 const faqs = [
     {
@@ -54,6 +56,26 @@ export default function HelpCenterPage() {
                         </AccordionItem>
                     ))}
                 </Accordion>
+
+                <div className="mt-8 rounded-lg bg-card p-6 text-center shadow-sm">
+                    <h3 className="text-lg font-semibold">अधिक मदतीची गरज आहे?</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        तुम्हाला येथे उत्तर न सापडल्यास, कृपया आमच्याशी संपर्क साधा.
+                    </p>
+                    <a href="mailto:support@shevgavbazar.com" className="mt-4 inline-block font-semibold text-primary hover:underline">
+                        support@shevgavbazar.com
+                    </a>
+                </div>
+
+                <div className="mt-8 text-center text-xs text-muted-foreground">
+                    <Link href="#" className="hover:underline">
+                        सेवा अटी
+                    </Link>
+                    <Separator orientation="vertical" className="mx-2 h-3 inline-block" />
+                    <Link href="#" className="hover:underline">
+                        गोपनीयता धोरण
+                    </Link>
+                </div>
             </main>
         </div>
     )
