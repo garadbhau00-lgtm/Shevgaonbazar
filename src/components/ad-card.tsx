@@ -37,7 +37,7 @@ export default function AdCard({ ad }: AdCardProps) {
         )}
       </div>
       <CardContent className="flex-grow p-3">
-        <h3 className="font-semibold truncate">{ad.title}</h3>
+        <h3 className="font-semibold truncate">{ad.category}</h3>
         <p className="text-lg font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
         <p className="text-xs text-muted-foreground truncate">{ad.location}</p>
       </CardContent>
