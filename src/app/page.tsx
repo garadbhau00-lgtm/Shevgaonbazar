@@ -150,7 +150,7 @@ export default function Home() {
   return (
     <div>
       <header className="bg-card pb-4">
-        <div className="relative h-48 w-full text-white">
+        <div className="relative h-40 w-full text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
                 alt="Header background"
@@ -165,7 +165,7 @@ export default function Home() {
                     </div>
                 </div>
                  <div className='text-center'>
-                    <h2 className="text-2xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
+                    <h2 className="text-xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
                     <p className="text-xs max-w-md mt-1 mx-auto">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
                 </div>
             </div>
