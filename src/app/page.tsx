@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bell, Loader2, LogOut, Search } from 'lucide-react';
+import { Loader2, LogOut, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { categories } from '@/lib/categories';
+import NotificationBell from '@/components/notification-bell';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -148,10 +149,7 @@ export default function Home() {
         <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-primary">शेवगाव बाजार</h1>
             <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="icon">
-                    <Bell className="h-5 w-5" />
-                    <span className="sr-only">सूचना</span>
-                </Button>
+                {user && <NotificationBell />}
                 {renderUserOptions()}
             </div>
         </div>

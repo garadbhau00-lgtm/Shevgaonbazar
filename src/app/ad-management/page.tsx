@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, updateDoc, where } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, updateDoc, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import Image from 'next/image';
 import { db } from '@/lib/firebase';
 import type { Ad } from '@/lib/types';
@@ -80,10 +80,30 @@ export default function AdManagementPage() {
         }
     }, [authLoading, userProfile, router, toast]);
 
-    const handleUpdateStatus = async (id: string, status: 'approved') => {
+    const createNotification = async (ad: Ad, type: 'ad-approved' | 'ad-rejected', reason?: string) => {
         try {
-            const adDoc = doc(db, 'ads', id);
+            await addDoc(collection(db, 'notifications'), {
+                userId: ad.userId,
+                adId: ad.id,
+                adTitle: ad.title,
+                type: type,
+                message: type === 'ad-approved'
+                    ? `तुमची जाहिरात "${ad.title}" मंजूर झाली आहे.`
+                    : `तुमची जाहिरात "${ad.title}" नाकारली आहे. कारण: ${reason}`,
+                read: false,
+                createdAt: serverTimestamp(),
+            });
+        } catch (error) {
+            console.error("Error creating notification:", error);
+            // Non-critical, so we don't show a toast to the admin for this
+        }
+    };
+
+    const handleUpdateStatus = async (ad: Ad, status: 'approved') => {
+        try {
+            const adDoc = doc(db, 'ads', ad.id);
             await updateDoc(adDoc, { status });
+            await createNotification(ad, 'ad-approved');
             toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या स्वीकृत झाली आहे.` });
         } catch (error) {
             console.error("Error updating ad status:", error);
@@ -109,7 +129,9 @@ export default function AdManagementPage() {
         setIsSubmitting(true);
         try {
             const adDoc = doc(db, 'ads', adToReject.id);
-            await updateDoc(adDoc, { status: 'rejected', rejectionReason: rejectionReason.trim() });
+            const reason = rejectionReason.trim();
+            await updateDoc(adDoc, { status: 'rejected', rejectionReason: reason });
+            await createNotification(adToReject, 'ad-rejected', reason);
             toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या नाकारली गेली आहे.` });
             handleCloseRejectDialog();
         } catch (error) {
@@ -145,7 +167,7 @@ export default function AdManagementPage() {
                         <Card key={ad.id} className="overflow-hidden">
                             <div className="relative h-40 w-full">
                                 {ad.photos && ad.photos.length > 0 && (
-                                    <Image src={ad.photos[0]} alt={ad.title} fill className="object-cover" />
+                                    <Image src={ad.photos[0]} alt={ad.title || ''} fill className="object-cover" />
                                 )}
                                 <Badge variant={getStatusVariant(ad.status)} className="absolute top-2 right-2">
                                     {statusTranslations[ad.status]}
@@ -173,7 +195,7 @@ export default function AdManagementPage() {
                                 <Button
                                     variant="default"
                                     size="sm"
-                                    onClick={() => handleUpdateStatus(ad.id, 'approved')}
+                                    onClick={() => handleUpdateStatus(ad, 'approved')}
                                 >
                                     <Check className="mr-1 h-4 w-4" /> स्वीकृत करा
                                 </Button>
