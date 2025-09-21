@@ -7,13 +7,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { Store, LogOut } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Skeleton } from '../ui/skeleton';
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function AppHeader() {
   const { user, userProfile, loading: authLoading, handleLogout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -25,17 +27,19 @@ export default function AppHeader() {
     router.push('/login');
   };
 
+  const isHomePage = pathname === '/';
+
   const renderUserOptions = () => {
     if (!isClient || authLoading) {
-      return <Skeleton className="h-8 w-8 rounded-full" />;
+      return <Skeleton className="h-8 w-8 rounded-full bg-white/20" />;
     }
     if (user && userProfile) {
        return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-               <Avatar className="h-8 w-8 cursor-pointer">
+               <Avatar className="h-9 w-9 cursor-pointer border-2 border-white/80">
                   {user.photoURL && <AvatarImage src={user.photoURL} />}
-                  <AvatarFallback className="font-bold bg-black text-white">{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
+                  <AvatarFallback className="font-bold bg-black/50 text-white">{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -59,15 +63,21 @@ export default function AppHeader() {
       );
     }
     return (
-        <Button asChild variant="default" className="bg-black text-white border-black hover:bg-black/80 hover:text-white">
+        <Button asChild variant={isHomePage ? 'outline' : 'default'} className={cn(isHomePage && 'border-white text-white hover:bg-white/20 hover:text-white')}>
             <Link href="/login">लॉगिन करा</Link>
         </Button>
     );
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-4">
-      <Link href="/" className="flex items-center gap-2 text-xl font-bold text-primary">
+    <header className={cn(
+        "sticky top-0 z-30 flex h-16 items-center justify-between px-4",
+        isHomePage ? 'absolute inset-x-0 bg-transparent' : 'border-b bg-card'
+    )}>
+      <Link href="/" className={cn(
+          "flex items-center gap-2 text-xl font-bold",
+          isHomePage ? 'text-white' : 'text-primary'
+      )}>
         <Store className="h-6 w-6" />
         <span>शेवगाव बाजार</span>
       </Link>

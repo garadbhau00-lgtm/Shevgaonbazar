@@ -10,6 +10,7 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
+import AppHeader from '@/components/layout/app-header';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -92,7 +93,8 @@ export default function SearchPage() {
 
   return (
     <div>
-      <header className="sticky top-0 z-20 bg-background p-2 border-b">
+      <AppHeader />
+      <header className="sticky top-16 z-20 bg-background p-2 border-b">
          <div className="flex items-center gap-2">
              <button onClick={() => router.back()} className="p-2">
                 <ArrowLeft className="h-5 w-5" />

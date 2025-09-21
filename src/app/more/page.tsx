@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import AppHeader from '@/components/layout/app-header';
 
 
 const baseMenuItems = [
@@ -90,37 +91,39 @@ export default function MorePage() {
 
 
     return (
-        <main className="p-4">
-            {renderUserProfile()}
+        <>
+            <AppHeader />
+            <main className="p-4">
+                {renderUserProfile()}
 
-            <div className="space-y-2">
-                {getMenuItems().map((item) => (
-                    <Link
-                        href={item.href}
-                        key={item.label}
-                        className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary"
-                    >
-                        <div className="flex items-center gap-4">
-                            <item.icon className="h-5 w-5 text-primary" />
-                            <span className="font-medium">{item.label}</span>
+                <div className="space-y-2">
+                    {getMenuItems().map((item) => (
+                        <Link
+                            href={item.href}
+                            key={item.label}
+                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary"
+                        >
+                            <div className="flex items-center gap-4">
+                                <item.icon className="h-5 w-5 text-primary" />
+                                <span className="font-medium">{item.label}</span>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        </Link>
+                    ))}
+                    {user && (
+                        <div
+                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary cursor-pointer"
+                            onClick={onLogout}
+                        >
+                            <div className="flex items-center gap-4">
+                                <LogOut className="h-5 w-5 text-destructive" />
+                                <span className="font-medium text-destructive">लॉगआउट</span>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </Link>
-                ))}
-                 {user && (
-                    <div
-                        className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary cursor-pointer"
-                        onClick={onLogout}
-                    >
-                        <div className="flex items-center gap-4">
-                            <LogOut className="h-5 w-5 text-destructive" />
-                            <span className="font-medium text-destructive">लॉगआउट</span>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                )}
-            </div>
-        </main>
+                    )}
+                </div>
+            </main>
+        </>
     );
 }
-

@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, List } from 'lucide-react';
+import { Loader2, List, Search as SearchIcon } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
 import AdCard from '@/components/ad-card';
@@ -11,6 +11,9 @@ import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestor
 import { db } from '@/lib/firebase';
 import { categories } from '@/lib/categories';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import AppHeader from '@/components/layout/app-header';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -89,20 +92,22 @@ export default function Home() {
 
   return (
     <div>
-      <header className="relative h-48 w-full">
+      <div className="relative h-48 w-full">
+        <AppHeader />
         <Image
             src="https://picsum.photos/seed/header/1200/400"
             alt="Header background"
             fill
             className="object-cover"
             data-ai-hint="farm landscape"
+            priority
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
             <h1 className="text-3xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h1>
-            <p className="mt-2 text-lg">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
+            <p className="mt-2 text-lg max-w-xl">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
         </div>
-      </header>
+      </div>
 
       <main>
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm p-4 pb-2">

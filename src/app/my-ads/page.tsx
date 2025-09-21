@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import AppHeader from '@/components/layout/app-header';
 
 
 const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'destructive' => {
@@ -116,101 +117,107 @@ export default function MyAdsPage() {
 
     if (authLoading || adsLoading) {
         return (
-            <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
+            <>
+                <AppHeader />
+                <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            </>
         )
     }
 
     return (
-        <main className="p-4 pb-20">
-            <div className="mb-4">
-                <h1 className="text-2xl font-bold">माझ्या जाहिराती</h1>
-                <p className="text-muted-foreground">तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.</p>
-            </div>
-
-            {myAds.length > 0 ? (
-                <div className="space-y-4">
-                    {myAds.map(ad => (
-                        <Card key={ad.id} className="flex flex-col">
-                            <div className='flex items-center w-full'>
-                                <CardHeader className="flex-shrink-0 p-2">
-                                    <div className="relative h-20 w-20 rounded-md overflow-hidden">
-                                        {ad.photos && ad.photos.length > 0 ? (
-                                            <Image
-                                                src={ad.photos[0]}
-                                                alt={ad.title || ''}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        ): (
-                                            <div className="h-full w-full bg-secondary flex items-center justify-center">
-                                                <p className="text-xs text-muted-foreground">फोटो नाही</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="flex-grow p-3">
-                                    <h3 className="font-semibold">{ad.title}</h3>
-                                    <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
-
-                                    <Badge variant={getStatusVariant(ad.status)} className="mt-1">
-                                        {statusTranslations[ad.status]}
-                                    </Badge>
-                                </CardContent>
-                                <CardFooter className="p-3 space-x-2">
-                                    <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)}>
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setAdToDelete(ad)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </CardFooter>
-                            </div>
-                            {ad.status === 'rejected' && ad.rejectionReason && (
-                                <Alert variant="destructive" className="m-4 mt-0">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>नाकारण्याचे कारण</AlertTitle>
-                                    <AlertDescription>
-                                        {ad.rejectionReason}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                        </Card>
-                    ))}
+        <>
+            <AppHeader />
+            <main className="p-4 pb-20">
+                <div className="mb-4">
+                    <h1 className="text-2xl font-bold">माझ्या जाहिराती</h1>
+                    <p className="text-muted-foreground">तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.</p>
                 </div>
-            ) : (
-                <div className="flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed text-center">
-                    <p className="text-lg font-semibold text-muted-foreground">
-                        तुम्ही अद्याप एकही जाहिरात पोस्ट केलेली नाही.
-                    </p>
-                    <Button className="mt-4" onClick={() => router.push('/post-ad')}>
-                        पहिली जाहिरात पोस्ट करा
-                    </Button>
-                </div>
-            )}
 
-             <AlertDialog open={!!adToDelete} onOpenChange={(open) => !open && setAdToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>तुम्ही जाहिरात हटवण्याची खात्री आहे का?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            ही क्रिया पूर्ववत केली जाऊ शकत नाही. यामुळे तुमची जाहिरात आमच्या सर्व्हरवरून कायमची हटवली जाईल.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>रद्द करा</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleConfirmDelete}
-                            disabled={isDeleting}
-                            className="bg-destructive hover:bg-destructive/90"
-                        >
-                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            हटवा
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </main>
+                {myAds.length > 0 ? (
+                    <div className="space-y-4">
+                        {myAds.map(ad => (
+                            <Card key={ad.id} className="flex flex-col">
+                                <div className='flex items-center w-full'>
+                                    <CardHeader className="flex-shrink-0 p-2">
+                                        <div className="relative h-20 w-20 rounded-md overflow-hidden">
+                                            {ad.photos && ad.photos.length > 0 ? (
+                                                <Image
+                                                    src={ad.photos[0]}
+                                                    alt={ad.title || ''}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ): (
+                                                <div className="h-full w-full bg-secondary flex items-center justify-center">
+                                                    <p className="text-xs text-muted-foreground">फोटो नाही</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow p-3">
+                                        <h3 className="font-semibold">{ad.title}</h3>
+                                        <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
+
+                                        <Badge variant={getStatusVariant(ad.status)} className="mt-1">
+                                            {statusTranslations[ad.status]}
+                                        </Badge>
+                                    </CardContent>
+                                    <CardFooter className="p-3 space-x-2">
+                                        <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)}>
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setAdToDelete(ad)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </CardFooter>
+                                </div>
+                                {ad.status === 'rejected' && ad.rejectionReason && (
+                                    <Alert variant="destructive" className="m-4 mt-0">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>नाकारण्याचे कारण</AlertTitle>
+                                        <AlertDescription>
+                                            {ad.rejectionReason}
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </Card>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed text-center">
+                        <p className="text-lg font-semibold text-muted-foreground">
+                            तुम्ही अद्याप एकही जाहिरात पोस्ट केलेली नाही.
+                        </p>
+                        <Button className="mt-4" onClick={() => router.push('/post-ad')}>
+                            पहिली जाहिरात पोस्ट करा
+                        </Button>
+                    </div>
+                )}
+
+                <AlertDialog open={!!adToDelete} onOpenChange={(open) => !open && setAdToDelete(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>तुम्ही जाहिरात हटवण्याची खात्री आहे का?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                ही क्रिया पूर्ववत केली जाऊ शकत नाही. यामुळे तुमची जाहिरात आमच्या सर्व्हरवरून कायमची हटवली जाईल.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isDeleting}>रद्द करा</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleConfirmDelete}
+                                disabled={isDeleting}
+                                className="bg-destructive hover:bg-destructive/90"
+                            >
+                                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                हटवा
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </main>
+        </>
     );
 }

@@ -15,6 +15,7 @@ import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { hi as mr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import AppHeader from '@/components/layout/app-header';
 
 export default function InboxPage() {
     const { user, loading: authLoading } = useAuth();
@@ -61,9 +62,12 @@ export default function InboxPage() {
 
     if (authLoading || pageLoading) {
         return (
-            <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
+            <>
+                <AppHeader />
+                <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            </>
         )
     }
 
@@ -78,59 +82,62 @@ export default function InboxPage() {
     };
 
     return (
-        <main className="flex-1">
-            <div className="border-b p-4">
-                <h1 className="text-2xl font-bold">इनबॉक्स</h1>
-                <p className="text-muted-foreground">तुमचे संभाषण येथे पहा.</p>
-            </div>
-            
-            {conversations.length > 0 ? (
-                <div className="divide-y">
-                    {conversations.map(convo => {
-                        const otherParticipant = getOtherParticipant(convo);
-                        const isUnread = user && convo.unreadBy && convo.unreadBy[user.uid];
-                        const lastMessagePrefix = user && convo.lastMessageSenderId === user.uid ? "तुम्ही: " : "";
+        <>
+            <AppHeader />
+            <main className="flex-1">
+                <div className="border-b p-4">
+                    <h1 className="text-2xl font-bold">इनबॉक्स</h1>
+                    <p className="text-muted-foreground">तुमचे संभाषण येथे पहा.</p>
+                </div>
+                
+                {conversations.length > 0 ? (
+                    <div className="divide-y">
+                        {conversations.map(convo => {
+                            const otherParticipant = getOtherParticipant(convo);
+                            const isUnread = user && convo.unreadBy && convo.unreadBy[user.uid];
+                            const lastMessagePrefix = user && convo.lastMessageSenderId === user.uid ? "तुम्ही: " : "";
 
-                        return (
-                            <Link href={`/inbox/${convo.id}`} key={convo.id}>
-                                <div className={`p-4 flex items-start gap-4 transition-colors hover:bg-secondary ${isUnread ? 'bg-secondary' : 'bg-card'}`}>
-                                    <div className="relative h-16 w-16 flex-shrink-0">
-                                        <Image src={convo.adPhoto} alt={convo.adTitle} fill className="rounded-md object-cover" />
-                                    </div>
-                                    <div className="flex-grow overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="font-semibold truncate">{convo.adTitle}</h3>
-                                            {convo.lastMessageTimestamp && (
-                                                <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                                                    {formatTimestamp(convo.lastMessageTimestamp)}
-                                                </p>
-                                            )}
+                            return (
+                                <Link href={`/inbox/${convo.id}`} key={convo.id}>
+                                    <div className={`p-4 flex items-start gap-4 transition-colors hover:bg-secondary ${isUnread ? 'bg-secondary' : 'bg-card'}`}>
+                                        <div className="relative h-16 w-16 flex-shrink-0">
+                                            <Image src={convo.adPhoto} alt={convo.adTitle} fill className="rounded-md object-cover" />
                                         </div>
-                                        <p className="text-sm text-muted-foreground">सोबत: {otherParticipant?.name || 'अज्ञात'}</p>
-                                        <p className={`text-sm truncate ${isUnread ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
-                                            {lastMessagePrefix}{convo.lastMessage || 'अद्याप कोणतेही संदेश नाहीत.'}
-                                        </p>
+                                        <div className="flex-grow overflow-hidden">
+                                            <div className="flex justify-between items-start">
+                                                <h3 className="font-semibold truncate">{convo.adTitle}</h3>
+                                                {convo.lastMessageTimestamp && (
+                                                    <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                                                        {formatTimestamp(convo.lastMessageTimestamp)}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">सोबत: {otherParticipant?.name || 'अज्ञात'}</p>
+                                            <p className={`text-sm truncate ${isUnread ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
+                                                {lastMessagePrefix}{convo.lastMessage || 'अद्याप कोणतेही संदेश नाहीत.'}
+                                            </p>
+                                        </div>
+                                        {isUnread && <div className="h-3 w-3 rounded-full bg-primary flex-shrink-0 mt-1"></div>}
                                     </div>
-                                     {isUnread && <div className="h-3 w-3 rounded-full bg-primary flex-shrink-0 mt-1"></div>}
-                                </div>
-                            </Link>
-                        )
-                    })}
-                </div>
-            ) : (
-                <div className="flex h-[calc(100vh-14rem)] flex-col items-center justify-center text-center p-4">
-                    <MessageSquarePlus className="h-16 w-16 text-muted-foreground/50" />
-                    <p className="mt-4 text-lg font-semibold text-muted-foreground">
-                        तुमचा इनबॉक्स रिकामा आहे.
-                    </p>
-                     <p className="mt-1 text-sm text-muted-foreground">
-                        एखाद्या जाहिरातीवर 'चॅट करा' बटण दाबून संभाषण सुरू करा.
-                    </p>
-                    <Button className="mt-6" onClick={() => router.push('/')}>
-                        जाहिराती ब्राउझ करा
-                    </Button>
-                </div>
-            )}
-        </main>
+                                </Link>
+                            )
+                        })}
+                    </div>
+                ) : (
+                    <div className="flex h-[calc(100vh-14rem)] flex-col items-center justify-center text-center p-4">
+                        <MessageSquarePlus className="h-16 w-16 text-muted-foreground/50" />
+                        <p className="mt-4 text-lg font-semibold text-muted-foreground">
+                            तुमचा इनबॉक्स रिकामा आहे.
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            एखाद्या जाहिरातीवर 'चॅट करा' बटण दाबून संभाषण सुरू करा.
+                        </p>
+                        <Button className="mt-6" onClick={() => router.push('/')}>
+                            जाहिराती ब्राउझ करा
+                        </Button>
+                    </div>
+                )}
+            </main>
+        </>
     );
 }
