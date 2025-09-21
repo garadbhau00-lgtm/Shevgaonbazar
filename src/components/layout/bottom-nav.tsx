@@ -50,7 +50,7 @@ export default function BottomNav() {
                   isAuthProtected && !loading && 'opacity-60'
                 )}
               >
-                <item.icon className="mb-0.5 h-5 w-5" />
+                <item.icon className="mb-0.5 h-4 w-4" />
                 <span className="text-[11px]">{item.label}</span>
               </Link>
             );
