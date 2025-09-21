@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { hi as mr } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
 
 export default function InboxPage() {
     const { user, loading: authLoading } = useAuth();
