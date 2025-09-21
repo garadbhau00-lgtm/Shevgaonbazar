@@ -21,6 +21,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { Ad } from '@/lib/types';
 import imageCompression from 'browser-image-compression';
+import { villageList } from '@/lib/villages';
 
 const adSchema = z.object({
   title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
@@ -29,7 +30,7 @@ const adSchema = z.object({
     required_error: 'कृपया एक श्रेणी निवडा.',
   }),
   price: z.coerce.number().positive({ message: 'किंमत ० पेक्षा जास्त असावी.' }),
-  location: z.string().min(2, { message: 'तुमच्या गावाचे नाव टाका.' }),
+  location: z.string({ required_error: 'कृपया एक गाव निवडा.' }),
   mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }),
 });
 
@@ -68,7 +69,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
       title: '',
       description: '',
       price: undefined,
-      location: '',
+      location: undefined,
       mobileNumber: '',
     },
   });
@@ -77,9 +78,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
         if (authLoading) return;
 
         if (!user) {
-            // Use a toast and redirect inside useEffect to avoid updating during render.
-            toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.' });
             router.push('/login');
+            toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.' });
         }
     }, [user, authLoading, router, toast]);
 
@@ -162,7 +162,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     try {
         let finalPhotoUrls: string[] = [];
 
-        // Scenario 1: New files were selected by the user.
         if (newFiles.length > 0) {
             const imageFile = newFiles[0];
             const options = {
@@ -172,18 +171,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
             };
 
             try {
-                console.log(`Original file size: ${(imageFile.size / 1024).toFixed(2)} KB`);
                 const compressedFile = await imageCompression(imageFile, options);
-                console.log(`Compressed file size: ${(compressedFile.size / 1024).toFixed(2)} KB`);
-
                 const dataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
                 finalPhotoUrls = [dataUrl];
-                
-                toast({ 
-                    title: 'फोटो यशस्वीरित्या कॉम्प्रेस केला',
-                    description: `नवीन आकार: ${(compressedFile.size / 1024).toFixed(2)} KB`
-                });
-
             } catch (compressionError) {
                 console.error('Image compression failed:', compressionError);
                 toast({
@@ -194,9 +184,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 setIsSubmitting(false);
                 return; 
             }
-        } 
-        // Scenario 2: No new files selected, but in edit mode with existing photos.
-        else if (isEditMode && existingAd?.photos) {
+        } else if (isEditMode && existingAd?.photos) {
             finalPhotoUrls = existingAd.photos;
         }
        
@@ -319,9 +307,18 @@ export default function AdForm({ existingAd }: AdFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>गाव</FormLabel>
-              <FormControl>
-                <Input placeholder="तुमच्या गावाचे नाव" {...field} disabled={isSubmitting}/>
-              </FormControl>
+               <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="एक गाव निवडा" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                    {villageList.map((village) => (
+                        <SelectItem key={village} value={village}>{village}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
