@@ -16,7 +16,7 @@ import Image from 'next/image';
 
 const baseMenuItems = [
     { label: "सेटिंग्स", icon: Settings, href: "#" },
-    { label: "मदत केंद्र", icon: HelpCircle, href: "#" },
+    { label: "मदत केंद्र", icon: HelpCircle, href: "/help-center" },
 ];
 
 const adminMenuItems = [
