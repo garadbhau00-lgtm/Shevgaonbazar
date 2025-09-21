@@ -43,14 +43,13 @@ service cloud.firestore {
     }
     // Rules for listing ads
     match /ads/{document=**} {
-      allow list: if request.query.get("where.status") == 'approved'
-                  || (
-                      request.auth != null && (
-                        (request.query.get("where.userId") == request.auth.uid)
-                        || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.get("where.status") == 'pending')
-                      )
-                  );
+      allow list: if request.query.where.status == 'approved'
+          || (request.auth != null && (
+              (request.query.where.userId == request.auth.uid)
+              || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.where.status == 'pending')
+             ));
     }
+
 
     // CONVERSATIONS & MESSAGES
     // Allow users to read, write, and create conversations they are a part of.
@@ -64,7 +63,7 @@ service cloud.firestore {
     }
     // Users can list conversations they are part of.
     match /conversations/{document=**} {
-      allow list: if request.auth != null && request.query.get("where.participants")['array-contains'] == request.auth.uid;
+     allow list: if request.auth != null && request.auth.uid == request.query.where.participants['array-contains'];
     }
   }
 }
@@ -85,7 +84,13 @@ You need to create composite indexes for the chat queries.
 
 - Collection ID: conversations
 - Fields to index:
-  1. participants (Array contains)
+  1. adId (Ascending)
+  2. participants (Array-contains)
+- Query scope: Collection
+
+- Collection ID: conversations
+- Fields to index:
+  1. participants (Array-contains)
   2. lastMessageTimestamp (Descending)
 - Query scope: Collection
 
