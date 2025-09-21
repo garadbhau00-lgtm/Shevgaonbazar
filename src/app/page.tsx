@@ -168,7 +168,7 @@ export default function Home() {
       </header>
       
       <main>
-        <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pt-2">
+        <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pt-2 pb-2">
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
             <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
