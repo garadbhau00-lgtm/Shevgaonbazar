@@ -28,7 +28,7 @@ export default function RootLayout({
       <body className={cn('font-body antialiased')}>
         <AuthProvider>
           <div className="relative mx-auto flex min-h-screen max-w-lg flex-col border-x bg-card">
-            <main className="flex-1 pb-16">{children}</main>
+            <main className="flex-1 pb-28">{children}</main>
             <BottomNav />
           </div>
           <Toaster />
