@@ -7,11 +7,9 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Sparkles, Upload, X as XIcon } from 'lucide-react';
-import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
+import { Loader2, Upload, X as XIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -25,8 +23,6 @@ import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
 
 const adSchema = z.object({
-  title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
-  description: z.string().min(10, { message: 'वर्णनासाठी किमान १० अक्षरे आवश्यक आहेत.' }),
   category: z.enum(
     [
       'पशुधन',
@@ -56,7 +52,6 @@ type AdFormProps = {
 const MAX_FILES = 1;
 
 export default function AdForm({ existingAd }: AdFormProps) {
-  const [isAiLoading, setIsAiLoading] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -72,16 +67,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const form = useForm<AdFormValues>({
     resolver: zodResolver(adSchema),
     defaultValues: isEditMode ? {
-        title: existingAd.title,
-        description: existingAd.description,
         category: existingAd.category,
         subcategory: existingAd.subcategory,
         price: existingAd.price,
         location: existingAd.location,
         mobileNumber: existingAd.mobileNumber,
     } : {
-      title: '',
-      description: '',
       price: undefined,
       location: undefined,
       mobileNumber: '',
@@ -128,7 +119,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   useEffect(() => {
     // Reset subcategory when main category changes
     form.setValue('subcategory', undefined);
-  }, [selectedCategory, form.setValue]);
+  }, [selectedCategory, form]);
 
 
   if (authLoading) {
@@ -152,25 +143,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
-    }
-  };
-
-  const handleSuggestion = async () => {
-    const description = form.getValues('description');
-    if (description.length < 10) {
-      form.setError('description', { type: 'manual', message: 'AI सूचनेसाठी किमान १० अक्षरे आवश्यक आहेत.' });
-      return;
-    }
-    setIsAiLoading(true);
-    try {
-      const result = await suggestAdDescription({ description });
-      form.setValue('description', result.improvedDescription, { shouldValidate: true });
-      toast({ title: 'AI ने वर्णन सुधारले आहे!' });
-    } catch (error) {
-      console.error('AI suggestion failed', error);
-      toast({ variant: 'destructive', title: 'AI सूचना अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
-    } finally {
-      setIsAiLoading(false);
     }
   };
   
@@ -220,8 +192,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
             finalPhotoUrls = existingAd.photos;
         }
        
+        const generatedTitle = data.subcategory ? `${data.category} - ${data.subcategory}` : data.category;
+
         const adData = {
             ...data,
+            title: generatedTitle,
+            description: '',
             photos: finalPhotoUrls,
             status: 'pending' as const,
             rejectionReason: '',
@@ -263,43 +239,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>शीर्षक</FormLabel>
-              <FormControl>
-                <Input placeholder="उदा. काळी म्हैस विक्रीसाठी" {...field} disabled={isSubmitting}/>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>वर्णन</FormLabel>
-                <div className="relative">
-                  <Textarea placeholder="तुमच्या उत्पादनाबद्दल सर्व माहिती लिहा..." {...field} className="pr-24" disabled={isSubmitting} />
-                  <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleSuggestion}
-                      disabled={isAiLoading || isSubmitting}
-                      className="absolute bottom-2 right-2 flex items-center gap-1 text-primary hover:text-primary"
-                  >
-                      {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                      <span>सुचवा</span>
-                  </Button>
-                </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
         <FormField
           control={form.control}
           name="category"
