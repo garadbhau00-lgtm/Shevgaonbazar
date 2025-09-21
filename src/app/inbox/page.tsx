@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { mr } from 'date-fns/locale';
+import { mr } from 'date-fns/locale/mr';
 
 export default function InboxPage() {
     const { user, loading: authLoading } = useAuth();
