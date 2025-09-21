@@ -149,8 +149,8 @@ export default function Home() {
 
   return (
     <div>
-      <header className="bg-card pb-4">
-        <div className="relative h-32 w-full text-white">
+      <header className="bg-card">
+        <div className="relative w-full text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
                 alt="Header background"
@@ -158,7 +158,7 @@ export default function Home() {
                 className="object-cover"
                 data-ai-hint="green forest"
             />
-            <div className="absolute inset-0 bg-black/50 flex flex-col justify-start p-4">
+            <div className="absolute inset-0 bg-black/50 flex flex-col justify-between p-4">
                 <div className="flex items-start justify-end">
                     <div className="flex items-center space-x-2">
                         {renderUserOptions()}
@@ -168,12 +168,11 @@ export default function Home() {
                     <h2 className="text-xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
                     <p className="text-xs max-w-md mt-1 mx-auto">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
                 </div>
+                 <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input placeholder="जाहिरात शोधा..." className="pl-10 bg-white/90 text-black placeholder:text-muted-foreground" />
+                </div>
             </div>
-        </div>
-        
-        <div className="relative px-4 -mt-6 z-10">
-          <Search className="absolute left-7 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input placeholder="जाहिरात शोधा..." className="pl-10 bg-white" />
         </div>
       </header>
 
