@@ -21,7 +21,6 @@ const baseMenuItems = [
 const adminMenuItems = [
     { label: "प्रवेश व्यवस्थापन", icon: ShieldCheck, href: "/access-management" },
     { label: "जाहिरात व्यवस्थापन", icon: ListChecks, href: "/ad-management" },
-    { label: "सर्व जाहिराती", icon: Database, href: "/all-ads"}
 ];
 
 export default function MorePage() {

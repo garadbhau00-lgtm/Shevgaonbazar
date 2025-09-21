@@ -42,10 +42,10 @@ service cloud.firestore {
       allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
     // Rules for listing ads
-     match /ads/{document=**} {
-        allow list: if (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin')
-            || (request.query.get('where').get('status') == 'approved')
-            || (request.auth != null && request.query.get('where').get('userId') == request.auth.uid);
+    match /ads/{document=**} {
+      allow list: if (request.query.where.status == 'approved')
+                  || (request.auth != null && request.query.where.userId == request.auth.uid)
+                  || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.where.status == 'pending');
     }
 
 
