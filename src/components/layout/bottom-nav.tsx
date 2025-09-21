@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Mail, Star, MoreHorizontal, Home, User, Plus } from 'lucide-react';
+import { Search, Star, MoreHorizontal, Home, User, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const baseNavItems = [
   { href: '/', label: 'होम', icon: Home },
-  { href: '/inbox', label: 'इनबॉक्स', icon: Mail, requiresAuth: true },
+  { href: '/search', label: 'शोधा', icon: Search },
   { href: '/post-ad', label: 'जाहिरात टाका', icon: Plus, requiresAuth: true },
   { href: '/my-ads', label: 'माझ्या जाहिराती', icon: Star, requiresAuth: true },
   { href: '/more', label: 'अधिक', icon: MoreHorizontal },
