@@ -157,7 +157,7 @@ export default function Home() {
                 className="object-cover"
                 data-ai-hint="green forest"
             />
-            <div className="absolute inset-0 bg-black/50 flex flex-col justify-end p-4">
+            <div className="absolute inset-0 bg-black/50 flex flex-col justify-start p-4">
                 <div className="flex items-start justify-end">
                     <div className="flex items-center space-x-2">
                         {renderUserOptions()}
