@@ -76,6 +76,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
       location: '',
     },
   });
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+          variant: 'destructive',
+          title: 'प्रवेश प्रतिबंधित',
+          description: isEditMode ? 'जाहिरात संपादित करण्यासाठी कृपया लॉगिन करा.' : 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.'
+      });
+      router.push('/login');
+    }
+  }, [authLoading, user, router, toast, isEditMode]);
   
   useEffect(() => {
     if (isEditMode && existingAd?.photos) {
@@ -99,22 +110,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [newFiles, existingAd]);
 
 
-  if (authLoading) {
+  if (authLoading || !user) {
       return (
           <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin" />
           </div>
       )
-  }
-
-  if (!user) {
-    router.push('/login');
-    toast({
-        variant: 'destructive',
-        title: 'प्रवेश प्रतिबंधित',
-        description: isEditMode ? 'जाहिरात संपादित करण्यासाठी कृपया लॉगिन करा.' : 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.'
-    })
-    return null;
   }
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
