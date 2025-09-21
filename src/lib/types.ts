@@ -18,6 +18,7 @@ export type Ad = {
   photos: string[]; // image urls
   status: 'pending' | 'approved' | 'rejected';
   userId: string;
+  userName?: string; // Seller's name
   createdAt: any; // Firestore timestamp
   updatedAt?: any; // Firestore timestamp
   rejectionReason?: string;

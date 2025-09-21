@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Bell, Loader2, LogOut, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
@@ -59,6 +59,20 @@ export default function Home() {
   const [adsLoading, setAdsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('सर्व');
 
+  const fetchUserName = useCallback(async (userId: string) => {
+    try {
+        const userDocRef = doc(db, 'users', userId);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+            return userDocSnap.data().name || 'अज्ञात विक्रेता';
+        }
+        return 'अज्ञात विक्रेता';
+    } catch (error) {
+        console.error("Error fetching user name:", error);
+        return 'अज्ञात विक्रेता';
+    }
+  }, []);
+
   useEffect(() => {
     const q = query(
         collection(db, 'ads'), 
@@ -66,8 +80,15 @@ export default function Home() {
         orderBy('createdAt', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const adsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ad));
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+        const adsDataPromises = querySnapshot.docs.map(async (docSnapshot) => {
+            const adData = { id: docSnapshot.id, ...docSnapshot.data() } as Ad;
+            const userName = await fetchUserName(adData.userId);
+            return { ...adData, userName };
+        });
+
+        const adsData = await Promise.all(adsDataPromises);
+        
         setAds(adsData);
         setAdsLoading(false);
     }, (error: any) => {
@@ -90,7 +111,7 @@ export default function Home() {
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, fetchUserName]);
   
   const filteredAds = selectedCategory === 'सर्व'
     ? ads
