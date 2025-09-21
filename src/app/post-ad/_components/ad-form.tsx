@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -99,14 +99,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
         // Revoke the blob URLs when the component unmounts or files change.
         objectUrls.forEach(url => URL.revokeObjectURL(url));
       };
-    } else if (existingAd?.photos) {
+    } else if (isEditMode && existingAd?.photos) {
         // If newFiles is cleared, fall back to existing ad photos.
         setPhotoPreviews(existingAd.photos);
     } else {
         // Otherwise, no previews.
         setPhotoPreviews([]);
     }
-  }, [newFiles, existingAd]);
+  }, [newFiles, isEditMode, existingAd]);
 
 
   if (authLoading) {
@@ -125,16 +125,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
 
   const removePhoto = (index: number) => {
-    // This handles removing both newly selected files and existing photos in edit mode.
-    if (newFiles.length > 0) {
-        const newFileArray = [...newFiles];
-        newFileArray.splice(index, 1);
-        setNewFiles(newFileArray);
-    } else {
-        const newPhotoPreviews = [...photoPreviews];
-        newPhotoPreviews.splice(index, 1);
-        setPhotoPreviews(newPhotoPreviews);
-    }
+    setNewFiles([]);
+    setPhotoPreviews([]);
     
     // Reset the file input so the user can re-select the same file if they want.
     if (fileInputRef.current) {
@@ -172,9 +164,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let finalPhotoUrls: string[] = photoPreviews.filter(p => !p.startsWith('blob:'));
+        let finalPhotoUrls: string[] = [];
 
         if (newFiles.length > 0) {
+            // Scenario 1: New files were selected. Upload them.
             const uploadPromises = newFiles.map(async (file) => {
                 const options = {
                     maxSizeMB: 0.5, // Target 500KB
@@ -203,12 +196,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
                 const imageRef = storageRef(storage, `ad-images/${user.uid}/${Date.now()}-${fileToUpload.name}`);
                 await uploadBytes(imageRef, fileToUpload);
-                const downloadURL = await getDownloadURL(imageRef);
-                return downloadURL;
+                return await getDownloadURL(imageRef);
             });
             
-            const uploadedUrls = await Promise.all(uploadPromises);
-            finalPhotoUrls = [...finalPhotoUrls, ...uploadedUrls];
+            finalPhotoUrls = await Promise.all(uploadPromises);
+
+        } else if (isEditMode && photoPreviews.length > 0) {
+            // Scenario 2: No new files, but in edit mode. Keep existing photos.
+            finalPhotoUrls = photoPreviews;
         }
        
         const adData = {
@@ -392,3 +387,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
