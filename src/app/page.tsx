@@ -146,7 +146,7 @@ export default function Home() {
 
   return (
     <div>
-      <header className="bg-card sticky top-0 z-20">
+       <header className="bg-card sticky top-0 z-20">
         <div className="relative w-full h-24 text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
@@ -166,31 +166,29 @@ export default function Home() {
             </div>
         </div>
       </header>
-
+      
       <main>
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-          <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pt-2">
+        <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pt-2">
+            <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
             <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
-                <TabsTrigger value="सर्व" className="flex-col h-auto gap-1 border p-3">
-                  <List className="h-5 w-5" />
+                <TabsTrigger value="सर्व" className="h-auto border p-2 text-[11px]">
                   सर्व
                 </TabsTrigger>
                 {categories.map((category) => (
                   <TabsTrigger
                     key={category.name}
                     value={category.name}
-                    className="flex-col h-auto gap-1 border p-3"
+                    className="h-auto border p-2 text-[11px]"
                   >
-                    <category.icon className="h-5 w-5" />
                     {category.name}
                   </TabsTrigger>
                 ))}
               </TabsList>
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
-          </div>
-        </Tabs>
+            </Tabs>
+        </div>
         <div className="p-4">
           <AdList ads={filteredAds} loading={adsLoading} />
         </div>
