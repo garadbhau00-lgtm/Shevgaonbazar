@@ -71,15 +71,9 @@ export default function AppHeader() {
 
   return (
     <header className={cn(
-        "sticky top-0 z-30 flex h-16 items-center justify-between px-4",
+        "sticky top-0 z-30 flex h-16 items-center justify-end px-4",
         isHomePage ? 'absolute inset-x-0 bg-transparent' : 'border-b bg-card'
     )}>
-      <Link href="/" className={cn(
-          "flex items-center gap-2 text-xl font-bold",
-          isHomePage ? 'text-white' : 'text-primary'
-      )}>
-        <Store className="h-6 w-6" />
-      </Link>
       <div className="flex items-center gap-2">
         {renderUserOptions()}
       </div>
