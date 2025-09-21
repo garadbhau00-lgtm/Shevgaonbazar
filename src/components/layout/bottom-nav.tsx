@@ -26,7 +26,7 @@ export default function BottomNav() {
     setIsClient(true);
   }, []);
 
-  const showNav = isClient && !pathname.startsWith('/login') && !pathname.startsWith('/signup');
+  const showNav = isClient && !pathname.startsWith('/login') && !pathname.startsWith('/signup') && !pathname.startsWith('/search');
 
   if (!showNav) {
     return null;

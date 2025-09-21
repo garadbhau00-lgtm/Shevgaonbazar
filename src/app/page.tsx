@@ -173,11 +173,20 @@ export default function Home() {
       <main>
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
           <div className="sticky top-[96px] z-20 bg-background p-4 pt-2">
+            <div className="relative mb-2">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="जाहिराती शोधा..."
+                className="w-full rounded-lg bg-secondary pl-8"
+                onFocus={() => router.push('/search')}
+              />
+            </div>
             <ScrollArea className="w-full whitespace-nowrap">
-              <TabsList className="inline-flex w-max">
-                <TabsTrigger value="सर्व">सर्व</TabsTrigger>
+              <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
+                <TabsTrigger value="सर्व" className="border">सर्व</TabsTrigger>
                 {categories.map((category) => (
-                  <TabsTrigger key={category.name} value={category.name}>
+                  <TabsTrigger key={category.name} value={category.name} className="border">
                     {category.name}
                   </TabsTrigger>
                 ))}

@@ -1,0 +1,136 @@
+
+'use client';
+
+import { useEffect, useState, useMemo } from 'react';
+import { Loader2, Search as SearchIcon, X, ArrowLeft } from 'lucide-react';
+import type { Ad } from '@/lib/types';
+import AdCard from '@/components/ad-card';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
+
+function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
+  if (loading) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-2 text-muted-foreground">जाहिराती लोड होत आहेत...</p>
+      </div>
+    );
+  }
+
+  if (ads.length === 0) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center text-center p-4">
+         <SearchIcon className="h-16 w-16 text-muted-foreground/50" />
+        <p className="mt-4 text-lg font-semibold text-muted-foreground">
+          कोणतेही परिणाम आढळले नाहीत.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          वेगळा शोध शब्द वापरून पहा.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {ads.map((ad) => (
+        <AdCard key={ad.id} ad={ad} />
+      ))}
+    </div>
+  );
+}
+
+export default function SearchPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [allAds, setAllAds] = useState<Ad[]>([]);
+  const [adsLoading, setAdsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const q = query(
+        collection(db, 'ads'), 
+        where('status', '==', 'approved'),
+        orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const adsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ad));
+        setAllAds(adsData);
+        setAdsLoading(false);
+    }, (error: any) => {
+        console.error("Error fetching ads: ", error);
+        toast({
+            variant: 'destructive',
+            title: 'त्रुटी',
+            description: 'जाहिराती आणण्यात अयशस्वी.'
+        });
+        setAdsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
+  
+  const filteredAds = useMemo(() => {
+    if (!searchTerm) {
+      return [];
+    }
+    const lowercasedTerm = searchTerm.toLowerCase();
+    return allAds.filter(ad => 
+        (ad.title && ad.title.toLowerCase().includes(lowercasedTerm)) ||
+        (ad.category && ad.category.toLowerCase().includes(lowercasedTerm)) ||
+        (ad.subcategory && ad.subcategory.toLowerCase().includes(lowercasedTerm)) ||
+        (ad.location && ad.location.toLowerCase().includes(lowercasedTerm))
+    );
+  }, [searchTerm, allAds]);
+  
+  const showInitialState = searchTerm.length === 0;
+
+  return (
+    <div>
+      <header className="sticky top-0 z-20 bg-background p-2 border-b">
+         <div className="flex items-center gap-2">
+             <button onClick={() => router.back()} className="p-2">
+                <ArrowLeft className="h-5 w-5" />
+             </button>
+            <div className="relative w-full">
+              <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="जाहिराती शोधा..."
+                className="w-full rounded-lg bg-secondary pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                autoFocus
+              />
+              {searchTerm && (
+                <button onClick={() => setSearchTerm('')} className="absolute right-2.5 top-2.5 text-muted-foreground">
+                    <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+         </div>
+      </header>
+
+      <main className="p-4">
+        {showInitialState ? (
+             <div className="flex h-64 flex-col items-center justify-center text-center p-4">
+                <SearchIcon className="h-16 w-16 text-muted-foreground/50" />
+                <p className="mt-4 text-lg font-semibold text-muted-foreground">
+                    तुमच्या गरजेनुसार काहीही शोधा
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    उदा. 'ट्रॅक्टर', 'कांदा', किंवा 'शेवगाव'
+                </p>
+            </div>
+        ) : (
+             <AdList ads={filteredAds} loading={adsLoading} />
+        )}
+      </main>
+    </div>
+  );
+}
