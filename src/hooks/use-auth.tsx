@@ -32,50 +32,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            if (firebaseUser) {
-                setUser(firebaseUser);
-            } else {
-                setUser(null);
-            }
+            setUser(firebaseUser);
             setLoading(false);
         });
-
         return () => unsubscribeAuth();
     }, []);
 
     useEffect(() => {
         let unsubscribeProfile: Unsubscribe | undefined;
-    
         if (user) {
-            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const profileData = docSnap.data() as UserProfile;
-                    if (profileData.disabled) {
+                     if (profileData.disabled) {
                         toast({ 
                             variant: 'destructive', 
                             title: 'खाते अक्षम केले आहे', 
                             description: 'तुमचे खाते प्रशासकाने अक्षम केले आहे.' 
                         });
                         signOut(auth);
-                        setUserProfile(null);
                     } else {
                         setUserProfile(profileData);
                     }
                 } else {
-                     setUserProfile(null);
+                    // This case can happen briefly if the user document hasn't been created yet.
+                    setUserProfile(null);
                 }
-                setLoading(false);
             }, (error) => {
                 console.error("Error fetching user profile:", error);
                 setUserProfile(null);
-                setLoading(false);
             });
         } else {
             setUserProfile(null);
         }
-    
+
         return () => {
             if (unsubscribeProfile) {
                 unsubscribeProfile();
