@@ -172,15 +172,17 @@ export default function Home() {
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
             <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
-                <TabsTrigger value="सर्व" className="h-auto border p-2 text-[11px]">
+                <TabsTrigger value="सर्व" className="h-auto flex flex-col gap-1.5 border p-2 text-[11px]">
+                  <List className="h-4 w-4" />
                   सर्व
                 </TabsTrigger>
                 {categories.map((category) => (
                   <TabsTrigger
                     key={category.name}
                     value={category.name}
-                    className="h-auto border p-2 text-[11px]"
+                    className="h-auto flex flex-col gap-1.5 border p-2 text-[11px]"
                   >
+                    <category.icon className="h-4 w-4" />
                     {category.name}
                   </TabsTrigger>
                 ))}
