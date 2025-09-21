@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, List } from 'lucide-react';
+import { Loader2, List, Search } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
 import AdCard from '@/components/ad-card';
@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { categories } from '@/lib/categories';
+import Image from 'next/image';
+import Link from 'next/link';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -88,6 +90,26 @@ export default function Home() {
 
   return (
     <div>
+      <header className="relative h-48 w-full">
+        <Image
+            src="https://picsum.photos/seed/header/1200/400"
+            alt="Header background"
+            fill
+            className="object-cover"
+            data-ai-hint="farm landscape"
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-white">
+            <h1 className="text-2xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h1>
+            <Link href="/search" className="mt-4 w-full max-w-md">
+                <div className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground ring-offset-background">
+                    <Search className="h-4 w-4 mr-2"/>
+                    <span>काहीही शोधा...</span>
+                </div>
+            </Link>
+        </div>
+      </header>
+
       <main>
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm p-4 pb-2">
            <div className="w-full overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
