@@ -1,8 +1,13 @@
 
-// CORRECT FIRESTORE RULES
-// It is recommended that you copy and paste these rules into your Firebase project's
-// Firestore rules editor to ensure the app works correctly.
+// CORRECT FIRESTORE RULES & INDEXES
+// It is recommended that you copy and paste these into your Firebase project's
+// Firestore console to ensure the app works correctly.
+
 /*
+RULES:
+Paste these into the "Rules" tab of your Firestore database.
+(Build > Firestore Database > Rules)
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -41,6 +46,19 @@ service cloud.firestore {
   }
 }
 */
+
+/*
+INDEXES:
+You need to create a composite index for the main ads query. Go to the "Indexes" tab
+in your Firestore console and create a new index with these settings:
+
+- Collection ID: ads
+- Fields to index:
+  1. status (Ascending)
+  2. createdAt (Descending)
+- Query scope: Collection
+*/
+
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';

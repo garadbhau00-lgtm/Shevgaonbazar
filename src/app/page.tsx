@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
 
 const categories = ['सर्व', 'पशुधन', 'शेती उत्पादन', 'उपकरणे'];
 
@@ -53,6 +54,7 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
 export default function Home() {
   const { user, userProfile, loading: authLoading, handleLogout } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [ads, setAds] = useState<Ad[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
 
@@ -67,13 +69,27 @@ export default function Home() {
         const adsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ad));
         setAds(adsData);
         setAdsLoading(false);
-    }, (error) => {
+    }, (error: any) => {
         console.error("Error fetching ads: ", error);
+        if (error.code === 'failed-precondition' && error.message.includes('index')) {
+          toast({
+            variant: 'destructive',
+            title: 'डेटाबेस त्रुटी: इंडेक्स आवश्यक',
+            description: 'जाहिराती आणण्यासाठी फायरस्टोअर इंडेक्स आवश्यक आहे. कृपया फायरबेस कन्सोलमध्ये इंडेक्स तयार करा.',
+            duration: 10000,
+          })
+        } else {
+           toast({
+            variant: 'destructive',
+            title: 'त्रुटी',
+            description: 'जाहिराती आणण्यात अयशस्वी.'
+           })
+        }
         setAdsLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   const livestockAds = ads.filter((ad) => ad.category === 'पशुधन');
   const produceAds = ads.filter((ad) => ad.category === 'शेती उत्पादन');
@@ -99,8 +115,8 @@ export default function Home() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>
-                <p>{userProfile.name || userProfile.email}</p>
-                {userProfile.name && <p className="text-xs text-muted-foreground font-normal">{userProfile.email}</p>}
+                <p>{userProfile.name || user.email}</p>
+                {userProfile.name && <p className="text-xs text-muted-foreground font-normal">{user.email}</p>}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/my-ads')}>
