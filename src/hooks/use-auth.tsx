@@ -147,6 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     description = 'या अॅपला Google साइन-इन वापरण्याची परवानगी नाही. (SHA-1 fingerprint configuration error).';
                     break;
                 case 'permission-denied':
+                case 'PERMISSION_DENIED':
                     title = 'परवानगी नाकारली';
                     description = 'डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा.';
                     break;
