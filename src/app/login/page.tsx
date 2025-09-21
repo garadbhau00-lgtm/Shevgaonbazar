@@ -81,7 +81,8 @@ export default function LoginPage() {
         )
     }
     
-    // If user is already logged in, redirecting...
+    // If user is already logged in, they will be redirected by the useEffect.
+    // So we can safely render the form if there is no user.
     if (user) {
          return (
             <div className="flex h-screen items-center justify-center">
@@ -89,7 +90,6 @@ export default function LoginPage() {
             </div>
         )
     }
-
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
