@@ -173,7 +173,7 @@ export default function Home() {
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
             <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0 h-16 items-center overflow-y-hidden">
-                <TabsTrigger value="सर्व" className="h-auto flex flex-col items-center justify-center gap-1 p-1 text-[10px] rounded-lg data-[state=active]:bg-primary/10">
+                <TabsTrigger value="सर्व" className="h-auto flex flex-col items-center justify-center gap-1 p-1 text-[10px] rounded-lg border data-[state=active]:bg-primary/10">
                   <List className="h-4 w-4" />
                   सर्व
                 </TabsTrigger>
@@ -181,7 +181,7 @@ export default function Home() {
                   <TabsTrigger
                     key={category.name}
                     value={category.name}
-                    className="h-auto flex flex-col items-center justify-center gap-1 p-1 text-[10px] rounded-lg data-[state=active]:bg-primary/10"
+                    className="h-auto flex flex-col items-center justify-center gap-1 p-1 text-[10px] rounded-lg border data-[state=active]:bg-primary/10"
                   >
                     <category.icon className="h-4 w-4" />
                     {category.name}
