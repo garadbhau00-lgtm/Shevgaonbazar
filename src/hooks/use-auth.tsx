@@ -30,31 +30,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     
-    // Listen for auth state changes
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                 if (user?.uid !== firebaseUser.uid) { // Check if it's a new user login
-                    setUser(firebaseUser);
-                }
-            } else {
-                setUser(null);
-                setUserProfile(null);
-            }
+        const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+            setUser(firebaseUser);
             setLoading(false);
         });
 
-        return () => unsubscribe();
-    }, [user]);
+        return () => unsubscribeAuth();
+    }, []);
 
-    // Listen for user profile changes
     useEffect(() => {
         if (!user) {
             setUserProfile(null);
             return;
         }
 
-        const unsubscribe = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+        const unsubscribeProfile = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
             if (docSnap.exists()) {
                 const profileData = docSnap.data() as UserProfile;
                 if (profileData.disabled) {
@@ -63,15 +54,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 } else {
                     setUserProfile(profileData);
                 }
-            } else {
-                // This might happen if a user is created via auth but their doc creation fails.
-                // We can try to create it here as a fallback.
-                console.error("User profile document not found. This should not happen.");
             }
         });
 
-        return () => unsubscribe();
-
+        return () => unsubscribeProfile();
     }, [user, toast]);
 
 
