@@ -123,7 +123,7 @@ export default function AdDetailPage() {
 
                 <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-background border-t">
                     <Link href={`tel:${ad.mobileNumber}`} className="w-full">
-                        <Button className="w-full" size="lg">
+                        <Button className="w-full bg-green-600 hover:bg-green-700" size="lg">
                             <Phone className="mr-2 h-5 w-5" />
                             कॉल करा
                         </Button>
