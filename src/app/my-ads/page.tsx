@@ -11,10 +11,21 @@ import { Edit, Loader2, Trash2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 
 const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'destructive' => {
   switch (status) {
@@ -39,6 +50,8 @@ export default function MyAdsPage() {
     const { toast } = useToast();
     const [myAds, setMyAds] = useState<Ad[]>([]);
     const [adsLoading, setAdsLoading] = useState(true);
+    const [adToDelete, setAdToDelete] = useState<Ad | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (authLoading) return;
@@ -66,7 +79,6 @@ export default function MyAdsPage() {
             setAdsLoading(false);
         }, (error) => {
             console.error("Error fetching user ads: ", error);
-            // This toast is for developers, as users should have the index by now.
             if (error.message.includes("requires an index")) {
                  toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमच्या जाहिराती आणण्यात अयशस्वी. कृपया फायरस्टोअर इंडेक्स तपासा.' });
             } else {
@@ -77,6 +89,31 @@ export default function MyAdsPage() {
 
         return () => unsubscribe();
     }, [user, authLoading, router, toast]);
+
+    const handleConfirmDelete = async () => {
+        if (!adToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            const adDocRef = doc(db, 'ads', adToDelete.id);
+            await deleteDoc(adDocRef);
+            toast({
+                title: 'यशस्वी!',
+                description: 'तुमची जाहिरात यशस्वीरित्या हटवली आहे.',
+            });
+            setAdToDelete(null);
+        } catch (error) {
+            console.error("Error deleting ad: ", error);
+            toast({
+                variant: 'destructive',
+                title: 'त्रुटी',
+                description: 'जाहिरात हटवण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
 
     if (authLoading || adsLoading) {
         return (
@@ -92,7 +129,7 @@ export default function MyAdsPage() {
     return (
         <div>
             <AppHeader showUserOptions={false}/>
-            <main className="p-4">
+            <main className="p-4 pb-20">
                 <div className="mb-4">
                     <h1 className="text-2xl font-bold">माझ्या जाहिराती</h1>
                     <p className="text-muted-foreground">तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.</p>
@@ -108,7 +145,7 @@ export default function MyAdsPage() {
                                             {ad.photos && ad.photos.length > 0 ? (
                                                 <Image
                                                     src={ad.photos[0]}
-                                                    alt={ad.title}
+                                                    alt={ad.title || ''}
                                                     fill
                                                     className="object-cover"
                                                 />
@@ -131,7 +168,7 @@ export default function MyAdsPage() {
                                         <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setAdToDelete(ad)}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </CardFooter>
@@ -159,6 +196,28 @@ export default function MyAdsPage() {
                     </div>
                 )}
             </main>
+
+             <AlertDialog open={!!adToDelete} onOpenChange={(open) => !open && setAdToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>तुम्ही जाहिरात हटवण्याची खात्री आहे का?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ही क्रिया पूर्ववत केली जाऊ शकत नाही. यामुळे तुमची जाहिरात आमच्या सर्व्हरवरून कायमची हटवली जाईल.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>रद्द करा</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            हटवा
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
