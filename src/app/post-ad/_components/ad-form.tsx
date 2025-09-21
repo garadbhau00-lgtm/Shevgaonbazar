@@ -15,13 +15,11 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { Ad } from '@/lib/types';
-import imageCompression from 'browser-image-compression';
 
 
 const adSchema = z.object({
@@ -73,15 +71,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
   });
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      toast({
-          variant: 'destructive',
-          title: 'प्रवेश प्रतिबंधित',
-          description: isEditMode ? 'जाहिरात संपादित करण्यासाठी कृपया लॉगिन करा.' : 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.'
-      });
+    if (authLoading) return;
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Unauthorized', description: 'Please log in to post an ad.' });
       router.push('/login');
+      return;
     }
-  }, [authLoading, user, router, toast, isEditMode]);
+  }, [authLoading, user, router, toast]);
   
   useEffect(() => {
     if (isEditMode && existingAd?.photos) {
@@ -128,7 +124,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setNewFiles([]);
     setPhotoPreviews([]);
     
-    // Reset the file input so the user can re-select the same file if they want.
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -167,42 +162,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
         let finalPhotoUrls: string[] = [];
 
         if (newFiles.length > 0) {
-            // Scenario 1: New files were selected. Upload them.
-            const uploadPromises = newFiles.map(async (file) => {
-                const options = {
-                    maxSizeMB: 0.5, // Target 500KB
-                    maxWidthOrHeight: 1280,
-                    useWebWorker: true,
-                };
-                
-                const originalSize = (file.size / 1024).toFixed(2);
-                let fileToUpload = file;
-                try {
-                    const compressedFile = await imageCompression(file, options);
-                    const newSize = (compressedFile.size / 1024).toFixed(2);
-                    toast({ 
-                        title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला', 
-                        description: `मूळ आकार: ${originalSize} KB, नवीन आकार: ${newSize} KB` 
-                    });
-                    fileToUpload = compressedFile;
-                } catch (compressionError) {
-                    console.error('Image compression failed:', compressionError);
-                    toast({ 
-                        variant: 'destructive', 
-                        title: 'फोटो कॉम्प्रेशन अयशस्वी', 
-                        description: 'मूळ फोटो अपलोड करण्याचा प्रयत्न करत आहे.' 
-                    });
-                }
-
-                const imageRef = storageRef(storage, `ad-images/${user.uid}/${Date.now()}-${fileToUpload.name}`);
-                await uploadBytes(imageRef, fileToUpload);
-                return await getDownloadURL(imageRef);
-            });
-            
-            finalPhotoUrls = await Promise.all(uploadPromises);
-
+            // A new file was selected. Generate a new placeholder URL.
+            const seed = Date.now();
+            finalPhotoUrls = [`https://picsum.photos/seed/${seed}/600/400`];
+            toast({ title: "Placeholder Image Generated", description: "A new random placeholder image will be used for your ad." });
         } else if (isEditMode && photoPreviews.length > 0) {
-            // Scenario 2: No new files, but in edit mode. Keep existing photos.
+            // No new file, but in edit mode. Keep existing photos.
             finalPhotoUrls = photoPreviews;
         }
        
@@ -232,7 +197,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         if (error.code === 'storage/unauthorized') {
             errorMessage = "फोटो अपलोड करण्यासाठी परवानगी नाही. कृपया तुमचे फायरबेस स्टोरेज नियम तपासा.";
         } else if (error.code === 'resource-exhausted' || error.message.includes('size exceeded')) {
-            errorMessage = "फाइलचा आकार खूप मोठा आहे. कृपया 5MB पेक्षा लहान फाइल अपलोड करा."
+            errorMessage = "डेटा खूप मोठा आहे. कृपया पुन्हा प्रयत्न करा.";
         }
         toast({
             variant: "destructive",
