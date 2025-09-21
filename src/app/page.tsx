@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -91,7 +92,7 @@ export default function Home() {
 
   return (
     <div>
-      <div className="relative h-48 w-full">
+      <div className="relative h-40 w-full">
         <AppHeader />
         <Image
             src="https://picsum.photos/seed/header/1200/400"
