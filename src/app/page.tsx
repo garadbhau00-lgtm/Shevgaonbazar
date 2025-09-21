@@ -171,9 +171,9 @@ export default function Home() {
       <main>
         <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pt-2 pb-2">
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-            <ScrollArea className="w-full whitespace-nowrap [&>div>div[style*='position:absolute']]:hidden">
+            <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
-                <TabsTrigger value="सर्व" className="h-auto flex flex-col gap-1.5 p-2 text-[11px] rounded-lg">
+                <TabsTrigger value="सर्व" className="h-auto flex flex-col items-center justify-center gap-1.5 p-2 text-[11px] rounded-lg data-[state=active]:bg-primary/10">
                   <List className="h-4 w-4" />
                   सर्व
                 </TabsTrigger>
@@ -181,7 +181,7 @@ export default function Home() {
                   <TabsTrigger
                     key={category.name}
                     value={category.name}
-                    className="h-auto flex flex-col gap-1.5 p-2 text-[11px] rounded-lg"
+                    className="h-auto flex flex-col items-center justify-center gap-1.5 p-2 text-[11px] rounded-lg data-[state=active]:bg-primary/10"
                   >
                     <category.icon className="h-4 w-4" />
                     {category.name}
