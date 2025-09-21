@@ -1,4 +1,5 @@
 
+
 export type Ad = {
   id: string;
   title?: string;
@@ -39,4 +40,31 @@ export type User = {
     village: string;
     phone: string;
     role: 'Farmer' | 'Admin';
+};
+
+export type ChatMessage = {
+  id: string;
+  text: string;
+  senderId: string;
+  timestamp: any; // Firestore Timestamp
+};
+
+export type Conversation = {
+  id: string;
+  participants: string[]; // array of user UIDs
+  participantProfiles: {
+    [uid: string]: {
+      name: string;
+      photoURL?: string;
+    }
+  },
+  adId: string;
+  adPhoto: string;
+  adTitle: string;
+  lastMessage?: string;
+  lastMessageSenderId?: string;
+  lastMessageTimestamp?: any; // Firestore Timestamp
+  unreadBy: {
+    [uid: string]: boolean;
+  }
 };

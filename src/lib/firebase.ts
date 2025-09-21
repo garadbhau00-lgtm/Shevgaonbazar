@@ -1,5 +1,6 @@
 
 
+
 // CORRECT FIRESTORE RULES & INDEXES
 // It is recommended that you copy and paste these into your Firebase project's
 // Firestore console to ensure the app works correctly.
@@ -46,6 +47,21 @@ service cloud.firestore {
      match /ads/{document=**} {
         allow list: if true;
     }
+
+    // CONVERSATIONS & MESSAGES
+    // Allow users to read and write conversations they are a part of.
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
+      
+      // Allow users to read and write messages within a conversation they are part of.
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
+      }
+    }
+     // Users can only list conversations they are part of.
+    match /conversations/{document=**} {
+        allow list: if request.auth != null && resource.data.participants.hasAny([request.auth.uid]);
+    }
   }
 }
 */
@@ -60,6 +76,19 @@ in your Firestore console and create a new index with these settings:
   1. status (Ascending)
   2. createdAt (Descending)
 - Query scope: Collection
+
+You need to create composite indexes for the chat queries.
+
+- Collection ID: conversations
+- Fields to index:
+  1. participants (Array contains)
+  2. lastMessageTimestamp (Descending)
+- Query scope: Collection
+
+- Collection ID: messages
+- Fields to index:
+  1. timestamp (Ascending)
+- Query scope: Collection Group
 */
 
 
