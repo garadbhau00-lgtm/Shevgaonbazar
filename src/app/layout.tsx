@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import BottomNav from '@/components/layout/bottom-nav';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/use-auth';
+import AppHeader from '@/components/layout/app-header';
 
 export const metadata: Metadata = {
   title: 'शेवगाव बाजार',
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className={cn('font-body antialiased')}>
         <AuthProvider>
           <div className="relative mx-auto flex min-h-screen max-w-lg flex-col border-x bg-card">
+            <AppHeader />
             <main className="flex-1 pb-28">{children}</main>
             <BottomNav />
           </div>

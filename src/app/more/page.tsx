@@ -2,7 +2,6 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import AppHeader from "@/components/layout/app-header";
 import { ChevronRight, HelpCircle, LogIn, LogOut, Settings, User, UserPlus, ShieldCheck, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -91,40 +90,37 @@ export default function MorePage() {
 
 
     return (
-        <div>
-            <AppHeader showUserOptions={false} />
-            <main className="p-4">
-                {renderUserProfile()}
+        <main className="p-4">
+            {renderUserProfile()}
 
-                <div className="space-y-2">
-                    {getMenuItems().map((item) => (
-                        <Link
-                            href={item.href}
-                            key={item.label}
-                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary"
-                        >
-                            <div className="flex items-center gap-4">
-                                <item.icon className="h-5 w-5 text-primary" />
-                                <span className="font-medium">{item.label}</span>
-                            </div>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        </Link>
-                    ))}
-                     {user && (
-                        <div
-                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary cursor-pointer"
-                            onClick={onLogout}
-                        >
-                            <div className="flex items-center gap-4">
-                                <LogOut className="h-5 w-5 text-destructive" />
-                                <span className="font-medium text-destructive">लॉगआउट</span>
-                            </div>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            <div className="space-y-2">
+                {getMenuItems().map((item) => (
+                    <Link
+                        href={item.href}
+                        key={item.label}
+                        className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary"
+                    >
+                        <div className="flex items-center gap-4">
+                            <item.icon className="h-5 w-5 text-primary" />
+                            <span className="font-medium">{item.label}</span>
                         </div>
-                    )}
-                </div>
-            </main>
-        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                ))}
+                 {user && (
+                    <div
+                        className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary cursor-pointer"
+                        onClick={onLogout}
+                    >
+                        <div className="flex items-center gap-4">
+                            <LogOut className="h-5 w-5 text-destructive" />
+                            <span className="font-medium text-destructive">लॉगआउट</span>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                )}
+            </div>
+        </main>
     );
 }
 

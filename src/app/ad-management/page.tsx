@@ -8,7 +8,6 @@ import { db } from '@/lib/firebase';
 import type { Ad } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import AppHeader from '@/components/layout/app-header';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Check, X, BadgeIndianRupee } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -124,70 +123,64 @@ export default function AdManagementPage() {
 
     if (authLoading || pageLoading) {
         return (
-            <div>
-                <AppHeader showUserOptions={false} />
-                <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
+            <div className="flex justify-center items-center h-[calc(100vh-8rem)]">
+                <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         );
     }
 
     return (
-        <div>
-            <AppHeader showUserOptions={false} />
-            <main className="p-4">
-                <div className="mb-4">
-                    <h1 className="text-2xl font-bold">जाहिरात व्यवस्थापन</h1>
-                    <p className="text-muted-foreground">प्रलंबित जाहिरातींचे पुनरावलोकन करा, स्वीकृत करा किंवा नाकारा.</p>
-                </div>
-                <div className="space-y-4">
-                    {ads.length > 0 ? ads.map((ad) => (
-                        <Card key={ad.id} className="overflow-hidden">
-                            <div className="relative h-40 w-full">
-                                {ad.photos && ad.photos.length > 0 && (
-                                    <Image src={ad.photos[0]} alt={ad.title || ''} fill className="object-cover" />
-                                )}
-                                <Badge variant={getStatusVariant(ad.status)} className="absolute top-2 right-2">
-                                    {statusTranslations[ad.status]}
-                                </Badge>
-                            </div>
-                            <CardHeader>
-                                <CardTitle>{ad.title}</CardTitle>
-                                <CardDescription>{ad.location}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">{ad.description}</p>
-                                <div className="mt-2 flex items-center font-semibold text-primary">
-                                    <BadgeIndianRupee className="h-5 w-5 mr-1" />
-                                    <span>{ad.price.toLocaleString('en-IN')}</span>
-                                </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-end gap-2 bg-secondary/50 p-3">
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleOpenRejectDialog(ad)}
-                                >
-                                    <X className="mr-1 h-4 w-4" /> नाकारा
-                                </Button>
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={() => handleUpdateStatus(ad, 'approved')}
-                                >
-                                    <Check className="mr-1 h-4 w-4" /> स्वीकृत करा
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    )) : (
-                        <div className="text-center text-muted-foreground mt-8 rounded-lg border-2 border-dashed py-12">
-                            <p className="text-lg font-semibold">कोणत्याही प्रलंबित जाहिराती नाहीत.</p>
-                            <p className="text-sm">जेव्हा वापरकर्ते जाहिराती सबमिट करतील, तेव्हा त्या येथे दिसतील.</p>
+        <main className="p-4">
+            <div className="mb-4">
+                <h1 className="text-2xl font-bold">जाहिरात व्यवस्थापन</h1>
+                <p className="text-muted-foreground">प्रलंबित जाहिरातींचे पुनरावलोकन करा, स्वीकृत करा किंवा नाकारा.</p>
+            </div>
+            <div className="space-y-4">
+                {ads.length > 0 ? ads.map((ad) => (
+                    <Card key={ad.id} className="overflow-hidden">
+                        <div className="relative h-40 w-full">
+                            {ad.photos && ad.photos.length > 0 && (
+                                <Image src={ad.photos[0]} alt={ad.title || ''} fill className="object-cover" />
+                            )}
+                            <Badge variant={getStatusVariant(ad.status)} className="absolute top-2 right-2">
+                                {statusTranslations[ad.status]}
+                            </Badge>
                         </div>
-                    )}
-                </div>
-            </main>
+                        <CardHeader>
+                            <CardTitle>{ad.title}</CardTitle>
+                            <CardDescription>{ad.location}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground">{ad.description}</p>
+                            <div className="mt-2 flex items-center font-semibold text-primary">
+                                <BadgeIndianRupee className="h-5 w-5 mr-1" />
+                                <span>{ad.price.toLocaleString('en-IN')}</span>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-end gap-2 bg-secondary/50 p-3">
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleOpenRejectDialog(ad)}
+                            >
+                                <X className="mr-1 h-4 w-4" /> नाकारा
+                            </Button>
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleUpdateStatus(ad, 'approved')}
+                            >
+                                <Check className="mr-1 h-4 w-4" /> स्वीकृत करा
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                )) : (
+                    <div className="text-center text-muted-foreground mt-8 rounded-lg border-2 border-dashed py-12">
+                        <p className="text-lg font-semibold">कोणत्याही प्रलंबित जाहिराती नाहीत.</p>
+                        <p className="text-sm">जेव्हा वापरकर्ते जाहिराती सबमिट करतील, तेव्हा त्या येथे दिसतील.</p>
+                    </div>
+                )}
+            </div>
             <AlertDialog open={!!adToReject} onOpenChange={(open) => !open && handleCloseRejectDialog()}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -215,6 +208,6 @@ export default function AdManagementPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </main>
     );
 }

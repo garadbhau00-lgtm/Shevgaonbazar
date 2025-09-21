@@ -2,7 +2,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AppHeader from '@/components/layout/app-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -117,85 +116,79 @@ export default function MyAdsPage() {
 
     if (authLoading || adsLoading) {
         return (
-            <div>
-                <AppHeader showUserOptions={false} />
-                <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
+            <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         )
     }
 
     return (
-        <div>
-            <AppHeader showUserOptions={false}/>
-            <main className="p-4 pb-20">
-                <div className="mb-4">
-                    <h1 className="text-2xl font-bold">माझ्या जाहिराती</h1>
-                    <p className="text-muted-foreground">तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.</p>
+        <main className="p-4 pb-20">
+            <div className="mb-4">
+                <h1 className="text-2xl font-bold">माझ्या जाहिराती</h1>
+                <p className="text-muted-foreground">तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.</p>
+            </div>
+
+            {myAds.length > 0 ? (
+                <div className="space-y-4">
+                    {myAds.map(ad => (
+                        <Card key={ad.id} className="flex flex-col">
+                            <div className='flex items-center w-full'>
+                                <CardHeader className="flex-shrink-0 p-2">
+                                    <div className="relative h-20 w-20 rounded-md overflow-hidden">
+                                        {ad.photos && ad.photos.length > 0 ? (
+                                            <Image
+                                                src={ad.photos[0]}
+                                                alt={ad.title || ''}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        ): (
+                                            <div className="h-full w-full bg-secondary flex items-center justify-center">
+                                                <p className="text-xs text-muted-foreground">फोटो नाही</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="flex-grow p-3">
+                                    <h3 className="font-semibold">{ad.title}</h3>
+                                    <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
+
+                                    <Badge variant={getStatusVariant(ad.status)} className="mt-1">
+                                        {statusTranslations[ad.status]}
+                                    </Badge>
+                                </CardContent>
+                                <CardFooter className="p-3 space-x-2">
+                                    <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)}>
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setAdToDelete(ad)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </CardFooter>
+                            </div>
+                            {ad.status === 'rejected' && ad.rejectionReason && (
+                                <Alert variant="destructive" className="m-4 mt-0">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>नाकारण्याचे कारण</AlertTitle>
+                                    <AlertDescription>
+                                        {ad.rejectionReason}
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                        </Card>
+                    ))}
                 </div>
-
-                {myAds.length > 0 ? (
-                    <div className="space-y-4">
-                        {myAds.map(ad => (
-                            <Card key={ad.id} className="flex flex-col">
-                                <div className='flex items-center w-full'>
-                                    <CardHeader className="flex-shrink-0 p-2">
-                                        <div className="relative h-20 w-20 rounded-md overflow-hidden">
-                                            {ad.photos && ad.photos.length > 0 ? (
-                                                <Image
-                                                    src={ad.photos[0]}
-                                                    alt={ad.title || ''}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            ): (
-                                                <div className="h-full w-full bg-secondary flex items-center justify-center">
-                                                    <p className="text-xs text-muted-foreground">फोटो नाही</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="flex-grow p-3">
-                                        <h3 className="font-semibold">{ad.title}</h3>
-                                        <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
-
-                                        <Badge variant={getStatusVariant(ad.status)} className="mt-1">
-                                            {statusTranslations[ad.status]}
-                                        </Badge>
-                                    </CardContent>
-                                    <CardFooter className="p-3 space-x-2">
-                                        <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setAdToDelete(ad)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </CardFooter>
-                                </div>
-                                {ad.status === 'rejected' && ad.rejectionReason && (
-                                    <Alert variant="destructive" className="m-4 mt-0">
-                                        <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>नाकारण्याचे कारण</AlertTitle>
-                                        <AlertDescription>
-                                            {ad.rejectionReason}
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                            </Card>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed text-center">
-                        <p className="text-lg font-semibold text-muted-foreground">
-                            तुम्ही अद्याप एकही जाहिरात पोस्ट केलेली नाही.
-                        </p>
-                        <Button className="mt-4" onClick={() => router.push('/post-ad')}>
-                            पहिली जाहिरात पोस्ट करा
-                        </Button>
-                    </div>
-                )}
-            </main>
+            ) : (
+                <div className="flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed text-center">
+                    <p className="text-lg font-semibold text-muted-foreground">
+                        तुम्ही अद्याप एकही जाहिरात पोस्ट केलेली नाही.
+                    </p>
+                    <Button className="mt-4" onClick={() => router.push('/post-ad')}>
+                        पहिली जाहिरात पोस्ट करा
+                    </Button>
+                </div>
+            )}
 
              <AlertDialog open={!!adToDelete} onOpenChange={(open) => !open && setAdToDelete(null)}>
                 <AlertDialogContent>
@@ -218,6 +211,6 @@ export default function MyAdsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </main>
     );
 }
