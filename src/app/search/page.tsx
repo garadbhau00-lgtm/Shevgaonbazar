@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/app-header';
+import Image from 'next/image';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -93,12 +94,23 @@ export default function SearchPage() {
 
   return (
     <div>
-      <AppHeader />
-      <header className="sticky top-16 z-20 bg-background p-2 border-b">
+      <div className="relative h-28 w-full">
+        <AppHeader />
+        <Image
+          src="https://picsum.photos/seed/search-page/1200/400"
+          alt="Search page background"
+          fill
+          className="object-cover"
+          data-ai-hint="magnifying glass farm"
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+          <h1 className="text-lg font-bold">जाहिराती शोधा</h1>
+          <p className="mt-2 text-xs max-w-xl">तुम्हाला जे हवे आहे ते शोधा, जलद आणि सहज.</p>
+        </div>
+      </div>
+      <header className="sticky top-0 z-20 bg-background p-2 border-b">
          <div className="flex items-center gap-2">
-             <button onClick={() => router.back()} className="p-2">
-                <ArrowLeft className="h-5 w-5" />
-             </button>
             <div className="relative w-full">
               <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input

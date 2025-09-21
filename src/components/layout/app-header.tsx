@@ -27,7 +27,7 @@ export default function AppHeader() {
     router.push('/login');
   };
 
-  const isTransparentPage = ['/', '/post-ad', '/my-ads', '/more'].includes(pathname);
+  const isTransparentPage = ['/', '/post-ad', '/my-ads', '/more', '/search'].includes(pathname);
 
   const renderUserOptions = () => {
     if (!isClient || authLoading) {
