@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDocs, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -58,6 +58,13 @@ export default function SignupPage() {
     
     const { isSubmitting } = form.formState;
 
+    useEffect(() => {
+        if (!loading && user) {
+            router.push('/');
+        }
+    }, [user, loading, router]);
+
+
     async function onSubmit(data: SignupFormValues) {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
@@ -73,8 +80,7 @@ export default function SignupPage() {
             });
 
             toast({
-                title: "खाते तयार झाले!",
-                description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: Farmer`,
+                title: "Sign in successfully.",
             });
             
         } catch (error: any) {
@@ -102,8 +108,7 @@ export default function SignupPage() {
     }
 
     if (user) {
-        router.push('/');
-        return null;
+        return null; 
     }
 
     return (
