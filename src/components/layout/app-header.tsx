@@ -1,7 +1,6 @@
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import NotificationBell from '@/components/notification-bell';
 import { useAuth } from '@/hooks/use-auth';
 
 type AppHeaderProps = {
@@ -15,7 +14,6 @@ export default function AppHeader({ showUserOptions = true }: AppHeaderProps) {
       <div className="text-xl font-bold text-primary">शेवगाव बाजार</div>
       {showUserOptions && (
         <div className="flex items-center gap-2">
-          {user && <NotificationBell />}
           <Button asChild variant="outline">
             <Link href="/login">लॉगिन करा</Link>
           </Button>

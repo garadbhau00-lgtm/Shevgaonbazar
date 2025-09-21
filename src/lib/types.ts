@@ -40,14 +40,3 @@ export type User = {
     phone: string;
     role: 'Farmer' | 'Admin';
 };
-
-export type Notification = {
-    id: string;
-    userId: string;
-    adId: string;
-    adTitle: string;
-    message: string;
-    type: 'ad-approved' | 'ad-rejected';
-    read: boolean;
-    createdAt: any; // Firestore timestamp
-};

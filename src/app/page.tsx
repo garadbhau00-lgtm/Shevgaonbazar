@@ -18,7 +18,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { categories } from '@/lib/categories';
-import NotificationBell from '@/components/notification-bell';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -149,7 +148,6 @@ export default function Home() {
         <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-primary">शेवगाव बाजार</h1>
             <div className="flex items-center space-x-2">
-                {user && <NotificationBell />}
                 {renderUserOptions()}
             </div>
         </div>

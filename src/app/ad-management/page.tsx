@@ -80,30 +80,10 @@ export default function AdManagementPage() {
         }
     }, [authLoading, userProfile, router, toast]);
 
-    const createNotification = async (ad: Ad, type: 'ad-approved' | 'ad-rejected', reason?: string) => {
-        try {
-            await addDoc(collection(db, 'notifications'), {
-                userId: ad.userId,
-                adId: ad.id,
-                adTitle: ad.title,
-                type: type,
-                message: type === 'ad-approved'
-                    ? `तुमची जाहिरात "${ad.title}" मंजूर झाली आहे.`
-                    : `तुमची जाहिरात "${ad.title}" नाकारली आहे. कारण: ${reason}`,
-                read: false,
-                createdAt: serverTimestamp(),
-            });
-        } catch (error) {
-            console.error("Error creating notification:", error);
-            // Non-critical, so we don't show a toast to the admin for this
-        }
-    };
-
     const handleUpdateStatus = async (ad: Ad, status: 'approved') => {
         try {
             const adDoc = doc(db, 'ads', ad.id);
             await updateDoc(adDoc, { status });
-            await createNotification(ad, 'ad-approved');
             toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या स्वीकृत झाली आहे.` });
         } catch (error) {
             console.error("Error updating ad status:", error);
@@ -131,7 +111,6 @@ export default function AdManagementPage() {
             const adDoc = doc(db, 'ads', adToReject.id);
             const reason = rejectionReason.trim();
             await updateDoc(adDoc, { status: 'rejected', rejectionReason: reason });
-            await createNotification(adToReject, 'ad-rejected', reason);
             toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या नाकारली गेली आहे.` });
             handleCloseRejectDialog();
         } catch (error) {
