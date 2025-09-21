@@ -20,8 +20,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { Ad } from '@/lib/types';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-
 
 const adSchema = z.object({
   title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
@@ -73,11 +71,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   useEffect(() => {
     if (authLoading) return;
+
     if (!user) {
         toast({ variant: 'destructive', title: 'Unauthorized', description: 'Please log in to post an ad.' });
         router.push('/login');
     }
-  }, [authLoading, user, router, toast]);
+}, [user, authLoading, router, toast]);
+
   
   useEffect(() => {
     if (isEditMode && existingAd?.photos) {
@@ -158,17 +158,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
         let finalPhotoUrl: string;
 
         if (newFiles.length > 0) {
-            // A new file was selected. Pick a random placeholder.
-            const randomIndex = Math.floor(Math.random() * PlaceHolderImages.length);
-            finalPhotoUrl = PlaceHolderImages[randomIndex].imageUrl;
-            toast({ title: 'Placeholder Image Assigned', description: 'A random placeholder image has been assigned to your ad.'});
+            // A new file was selected. Generate a unique picsum URL.
+            const seed = Date.now();
+            finalPhotoUrl = `https://picsum.photos/seed/${seed}/600/400`;
+            toast({ title: 'Placeholder Image Assigned', description: 'A unique placeholder image has been assigned to your ad.'});
         } else if (isEditMode && existingAd?.photos && existingAd.photos.length > 0) {
             // No new file, preserve the existing photo in edit mode.
             finalPhotoUrl = existingAd.photos[0];
         } else {
-            // No new file and no existing photo, assign a random placeholder.
-            const randomIndex = Math.floor(Math.random() * PlaceHolderImages.length);
-            finalPhotoUrl = PlaceHolderImages[randomIndex].imageUrl;
+             // This case should not be hit if the form validation is correct, but as a fallback:
+            const seed = Date.now();
+            finalPhotoUrl = `https://picsum.photos/seed/${seed}/600/400`;
         }
        
         const adData = {
@@ -348,4 +348,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
   );
 }
 
-    
