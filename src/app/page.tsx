@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -116,7 +117,7 @@ export default function Home() {
             <DropdownMenuTrigger asChild>
                <Avatar className="h-8 w-8 cursor-pointer">
                   {user.photoURL && <AvatarImage src={user.photoURL} />}
-                  <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
+                  <AvatarFallback className="font-bold">{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
