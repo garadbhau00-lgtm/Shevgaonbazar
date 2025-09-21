@@ -1,4 +1,6 @@
 
+'use client';
+
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
@@ -14,9 +16,11 @@ export default function AppHeader({ showUserOptions = true }: AppHeaderProps) {
       <div className="text-xl font-bold text-primary">शेवगाव बाजार</div>
       {showUserOptions && (
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline">
-            <Link href="/login">लॉगिन करा</Link>
-          </Button>
+          {!user && (
+            <Button asChild variant="outline">
+              <Link href="/login">लॉगिन करा</Link>
+            </Button>
+          )}
         </div>
       )}
     </header>
