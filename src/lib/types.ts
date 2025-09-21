@@ -11,6 +11,7 @@ export type Ad = {
     | 'गावातील गरज'
     | 'व्यावसायिक सेवा'
     | 'आर्थिक';
+  subcategory?: string;
   price: number;
   location: string; // village
   mobileNumber: string;

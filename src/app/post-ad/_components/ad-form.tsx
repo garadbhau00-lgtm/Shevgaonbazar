@@ -3,7 +3,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import type { Ad } from '@/lib/types';
 import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
+import { categories } from '@/lib/categories';
 
 const adSchema = z.object({
   title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
@@ -40,6 +41,7 @@ const adSchema = z.object({
       required_error: 'कृपया एक श्रेणी निवडा.',
     }
   ),
+  subcategory: z.string().optional(),
   price: z.coerce.number().positive({ message: 'किंमत ० पेक्षा जास्त असावी.' }),
   location: z.string({ required_error: 'कृपया एक गाव निवडा.' }),
   mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }),
@@ -73,6 +75,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         title: existingAd.title,
         description: existingAd.description,
         category: existingAd.category,
+        subcategory: existingAd.subcategory,
         price: existingAd.price,
         location: existingAd.location,
         mobileNumber: existingAd.mobileNumber,
@@ -82,18 +85,24 @@ export default function AdForm({ existingAd }: AdFormProps) {
       price: undefined,
       location: undefined,
       mobileNumber: '',
+      category: undefined,
+      subcategory: undefined,
     },
   });
 
-   useEffect(() => {
-        if (authLoading) return;
+  const selectedCategory = useWatch({
+    control: form.control,
+    name: 'category',
+  });
 
-        if (!user) {
-            router.push('/login');
-            toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.' });
-        }
-    }, [user, authLoading, router, toast]);
+  useEffect(() => {
+    if (authLoading) return;
 
+    if (!user) {
+        toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.' });
+        router.push('/login');
+    }
+  }, [user, authLoading, router, toast]);
   
   useEffect(() => {
     if (isEditMode && existingAd?.photos) {
@@ -116,6 +125,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   }, [newFiles, isEditMode, existingAd]);
 
+  useEffect(() => {
+    // Reset subcategory when main category changes
+    form.setValue('subcategory', undefined);
+  }, [selectedCategory, form.setValue]);
+
 
   if (authLoading) {
       return (
@@ -132,7 +146,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
 
-  const removePhoto = (index: number) => {
+  const removePhoto = () => {
     setNewFiles([]);
     setPhotoPreviews(isEditMode && existingAd?.photos ? existingAd.photos : []);
     
@@ -172,8 +186,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
     
     try {
         let finalPhotoUrls: string[] = [];
+        let hasNewUpload = newFiles.length > 0;
 
-        if (newFiles.length > 0) {
+        if (hasNewUpload) {
             const imageFile = newFiles[0];
             const options = {
                 maxSizeMB: 0.2, // Compress to max 200KB
@@ -183,6 +198,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
             try {
                 const compressedFile = await imageCompression(imageFile, options);
+                const originalSize = (imageFile.size / 1024).toFixed(2);
+                const compressedSize = (compressedFile.size / 1024).toFixed(2);
+                toast({
+                    title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला',
+                    description: `मूळ आकार: ${originalSize} KB, नवीन आकार: ${compressedSize} KB`,
+                });
                 const dataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
                 finalPhotoUrls = [dataUrl];
             } catch (compressionError) {
@@ -237,6 +258,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
 };
 
+  const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -290,19 +313,41 @@ export default function AdForm({ existingAd }: AdFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="पशुधन">पशुधन</SelectItem>
-                  <SelectItem value="शेती उत्पादने">शेती उत्पादने</SelectItem>
-                  <SelectItem value="शेतीसाठी साधनं">शेतीसाठी साधनं</SelectItem>
-                  <SelectItem value="शेती व गाव सेवा">शेती व गाव सेवा</SelectItem>
-                  <SelectItem value="गावातील गरज">गावातील गरज</SelectItem>
-                  <SelectItem value="व्यावसायिक सेवा">व्यावसायिक सेवा</SelectItem>
-                  <SelectItem value="आर्थिक">आर्थिक</SelectItem>
+                  {categories.map(cat => (
+                     <SelectItem key={cat.name} value={cat.name}>{cat.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {subcategories && subcategories.length > 0 && (
+          <FormField
+            control={form.control}
+            name="subcategory"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>उप-श्रेणी</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="एक उप-श्रेणी निवडा" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {subcategories.map(subcat => (
+                      <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <FormField
           control={form.control}
           name="price"
@@ -362,7 +407,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                             variant="destructive"
                             size="icon"
                             className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                            onClick={() => removePhoto(index)}
+                            onClick={() => removePhoto()}
                             disabled={isSubmitting}
                         >
                             <XIcon className="h-4 w-4" />

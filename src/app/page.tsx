@@ -17,16 +17,7 @@ import { db } from '@/lib/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-
-const categories: Ad['category'][] = [
-  'पशुधन',
-  'शेती उत्पादने',
-  'शेतीसाठी साधनं',
-  'शेती व गाव सेवा',
-  'गावातील गरज',
-  'व्यावसायिक सेवा',
-  'आर्थिक',
-];
+import { categories } from '@/lib/categories';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -180,8 +171,8 @@ export default function Home() {
             <TabsList className="inline-flex w-max">
               <TabsTrigger value="सर्व">सर्व</TabsTrigger>
               {categories.map((category) => (
-                <TabsTrigger key={category} value={category}>
-                  {category}
+                <TabsTrigger key={category.name} value={category.name}>
+                  {category.name}
                 </TabsTrigger>
               ))}
             </TabsList>
