@@ -27,19 +27,21 @@ export default function AdCard({ ad }: AdCardProps) {
             </div>
             )}
         </div>
-        <CardContent className="flex-grow p-2 flex flex-col">
-          <div className="flex-grow">
+        <CardContent className="p-2 flex justify-between items-start flex-grow">
+          <div className="flex-grow overflow-hidden mr-2">
             <h3 className="font-medium text-xs truncate">{ad.category}</h3>
             {ad.subcategory && (
             <p className="text-[11px] text-muted-foreground truncate">
                 {ad.subcategory}
             </p>
             )}
-            <p className="text-sm font-bold text-primary mt-0.5">
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-sm font-bold text-primary">
             ₹{ad.price.toLocaleString('en-IN')}
             </p>
+            <p className="text-[11px] text-muted-foreground truncate">{ad.location}</p>
           </div>
-          <p className="text-[11px] text-muted-foreground truncate mt-auto pt-1">{ad.location}</p>
         </CardContent>
         </Card>
     </Link>
