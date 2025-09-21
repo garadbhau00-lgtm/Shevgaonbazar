@@ -32,14 +32,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            if (firebaseUser) {
-                setUser(firebaseUser);
-            } else {
-                setUser(null);
+            setUser(firebaseUser);
+            if (!firebaseUser) {
                 setLoading(false);
             }
         });
-
         return () => unsubscribeAuth();
     }, []);
 
@@ -47,7 +44,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let unsubscribeProfile: Unsubscribe | undefined;
 
         if (user) {
-            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -96,6 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const handleGoogleSignIn = useCallback(async () => {
         const provider = new GoogleAuthProvider();
+        setLoading(true);
         try {
             const result = await signInWithPopup(auth, provider);
             const signedInUser = result.user;
@@ -147,6 +144,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 title: title,
                 description: description,
             });
+            setLoading(false);
         }
     }, [toast]);
     
