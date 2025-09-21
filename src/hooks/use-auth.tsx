@@ -32,14 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            setLoading(true);
-            if (firebaseUser) {
-                setUser(firebaseUser);
-            } else {
-                setUser(null);
-                setUserProfile(null);
-                setLoading(false);
-            }
+            setUser(firebaseUser);
+            setLoading(false);
         });
 
         return () => unsubscribeAuth();
@@ -49,6 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let unsubscribeProfile: Unsubscribe | undefined;
 
         if (user) {
+            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -65,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     }
                 } else {
                     // This can happen briefly if the user document hasn't been created yet
+                    // especially during sign up.
                     setUserProfile(null);
                 }
                 setLoading(false);
@@ -74,6 +70,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUserProfile(null);
                 setLoading(false);
             });
+        } else {
+            setUserProfile(null);
         }
 
         return () => {
@@ -104,10 +102,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
-                 const adminsQuery = query(collection(db, "users"), where("role", "==", "Admin"));
-                const adminSnapshot = await getDocs(adminsQuery);
-                const isAdminPresent = !adminSnapshot.empty;
-                const userRole = isAdminPresent ? 'Farmer' : 'Admin';
+                const usersQuery = query(collection(db, "users"));
+                const userSnapshot = await getDocs(usersQuery);
+                const isFirstUser = userSnapshot.empty;
+                const userRole = isFirstUser ? 'Admin' : 'Farmer';
 
                 await setDoc(userDocRef, {
                     uid: signedInUser.uid,
@@ -128,23 +126,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 });
             }
         } catch (error: any) {
-            console.error("Google sign-in error", error);
+            console.error("Google sign-in error:", error);
             let title = 'Google साइन-इन अयशस्वी';
             let description = 'एक अनपेक्षित त्रुटी आली. कृपया पुन्हा प्रयत्न करा.';
 
             switch (error.code) {
                 case 'auth/popup-closed-by-user':
-                    title = 'Google साइन-इन रद्द केले';
-                    description = 'तुम्ही साइन-इन विंडो बंद केली आहे.';
-                    break;
                 case 'auth/cancelled-popup-request':
-                case 'auth/popup-blocked':
-                    title = 'Google साइन-इन अयशस्वी';
-                    description = 'पॉप-अप ब्लॉक किंवा रद्द केला गेला. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.';
+                    title = 'Google साइन-इन रद्द केले';
+                    description = 'तुम्ही साइन-इन विंडो बंद केली आहे किंवा विनंती रद्द केली आहे.';
                     break;
-                 case 'auth/unauthorized-domain':
+                case 'auth/popup-blocked':
+                    title = 'पॉप-अप ब्लॉक केला';
+                    description = 'तुमच्या ब्राउझरने Google साइन-इन पॉप-अप ब्लॉक केला आहे. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.';
+                    break;
+                case 'auth/unauthorized-domain':
                     title = 'डोमेन अधिकृत नाही';
-                    description = 'या डोमेनला Firebase प्रमाणीकरणासाठी अधिकृत केलेले नाही. कृपया तुमच्या Firebase कन्सोलमध्ये हे डोमेन जोडा.';
+                    description = 'या अॅपला Google साइन-इन वापरण्याची परवानगी नाही. (SHA-1 fingerprint configuration error).';
+                    break;
+                case 'permission-denied':
+                    title = 'परवानगी नाकारली';
+                    description = 'डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा.';
                     break;
             }
             
@@ -153,6 +155,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 title: title,
                 description: description,
             });
+        } finally {
+            setLoading(false);
         }
     }, [toast]);
     

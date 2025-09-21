@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDocs, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, getDoc } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -67,12 +67,12 @@ export default function SignupPage() {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const newUser = userCredential.user;
 
-            // Check if there are any admin users yet.
-            const adminsQuery = query(collection(db, "users"), where("role", "==", "Admin"));
-            const adminSnapshot = await getDocs(adminsQuery);
-            const isAdminPresent = !adminSnapshot.empty;
+            // The first user to sign up will be an Admin, all others will be Farmers.
+            const usersQuery = query(collection(db, "users"));
+            const userSnapshot = await getDocs(usersQuery);
+            const isFirstUser = userSnapshot.empty;
+            const userRole = isFirstUser ? 'Admin' : 'Farmer';
 
-            const userRole = isAdminPresent ? 'Farmer' : 'Admin';
 
             await setDoc(doc(db, "users", newUser.uid), {
                 uid: newUser.uid,
@@ -93,6 +93,9 @@ export default function SignupPage() {
             let message = "खाते तयार करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
             if (error.code === 'auth/email-already-in-use') {
                 message = "हा ईमेल पत्ता आधीच वापरलेला आहे.";
+            }
+             else if (error.code === 'permission-denied') {
+                message = "डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा."
             }
             toast({
                 variant: "destructive",
