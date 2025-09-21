@@ -1,17 +1,29 @@
+
 import AdForm from './_components/ad-form';
 import AppHeader from '@/components/layout/app-header';
+import Image from 'next/image';
 
 export default function PostAdPage() {
   return (
-    <>
-      <AppHeader />
-      <main className="p-4">
-        <div className="mb-4">
-            <h1 className="text-2xl font-bold">नवीन जाहिरात टाका</h1>
-            <p className="text-muted-foreground">तुमच्या उत्पादनाची माहिती भरा.</p>
+    <div>
+      <div className="relative h-28 w-full">
+        <AppHeader />
+        <Image
+          src="https://picsum.photos/seed/post-ad/1200/400"
+          alt="Post ad background"
+          fill
+          className="object-cover"
+          data-ai-hint="farm produce"
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+            <h1 className="text-lg font-bold">नवीन जाहिरात टाका</h1>
+            <p className="mt-2 text-xs max-w-xl">तुमच्या उत्पादनाची माहिती भरा.</p>
         </div>
+      </div>
+      <main className="p-4">
         <AdForm />
       </main>
-    </>
+    </div>
   );
 }
