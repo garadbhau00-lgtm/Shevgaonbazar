@@ -32,7 +32,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            setUser(firebaseUser);
+            if (firebaseUser) {
+                setUser(firebaseUser);
+            } else {
+                setUser(null);
+            }
             setLoading(false);
         });
 
@@ -59,15 +63,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     } else {
                         setUserProfile(profileData);
                     }
+                } else {
+                     setUserProfile(null);
                 }
                 setLoading(false);
             }, (error) => {
                 console.error("Error fetching user profile:", error);
+                setUserProfile(null);
                 setLoading(false);
             });
         } else {
             setUserProfile(null);
-            setLoading(false);
         }
     
         return () => {
@@ -120,11 +126,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     title: 'Google साइन-इन रद्द केले',
                     description: 'तुम्ही साइन-इन विंडो बंद केली आहे.',
                 });
-            } else {
+            } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-blocked') {
                 toast({
                     variant: 'destructive',
                     title: 'Google साइन-इन अयशस्वी',
-                    description: 'कृपया पुन्हा प्रयत्न करा.',
+                    description: 'पॉप-अप ब्लॉक किंवा रद्द केला गेला. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.',
+                });
+            }
+             else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Google साइन-इन अयशस्वी',
+                    description: 'कृपया पुन्हा प्रयत्न करा किंवा तुमच्या फायरबेस प्रोजेक्टमध्ये SHA-1 की योग्यरित्या कॉन्फिगर केली आहे का ते तपासा.',
                 });
             }
         }
