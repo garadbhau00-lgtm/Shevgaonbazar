@@ -43,11 +43,9 @@ service cloud.firestore {
     }
     // Rules for listing ads
      match /ads/{document=**} {
-      allow list: if request.query.where.status == 'approved'
-          || (request.auth != null && (
-              (request.query.where.userId == request.auth.uid)
-              || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.where.status == 'pending')
-          ));
+        allow list: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin'
+            || request.query.where.status == 'approved'
+            || (request.auth != null && request.query.where.userId == request.auth.uid);
     }
 
 
