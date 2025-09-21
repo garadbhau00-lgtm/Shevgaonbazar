@@ -42,20 +42,24 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
-    // Anyone can list ads (they will be filtered on the client to show only 'approved').
-     match /ads/{document=**} {
-        allow list: if true;
+    // Rules for listing ads
+    match /ads/{document=**} {
+      // Allow listing approved ads (homepage)
+      // Allow users to list their own ads (my-ads page)
+      // Allow admins to list ads for moderation
+      allow list: if (request.query.where.status == 'approved')
+                  || (request.auth != null && request.query.where.userId == request.auth.uid)
+                  || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
     }
 
     // CONVERSATIONS & MESSAGES
     // Allow users to read, write, and create conversations they are a part of.
     match /conversations/{conversationId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
-      allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
+      allow read, write, create: if request.auth != null && request.resource.data.participants.hasAny([request.auth.uid]);
 
       // Allow users to read and write messages within a conversation they are part of.
       match /messages/{messageId} {
-        allow read, write: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
+        allow read, write, create: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
       }
     }
     // Users can list conversations they are part of.
@@ -89,6 +93,12 @@ You need to create composite indexes for the chat queries.
 - Fields to index:
   1. timestamp (Ascending)
 - Query scope: Collection Group
+  
+- Collection ID: ads
+- Fields to index:
+  1. userId (Ascending)
+  2. createdAt (Descending)
+- Query scope: Collection
 */
 
 
