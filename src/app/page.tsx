@@ -139,7 +139,7 @@ export default function Home() {
       );
     }
     return (
-        <Button asChild variant="outline" className="text-white border-white hover:bg-white/10 hover:text-white">
+        <Button asChild variant="default" className="bg-black text-white border-black hover:bg-black/80 hover:text-white">
             <Link href="/login">लॉगिन करा</Link>
         </Button>
     );
@@ -171,7 +171,7 @@ export default function Home() {
       <main>
         <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pt-2 pb-2">
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-            <ScrollArea className="w-full whitespace-nowrap">
+            <ScrollArea className="w-full whitespace-nowrap [&>div>div]:!overflow-x-scroll [&>div>div]:!overflow-y-hidden">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0 h-16 items-center overflow-y-hidden">
                 <TabsTrigger value="सर्व" className="h-auto flex flex-col items-center justify-center gap-1 p-1 text-[10px] rounded-lg border data-[state=active]:bg-primary/10">
                   <List className="h-4 w-4" />
@@ -188,7 +188,6 @@ export default function Home() {
                   </TabsTrigger>
                 ))}
               </TabsList>
-              <ScrollBar orientation="horizontal" className="invisible" />
             </ScrollArea>
             </Tabs>
         </div>
