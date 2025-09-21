@@ -9,7 +9,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,9 +19,11 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'नाव किमान २ अक्षरी असावे.' }),
+  mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }).optional().or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -35,6 +38,7 @@ export default function SettingsPage() {
         resolver: zodResolver(profileSchema),
         defaultValues: {
             name: '',
+            mobileNumber: '',
         },
     });
 
@@ -45,7 +49,10 @@ export default function SettingsPage() {
             return;
         }
         if (userProfile) {
-            form.reset({ name: userProfile.name || '' });
+            form.reset({ 
+                name: userProfile.name || '',
+                mobileNumber: userProfile.mobileNumber || '',
+            });
         }
     }, [user, userProfile, loading, router, form]);
 
@@ -54,7 +61,10 @@ export default function SettingsPage() {
         setIsSubmitting(true);
         try {
             const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, { name: data.name });
+            await updateDoc(userDocRef, { 
+                name: data.name,
+                mobileNumber: data.mobileNumber
+            });
             toast({ title: 'यशस्वी', description: 'तुमचे प्रोफाइल यशस्वीरित्या अद्यतनित झाले आहे.' });
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -63,6 +73,28 @@ export default function SettingsPage() {
             setIsSubmitting(false);
         }
     };
+    
+    const handlePasswordReset = async () => {
+        if (!user?.email) {
+            toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमचा ईमेल पत्ता सापडला नाही.' });
+            return;
+        }
+        try {
+            await sendPasswordResetEmail(auth, user.email);
+            toast({
+                title: 'पासवर्ड रीसेट लिंक पाठवली',
+                description: 'तुमचा पासवर्ड रीसेट करण्यासाठी तुमच्या ईमेलवर एक लिंक पाठवली आहे.',
+            });
+        } catch (error) {
+            console.error('Error sending password reset email:', error);
+             toast({
+                variant: 'destructive',
+                title: 'त्रुटी',
+                description: 'पासवर्ड रीसेट ईमेल पाठवण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
+            });
+        }
+    }
+
 
     if (loading) {
         return (
@@ -121,6 +153,19 @@ export default function SettingsPage() {
                                         </FormItem>
                                     )}
                                 />
+                                 <FormField
+                                    control={form.control}
+                                    name="mobileNumber"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>मोबाईल नंबर</FormLabel>
+                                            <FormControl>
+                                                <Input type="tel" {...field} disabled={isSubmitting} placeholder="तुमचा मोबाईल नंबर टाका" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                                  <FormItem>
                                     <FormLabel>ईमेल</FormLabel>
                                     <Input value={user.email || ''} disabled readOnly />
@@ -133,7 +178,23 @@ export default function SettingsPage() {
                         </Form>
                     </CardContent>
                 </Card>
-                 <Button variant="outline" className="w-full" onClick={handleLogout}>
+                
+                 <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="text-lg">सुरक्षितता</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div>
+                            <p className="text-sm font-medium">पासवर्ड</p>
+                            <p className="text-sm text-muted-foreground">तुमचा पासवर्ड बदलण्यासाठी आम्ही तुम्हाला एक ईमेल पाठवू.</p>
+                        </div>
+                        <Button variant="outline" className="w-full" onClick={handlePasswordReset}>
+                           पासवर्ड बदलण्यासाठी ईमेल पाठवा
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                 <Button variant="outline" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleLogout}>
                     लॉगआउट
                 </Button>
             </main>

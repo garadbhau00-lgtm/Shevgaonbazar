@@ -111,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         uid: signedInUser.uid,
                         email: signedInUser.email,
                         name: signedInUser.displayName || signedInUser.email?.split('@')[0],
+                        mobileNumber: signedInUser.phoneNumber || '',
                         role: userRole,
                         disabled: false,
                         createdAt: serverTimestamp(),

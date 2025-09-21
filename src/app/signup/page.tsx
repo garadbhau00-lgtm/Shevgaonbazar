@@ -21,6 +21,7 @@ import { useEffect } from 'react';
 
 const signupSchema = z.object({
     name: z.string().min(2, { message: 'नाव आवश्यक आहे.' }),
+    mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }),
     email: z.string().email({ message: 'कृपया वैध ईमेल पत्ता प्रविष्ट करा.' }),
     password: z.string().min(6, { message: 'पासवर्ड किमान ६ वर्णांचा असावा.' }),
     confirmPassword: z.string()
@@ -42,6 +43,7 @@ export default function SignupPage() {
         defaultValues: {
             name: '',
             email: '',
+            mobileNumber: '',
             password: '',
             confirmPassword: '',
         },
@@ -66,6 +68,7 @@ export default function SignupPage() {
                 uid: newUser.uid,
                 email: newUser.email,
                 name: data.name,
+                mobileNumber: data.mobileNumber,
                 role: 'Farmer',
                 disabled: false,
                 createdAt: serverTimestamp(),
@@ -132,6 +135,19 @@ export default function SignupPage() {
                                         <FormLabel>पूर्ण नाव</FormLabel>
                                         <FormControl>
                                             <Input placeholder="तुमचे पूर्ण नाव" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="mobileNumber"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>मोबाईल नंबर</FormLabel>
+                                        <FormControl>
+                                            <Input type="tel" placeholder="तुमचा मोबाईल नंबर" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

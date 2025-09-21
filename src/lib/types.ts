@@ -1,5 +1,6 @@
 
 
+
 export type Ad = {
   id: string;
   title?: string;
@@ -29,6 +30,7 @@ export type UserProfile = {
     uid: string;
     email: string;
     name?: string;
+    mobileNumber?: string;
     role: 'Farmer' | 'Admin';
     disabled: boolean;
     createdAt: any; // Firestore timestamp
