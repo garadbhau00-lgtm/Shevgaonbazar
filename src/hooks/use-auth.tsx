@@ -104,45 +104,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
+                // This is a new user, create their profile
                 const userRole = 'Farmer';
-                
-                await setDoc(userDocRef, {
-                    uid: signedInUser.uid,
-                    email: signedInUser.email,
-                    name: signedInUser.displayName || signedInUser.email?.split('@')[0],
-                    role: userRole,
-                    disabled: false,
-                    createdAt: serverTimestamp(),
-                });
-                 toast({
-                    title: "खाते तयार झाले!",
-                    description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${userRole}`,
-                });
+                try {
+                    await setDoc(userDocRef, {
+                        uid: signedInUser.uid,
+                        email: signedInUser.email,
+                        name: signedInUser.displayName || signedInUser.email?.split('@')[0],
+                        role: userRole,
+                        disabled: false,
+                        createdAt: serverTimestamp(),
+                    });
+                     toast({
+                        title: "खाते तयार झाले!",
+                        description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${userRole}`,
+                    });
+                } catch (dbError: any) {
+                    // If creating the doc fails, sign out the user to prevent an inconsistent state
+                    await signOut(auth);
+                    if (dbError.code === 'permission-denied' || dbError.code === 'PERMISSION_DENIED') {
+                         toast({
+                            variant: 'destructive',
+                            title: 'परवानगी नाकारली',
+                            description: "डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा.",
+                        });
+                    } else {
+                        throw dbError; // re-throw other database errors
+                    }
+                }
             } else {
+                 // This is a returning user
                  toast({
                     title: "लॉगिन यशस्वी!",
                     description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
                 });
             }
         } catch (error: any) {
-            // If there's an error, especially a permissions error, sign the user out.
-            await signOut(auth);
-
             let title = 'Google साइन-इन अयशस्वी';
             let description = 'एक अनपेक्षित त्रुटी आली. कृपया पुन्हा प्रयत्न करा.';
 
             if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-                title = 'Google साइन-इन रद्द केले';
-                description = 'तुम्ही साइन-इन विंडो बंद केली आहे किंवा विनंती रद्द केली आहे.';
+                // Don't show a toast if the user intentionally closed the popup
+                return;
             } else if (error.code === 'auth/popup-blocked') {
                 title = 'पॉप-अप ब्लॉक केला';
-                description = 'तुमच्या ब्राउझरने Google साइन-इन पॉप-अप ब्लॉक केला आहे. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.';
+                description = 'तुमच्या ब्राउझरने Google साइन-in पॉप-अप ब्लॉक केला आहे. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.';
             } else if (error.code === 'auth/unauthorized-domain') {
                 title = 'डोमेन अधिकृत नाही';
                 description = 'या अॅपला Google साइन-इन वापरण्याची परवानगी नाही. (SHA-1 fingerprint configuration error).';
-            } else if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED') {
-                title = 'परवानगी नाकारली';
-                description = "डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा.";
             }
             
             toast({
