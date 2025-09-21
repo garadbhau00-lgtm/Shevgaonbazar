@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDocs, collection, query, limit } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -67,7 +67,11 @@ export default function SignupPage() {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const user = userCredential.user;
 
-            const userRole = 'Farmer';
+            // Check if this is the first user
+            const usersQuery = query(collection(db, "users"), limit(1));
+            const usersSnapshot = await getDocs(usersQuery);
+            const isFirstUser = usersSnapshot.empty;
+            const userRole = isFirstUser ? 'Admin' : 'Farmer';
 
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
@@ -79,7 +83,7 @@ export default function SignupPage() {
             });
             toast({
                 title: "खाते तयार झाले!",
-                description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+                description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${userRole}`,
             });
             // The onAuthStateChanged listener in useAuth will handle the redirect.
             

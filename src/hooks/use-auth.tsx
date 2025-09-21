@@ -3,7 +3,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp, getDocs, collection, query, limit } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { useToast } from './use-toast';
@@ -29,26 +29,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
-    
-    // Handles user state changes
+
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-            if (firebaseUser) {
-                setUser(firebaseUser);
-            } else {
-                setUser(null);
-                setLoading(false);
-            }
+        const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+            setUser(firebaseUser);
+            setLoading(false);
         });
-        return () => unsubscribe();
+
+        return () => unsubscribeAuth();
     }, []);
 
-    // Handles user profile fetching
     useEffect(() => {
+        let unsubscribeProfile: Unsubscribe | undefined;
+
         if (user) {
             setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
-            const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
+            unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const profileData = docSnap.data() as UserProfile;
                      if (profileData.disabled) {
@@ -62,21 +59,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUserProfile(profileData);
                     }
                 } else {
-                    // This can happen for a new user if the doc isn't created yet.
                     setUserProfile(null);
                 }
                 setLoading(false);
             }, (error) => {
                 console.error("Error fetching user profile:", error);
+                toast({ variant: 'destructive', title: 'प्रोफाइल त्रुटी', description: 'वापरकर्ता प्रोफाइल आणण्यात अयशस्वी.' });
                 setUserProfile(null);
                 setLoading(false);
             });
-             return () => unsubscribeProfile();
         } else {
-            // No user, clear profile and finish loading
            setUserProfile(null);
-           setLoading(false);
         }
+
+        return () => {
+            if (unsubscribeProfile) {
+                unsubscribeProfile();
+            }
+        };
     }, [user, toast]);
 
 
@@ -100,7 +100,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
-                const userRole = 'Farmer';
+                const usersQuery = query(collection(db, "users"), limit(1));
+                const usersSnapshot = await getDocs(usersQuery);
+                const isFirstUser = usersSnapshot.empty;
+                const userRole = isFirstUser ? 'Admin' : 'Farmer';
+
                 await setDoc(userDocRef, {
                     uid: signedInUser.uid,
                     email: signedInUser.email,
@@ -109,11 +113,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     disabled: false,
                     createdAt: serverTimestamp(),
                 });
+                 toast({
+                    title: "खाते तयार झाले!",
+                    description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${userRole}`,
+                });
+            } else {
+                 toast({
+                    title: "लॉगिन यशस्वी!",
+                    description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+                });
             }
-            toast({
-                title: "लॉगिन यशस्वी!",
-                description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
-            });
         } catch (error: any) {
             console.error("Google sign-in error", error);
             if (error.code === 'auth/popup-closed-by-user') {
@@ -128,8 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     title: 'Google साइन-इन अयशस्वी',
                     description: 'पॉप-अप ब्लॉक किंवा रद्द केला गेला. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.',
                 });
-            }
-             else {
+            } else {
                 toast({
                     variant: 'destructive',
                     title: 'Google साइन-इन अयशस्वी',
