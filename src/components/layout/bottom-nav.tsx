@@ -2,12 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, MessageSquare, PlusCircle, LayoutList, Menu } from 'lucide-react';
+import { Home, PlusCircle, LayoutList, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'होम', icon: Home },
-  { href: '/inbox', label: 'इनबॉक्स', icon: MessageSquare },
   { href: '/post-ad', label: 'जाहिरात टाका', icon: PlusCircle },
   { href: '/my-ads', label: 'माझ्या जाहिराती', icon: LayoutList },
   { href: '/more', label: 'अधिक', icon: Menu },
@@ -18,7 +17,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 z-10 w-full max-w-lg border-t bg-card">
-      <div className="grid h-16 grid-cols-5 font-medium">
+      <div className="grid h-16 grid-cols-4 font-medium">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (

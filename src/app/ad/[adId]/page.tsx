@@ -10,16 +10,7 @@ import type { Ad } from '@/lib/types';
 import AppHeader from '@/components/layout/app-header';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, BadgeIndianRupee, MapPin, Phone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import AdCard from '@/components/ad-card';
-
-// This is a simplified version of the AdCard's chat logic
-// In a real app, this would be refactored into a reusable hook or service
-const handleChatClick = () => {
-    // Dummy function for display, real logic is in AdCard
-    alert("The chat functionality is available from the main listings page.");
-}
 
 export default function AdDetailPage() {
     const { adId } = useParams();
@@ -126,9 +117,6 @@ export default function AdDetailPage() {
                         <Phone className="h-5 w-5 mr-2" />
                         <span>{ad.mobileNumber}</span>
                     </div>
-
-                   <AdCard ad={ad} />
-
                 </div>
             </main>
         </div>
