@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ChatPage() {
     const { conversationId } = useParams();
@@ -157,7 +158,7 @@ export default function ChatPage() {
                 </Avatar>
                 <div className="flex-1 overflow-hidden">
                     <h2 className="font-semibold truncate">{otherParticipantProfile?.name || 'अज्ञात'}</h2>
-                    <Link href={`#`} className="text-xs text-muted-foreground hover:underline truncate">
+                    <Link href={`/ad/${conversation.adId}`} className="text-xs text-muted-foreground hover:underline truncate">
                         {conversation.adTitle}
                     </Link>
                 </div>
@@ -199,8 +200,4 @@ export default function ChatPage() {
             </footer>
         </div>
     )
-}
-
-function useToast(): { toast: any; } {
-    throw new Error('Function not implemented.');
 }
