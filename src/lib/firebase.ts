@@ -13,12 +13,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // USERS
-    // Allow users to read/update their own profile.
+    // Allow anyone to read user profiles to display seller names.
     // Allow new users to create their own profile.
-    // Admins can read/write any user profile.
+    // Allow users to update their own profile.
+    // Admins can write any user profile.
     match /users/{userId} {
-      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow read: if true;
       allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
     // Admins can list all users.
@@ -40,9 +42,9 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
-    // Logged-in users can list all ads (will be filtered on the client).
+    // Anyone can list ads (they will be filtered on the client to show only 'approved').
      match /ads/{document=**} {
-        allow list: if request.auth != null;
+        allow list: if true;
     }
   }
 }
