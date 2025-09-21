@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, getDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ function GoogleIcon() {
 }
 
 const signupSchema = z.object({
+    name: z.string().min(2, { message: 'नाव आवश्यक आहे.' }),
     email: z.string().email({ message: 'कृपया वैध ईमेल पत्ता प्रविष्ट करा.' }),
     password: z.string().min(6, { message: 'पासवर्ड किमान ६ वर्णांचा असावा.' }),
     confirmPassword: z.string()
@@ -48,6 +49,7 @@ export default function SignupPage() {
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
+            name: '',
             email: '',
             password: '',
             confirmPassword: '',
@@ -67,17 +69,12 @@ export default function SignupPage() {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const newUser = userCredential.user;
 
-            // The first user to sign up will be an Admin, all others will be Farmers.
-            const usersQuery = query(collection(db, "users"));
-            const userSnapshot = await getDocs(usersQuery);
-            const isFirstUser = userSnapshot.empty;
-            const userRole = isFirstUser ? 'Admin' : 'Farmer';
-
+            const userRole = 'Farmer';
 
             await setDoc(doc(db, "users", newUser.uid), {
                 uid: newUser.uid,
                 email: newUser.email,
-                name: newUser.displayName || data.email.split('@')[0],
+                name: data.name,
                 role: userRole,
                 disabled: false,
                 createdAt: serverTimestamp(),
@@ -87,14 +84,13 @@ export default function SignupPage() {
                 title: "खाते तयार झाले!",
                 description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${userRole}`,
             });
-            // The onAuthStateChanged listener in useAuth will handle the redirect.
             
         } catch (error: any) {
             let message = "खाते तयार करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
             if (error.code === 'auth/email-already-in-use') {
                 message = "हा ईमेल पत्ता आधीच वापरलेला आहे.";
             }
-             else if (error.code === 'permission-denied') {
+             else if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED') {
                 message = "डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा."
             }
             toast({
@@ -105,13 +101,15 @@ export default function SignupPage() {
         }
     }
     
-    if (loading || user) {
+    if (loading) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         )
     }
+
+    if (user) return null; // Redirect is happening in useEffect
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
@@ -130,6 +128,19 @@ export default function SignupPage() {
                 <CardContent>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>पूर्ण नाव</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="तुमचे पूर्ण नाव" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             <FormField
                                 control={form.control}
                                 name="email"

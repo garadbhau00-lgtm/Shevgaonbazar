@@ -72,13 +72,15 @@ export default function LoginPage() {
         }
     }
 
-    if (loading || user) {
+    if (loading) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         )
     }
+    
+    if (user) return null; // Redirect is happening in useEffect
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
