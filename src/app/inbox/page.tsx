@@ -44,7 +44,7 @@ export default function InboxPage() {
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const convos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Conversation));
-            setConversations(convoos);
+            setConversations(convos);
             setPageLoading(false);
         }, (error) => {
             console.error("Error fetching conversations:", error);
