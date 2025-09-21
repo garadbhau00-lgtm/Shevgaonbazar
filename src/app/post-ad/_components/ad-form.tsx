@@ -15,7 +15,8 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -40,15 +41,6 @@ type AdFormProps = {
 };
 
 const MAX_FILES = 1;
-
-const fileToDataUri = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-};
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -86,7 +78,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
   });
   
   useEffect(() => {
-    // This effect runs only on the client, preventing hydration mismatch.
+    if (isEditMode && existingAd?.photos) {
+      setPhotoPreviews(existingAd.photos);
+    }
+  }, [isEditMode, existingAd]);
+  
+  useEffect(() => {
     if (newFiles.length > 0) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
@@ -128,10 +125,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
 
   const removePhoto = (index: number) => {
-    const newFileArray = [...newFiles];
-    newFileArray.splice(index, 1);
-    setNewFiles(newFileArray);
-
+    if (newFiles.length > 0) {
+        const newFileArray = [...newFiles];
+        newFileArray.splice(index, 1);
+        setNewFiles(newFileArray);
+    } else {
+        const newPhotoPreviews = [...photoPreviews];
+        newPhotoPreviews.splice(index, 1);
+        setPhotoPreviews(newPhotoPreviews);
+    }
+    
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -159,7 +162,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
  const onSubmit = async (data: AdFormValues) => {
     if (!user) return;
 
-    if (newFiles.length === 0 && (!existingAd || !existingAd.photos || existingAd.photos.length === 0)) {
+    if (newFiles.length === 0 && photoPreviews.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
         return;
     }
@@ -167,34 +170,34 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let finalPhotoUrls: string[] = existingAd?.photos || [];
+        let finalPhotoUrls: string[] = photoPreviews.filter(p => !p.startsWith('blob:'));
 
         if (newFiles.length > 0) {
-             const options = {
-                maxSizeMB: 1,
-                maxWidthOrHeight: 1920,
-                useWebWorker: true,
-            };
+            const uploadPromises = newFiles.map(async (file) => {
+                const options = {
+                    maxSizeMB: 0.5, // 500KB
+                    maxWidthOrHeight: 1280,
+                    useWebWorker: true,
+                };
 
-            const compressedFiles = await Promise.all(
-                newFiles.map(async (file) => {
-                    if (file.type.startsWith('image/') && file.size > 1024 * 1024) { 
-                        try {
-                            const compressedFile = await imageCompression(file, options);
-                            toast({ title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला', description: `फोटोचा आकार ${(compressedFile.size / 1024).toFixed(2)} KB पर्यंत कमी झाला आहे.` });
-                            return compressedFile;
-                        } catch (compressionError) {
-                            console.error('Image compression failed:', compressionError);
-                            toast({ variant: 'destructive', title: 'फोटो कॉम्प्रेशन अयशस्वी', description: 'मूळ फोटो वापरला जाईल.' });
-                            return file;
-                        }
-                    }
-                    return file;
-                })
-            );
+                let fileToUpload = file;
+                try {
+                    const compressedFile = await imageCompression(file, options);
+                    toast({ title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला', description: `नवीन आकार: ${(compressedFile.size / 1024).toFixed(2)} KB` });
+                    fileToUpload = compressedFile;
+                } catch (compressionError) {
+                    console.error('Image compression failed:', compressionError);
+                    toast({ variant: 'warning', title: 'फोटो कॉम्प्रेशन अयशस्वी', description: 'मूळ फोटो अपलोड करण्याचा प्रयत्न करत आहे.' });
+                }
 
-            const dataUris = await Promise.all(compressedFiles.map(file => fileToDataUri(file)));
-            finalPhotoUrls = dataUris;
+                const imageRef = storageRef(storage, `ad-images/${user.uid}/${Date.now()}-${fileToUpload.name}`);
+                await uploadBytes(imageRef, fileToUpload);
+                const downloadURL = await getDownloadURL(imageRef);
+                return downloadURL;
+            });
+            
+            const uploadedUrls = await Promise.all(uploadPromises);
+            finalPhotoUrls = [...finalPhotoUrls, ...uploadedUrls];
         }
        
         const adData = {
@@ -206,7 +209,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
         if (isEditMode && existingAd) {
             const adDocRef = doc(db, 'ads', existingAd.id);
-            await updateDoc(adDocRef, adData);
+            await updateDoc(adDocRef, { ...adData, updatedAt: serverTimestamp() });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
         } else {
             await addDoc(collection(db, 'ads'), {
@@ -219,10 +222,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
         router.push('/my-ads');
     } catch (error: any) {
         console.error("Submission failed:", error);
+         let errorMessage = "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
+        if (error.code === 'storage/unauthorized') {
+            errorMessage = "फोटो अपलोड करण्यासाठी परवानगी नाही. कृपया तुमचे फायरबेस स्टोरेज नियम तपासा.";
+        } else if (error.code === 'resource-exhausted') {
+            errorMessage = "फाइलचा आकार खूप मोठा आहे. कृपया लहान फाइल अपलोड करा."
+        }
         toast({
             variant: "destructive",
             title: "त्रुटी!",
-            description: "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+            description: errorMessage,
         });
     } finally {
         setIsSubmitting(false);

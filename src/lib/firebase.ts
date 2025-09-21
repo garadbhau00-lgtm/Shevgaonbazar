@@ -1,4 +1,5 @@
 
+
 // CORRECT FIRESTORE RULES & INDEXES
 // It is recommended that you copy and paste these into your Firebase project's
 // Firestore console to ensure the app works correctly.
