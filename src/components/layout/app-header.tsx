@@ -37,9 +37,9 @@ export default function AppHeader() {
        return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-               <Avatar className="h-9 w-9 cursor-pointer border-2 border-primary/50">
+               <Avatar className={cn("h-9 w-9 cursor-pointer border-2", isHomePage ? 'border-primary-foreground/50' : 'border-primary/50')}>
                   {user.photoURL && <AvatarImage src={user.photoURL} />}
-                  <AvatarFallback className="font-bold bg-muted text-primary">{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
+                  <AvatarFallback className={cn("font-bold", isHomePage ? 'bg-transparent text-primary-foreground' : 'bg-muted text-primary')}>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -71,8 +71,8 @@ export default function AppHeader() {
 
   return (
     <header className={cn(
-        "flex h-16 items-center justify-end px-4",
-        isHomePage ? 'bg-transparent' : 'border-b bg-card'
+        "flex h-16 items-center justify-end px-4 z-10",
+        isHomePage ? 'absolute top-0 right-0' : 'border-b bg-card'
     )}>
       <div className="flex items-center gap-2">
         {renderUserOptions()}

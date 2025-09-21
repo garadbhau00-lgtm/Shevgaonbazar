@@ -93,6 +93,7 @@ export default function Home() {
   return (
     <div>
       <div className="relative h-28 w-full">
+        <AppHeader />
         <Image
             src="https://picsum.photos/seed/header/1200/400"
             alt="Header background"
@@ -109,8 +110,7 @@ export default function Home() {
       </div>
 
       <main>
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
-           <AppHeader />
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
            <div className="w-full overflow-x-auto p-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
              <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
                 <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
