@@ -99,8 +99,8 @@ export default function Home() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>
-                <p>{userProfile.name}</p>
-                <p className="text-xs text-muted-foreground font-normal">{userProfile.email}</p>
+                <p>{userProfile.name || userProfile.email}</p>
+                {userProfile.name && <p className="text-xs text-muted-foreground font-normal">{userProfile.email}</p>}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/more')}>
