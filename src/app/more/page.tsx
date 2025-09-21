@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 
 const baseMenuItems = [
@@ -30,33 +31,20 @@ export default function MorePage() {
     }
 
     const getMenuItems = () => {
-        if (loading) return [];
-        if (user) {
-            const menu = [
-                { label: "माझे प्रोफाइल", icon: User, href: "#" },
-                ...baseMenuItems
-            ];
-            if (userProfile?.role === 'Admin') {
-                menu.push(...adminMenuItems);
-            }
-            menu.push({ label: "लॉगआउट", icon: LogOut, href: "#", action: onLogout });
-            return menu;
-        } else {
-            return [
-                { label: "लॉगिन करा", icon: LogIn, href: "/login" },
-                { label: "साइन अप करा", icon: UserPlus, href: "/signup" },
-                ...baseMenuItems,
-            ];
+        const menu = [...baseMenuItems];
+        if (userProfile?.role === 'Admin') {
+            menu.push(...adminMenuItems);
         }
+        return menu;
     };
-
-    const menuItems = getMenuItems();
 
     if (loading) {
         return (
             <div>
                 <AppHeader showUserOptions={false} />
-                <div className="p-4 text-center">लोड होत आहे...</div>
+                <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
             </div>
         )
     }
@@ -66,7 +54,7 @@ export default function MorePage() {
             <AppHeader showUserOptions={false} />
             <main className="p-4">
                 {user && userProfile ? (
-                    <div className="flex items-center gap-4 rounded-lg bg-card p-4 shadow-sm">
+                    <div className="flex items-center gap-4 rounded-lg bg-card p-4 shadow-sm mb-6">
                         <Avatar className="h-16 w-16">
                             <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} alt="User" />
                             <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
@@ -77,7 +65,7 @@ export default function MorePage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="rounded-lg bg-card p-6 text-center shadow-sm">
+                    <div className="rounded-lg bg-card p-6 text-center shadow-sm mb-6">
                         <h2 className="text-xl font-bold">शेवगाव बाजारमध्ये सामील व्हा</h2>
                         <p className="mt-2 text-muted-foreground">तुमच्या स्थानिक शेतकरी समुदायाशी कनेक्ट व्हा.</p>
                         <div className="mt-4 flex gap-2">
@@ -92,27 +80,32 @@ export default function MorePage() {
                 )}
 
 
-                <div className="mt-6 space-y-2">
-                    {menuItems.map((item) => {
-                        const isLink = !!item.href && !item.action;
-                        const Component = isLink ? Link : 'div';
-
-                        return (
-                            <Component
-                                href={item.href || '#'}
-                                key={item.label}
-                                className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary"
-                                onClick={item.action}
-                                style={{ cursor: item.action ? 'pointer' : 'default' }}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <item.icon className="h-5 w-5 text-primary" />
-                                    <span className="font-medium">{item.label}</span>
-                                </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                            </Component>
-                        )
-                    })}
+                <div className="space-y-2">
+                    {getMenuItems().map((item) => (
+                        <Link
+                            href={item.href}
+                            key={item.label}
+                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary"
+                        >
+                            <div className="flex items-center gap-4">
+                                <item.icon className="h-5 w-5 text-primary" />
+                                <span className="font-medium">{item.label}</span>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        </Link>
+                    ))}
+                     {user && (
+                        <div
+                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary cursor-pointer"
+                            onClick={onLogout}
+                        >
+                            <div className="flex items-center gap-4">
+                                <LogOut className="h-5 w-5 text-destructive" />
+                                <span className="font-medium text-destructive">लॉगआउट</span>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                    )}
                 </div>
             </main>
         </div>

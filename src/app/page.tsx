@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const categories = ['सर्व', 'पशुधन', 'शेती उत्पादन', 'उपकरणे'];
 
@@ -89,17 +90,28 @@ export default function Home() {
     }
     if (user && userProfile) {
        return (
-          <div className="flex items-center gap-2">
-              <Link href="/more">
-                  <Avatar className="h-8 w-8 cursor-pointer">
-                      <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} />
-                      <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-              </Link>
-              <Button variant="ghost" size="icon" onClick={onLogout}>
-                  <LogOut className="h-5 w-5" />
-              </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+               <Avatar className="h-8 w-8 cursor-pointer">
+                  <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} />
+                  <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                <p>{userProfile.name}</p>
+                <p className="text-xs text-muted-foreground font-normal">{userProfile.email}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/more')}>
+                More Options
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onLogout} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>लॉगआउट</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
       );
     }
     return (
