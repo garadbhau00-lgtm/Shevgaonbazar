@@ -18,6 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { categories } from '@/lib/categories';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -58,8 +59,10 @@ export default function Home() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('सर्व');
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const q = query(
         collection(db, 'ads'), 
         where('status', '==', 'approved'),
@@ -103,8 +106,8 @@ export default function Home() {
   };
 
   const renderUserOptions = () => {
-    if (authLoading) {
-      return <Loader2 className="h-6 w-6 animate-spin" />;
+    if (!isClient || authLoading) {
+      return <Skeleton className="h-8 w-8 rounded-full" />;
     }
     if (user && userProfile) {
        return (

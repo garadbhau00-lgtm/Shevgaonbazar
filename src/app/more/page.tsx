@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 const baseMenuItems = [
@@ -24,6 +26,11 @@ const adminMenuItems = [
 export default function MorePage() {
     const { user, userProfile, loading, handleLogout } = useAuth();
     const router = useRouter();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const onLogout = async () => {
         await handleLogout();
@@ -38,47 +45,56 @@ export default function MorePage() {
         return menu;
     };
 
-    if (loading) {
+    const renderUserProfile = () => {
+        if (!isClient || loading) {
+             return (
+                <div className="flex items-center gap-4 rounded-lg bg-card p-4 shadow-sm mb-6">
+                    <Skeleton className="h-16 w-16 rounded-full" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-6 w-32" />
+                        <Skeleton className="h-4 w-48" />
+                    </div>
+                </div>
+            )
+        }
+
+        if (user && userProfile) {
+            return (
+                <div className="flex items-center gap-4 rounded-lg bg-card p-4 shadow-sm mb-6">
+                    <Avatar className="h-16 w-16">
+                        <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} alt="User" />
+                        <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <h2 className="text-xl font-bold">{userProfile.name || 'वापरकर्ता'}</h2>
+                        <p className="text-muted-foreground">{user.email}</p>
+                    </div>
+                </div>
+            );
+        }
+
         return (
-            <div>
-                <AppHeader showUserOptions={false} />
-                <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
-                    <Loader2 className="h-8 w-8 animate-spin" />
+             <div className="rounded-lg bg-card p-6 text-center shadow-sm mb-6">
+                <h2 className="text-xl font-bold">शेवगाव बाजारमध्ये सामील व्हा</h2>
+                <p className="mt-2 text-muted-foreground">तुमच्या स्थानिक शेतकरी समुदायाशी कनेक्ट व्हा.</p>
+                <div className="mt-4 flex gap-2">
+                    <Button asChild className="flex-1">
+                        <Link href="/login">लॉगिन करा</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="flex-1">
+                        <Link href="/signup">साइन अप करा</Link>
+                    </Button>
                 </div>
             </div>
-        )
+        );
     }
+
 
     return (
         <div>
             <AppHeader showUserOptions={false} />
             <main className="p-4">
-                {user && userProfile ? (
-                    <div className="flex items-center gap-4 rounded-lg bg-card p-4 shadow-sm mb-6">
-                        <Avatar className="h-16 w-16">
-                            <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} alt="User" />
-                            <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <h2 className="text-xl font-bold">{userProfile.name || 'वापरकर्ता'}</h2>
-                            <p className="text-muted-foreground">{user.email}</p>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="rounded-lg bg-card p-6 text-center shadow-sm mb-6">
-                        <h2 className="text-xl font-bold">शेवगाव बाजारमध्ये सामील व्हा</h2>
-                        <p className="mt-2 text-muted-foreground">तुमच्या स्थानिक शेतकरी समुदायाशी कनेक्ट व्हा.</p>
-                        <div className="mt-4 flex gap-2">
-                            <Button asChild className="flex-1">
-                                <Link href="/login">लॉगिन करा</Link>
-                            </Button>
-                            <Button asChild variant="outline" className="flex-1">
-                                <Link href="/signup">साइन अप करा</Link>
-                            </Button>
-                        </div>
-                    </div>
-                )}
-
+                {renderUserProfile()}
 
                 <div className="space-y-2">
                     {getMenuItems().map((item) => (
@@ -111,3 +127,4 @@ export default function MorePage() {
         </div>
     );
 }
+
