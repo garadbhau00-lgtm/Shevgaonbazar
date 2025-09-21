@@ -93,8 +93,8 @@ export default function Home() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
                <Avatar className="h-8 w-8 cursor-pointer">
-                  <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100`} />
-                  <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                  {user.photoURL && <AvatarImage src={user.photoURL} />}
+                  <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -103,6 +103,9 @@ export default function Home() {
                 {userProfile.name && <p className="text-xs text-muted-foreground font-normal">{userProfile.email}</p>}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/my-ads')}>
+                माझ्या जाहिराती
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/more')}>
                 More Options
               </DropdownMenuItem>
