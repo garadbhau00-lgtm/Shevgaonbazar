@@ -1,6 +1,5 @@
 
 
-
 // CORRECT FIRESTORE RULES & INDEXES
 // It is recommended that you copy and paste these into your Firebase project's
 // Firestore console to ensure the app works correctly.
@@ -49,18 +48,19 @@ service cloud.firestore {
     }
 
     // CONVERSATIONS & MESSAGES
-    // Allow users to read and write conversations they are a part of.
+    // Allow users to read, write, and create conversations they are a part of.
     match /conversations/{conversationId} {
       allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
-      
+      allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
+
       // Allow users to read and write messages within a conversation they are part of.
       match /messages/{messageId} {
         allow read, write: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
       }
     }
-     // Users can only list conversations they are part of.
+    // Users can list conversations they are part of.
     match /conversations/{document=**} {
-        allow list: if request.auth != null && resource.data.participants.hasAny([request.auth.uid]);
+      allow list: if request.auth != null && request.query.where.participants.hasAny([request.auth.uid]);
     }
   }
 }
