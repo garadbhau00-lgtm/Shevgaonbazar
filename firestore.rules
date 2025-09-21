@@ -1,5 +1,6 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     // USERS
@@ -28,16 +29,17 @@ service cloud.firestore {
                    || (request.auth != null && resource.data.userId == request.auth.uid)
                    || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
       allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && (resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
       allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
     // Rules for listing ads
      match /ads/{document=**} {
-      allow list: if request.query.where.status == 'approved'
-          || (request.auth != null && (
-              (request.query.where.userId == request.auth.uid)
-              || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.where.status == 'pending')
-          ));
+      allow list: if request.auth != null && (
+      		(request.query.where.status == 'approved') ||
+      		(request.query.where.userId == request.auth.uid) ||
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin')
+      );
     }
 
 

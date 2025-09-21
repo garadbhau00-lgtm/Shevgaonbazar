@@ -2,7 +2,7 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, HelpCircle, LogIn, LogOut, Settings, User, UserPlus, ShieldCheck, ListChecks } from "lucide-react";
+import { ChevronRight, HelpCircle, LogIn, LogOut, Settings, User, UserPlus, ShieldCheck, ListChecks, Database } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,8 @@ const baseMenuItems = [
 
 const adminMenuItems = [
     { label: "प्रवेश व्यवस्थापन", icon: ShieldCheck, href: "/access-management" },
-    { label: "जाहिरात व्यवस्थापन", icon: ListChecks, href: "/ad-management" }
+    { label: "जाहिरात व्यवस्थापन", icon: ListChecks, href: "/ad-management" },
+    { label: "सर्व जाहिराती", icon: Database, href: "/all-ads"}
 ];
 
 export default function MorePage() {
