@@ -92,7 +92,7 @@ export default function Home() {
 
   return (
     <div>
-      <div className="relative h-32 w-full">
+      <div className="relative h-28 w-full">
         <AppHeader />
         <Image
             src="https://picsum.photos/seed/header/1200/400"
