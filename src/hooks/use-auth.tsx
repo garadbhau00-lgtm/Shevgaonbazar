@@ -3,7 +3,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp, getDocs, collection, query, limit } from 'firebase/firestore';
+import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp, getDocs, collection, query, where } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { useToast } from './use-toast';
@@ -32,8 +32,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            setUser(firebaseUser);
-            setLoading(false);
+            setLoading(true);
+            if (firebaseUser) {
+                setUser(firebaseUser);
+            } else {
+                setUser(null);
+                setUserProfile(null);
+                setLoading(false);
+            }
         });
 
         return () => unsubscribeAuth();
@@ -43,7 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let unsubscribeProfile: Unsubscribe | undefined;
 
         if (user) {
-            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -59,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUserProfile(profileData);
                     }
                 } else {
+                    // This can happen briefly if the user document hasn't been created yet
                     setUserProfile(null);
                 }
                 setLoading(false);
@@ -68,8 +74,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUserProfile(null);
                 setLoading(false);
             });
-        } else {
-           setUserProfile(null);
         }
 
         return () => {
@@ -100,10 +104,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
-                const usersQuery = query(collection(db, "users"), limit(1));
-                const usersSnapshot = await getDocs(usersQuery);
-                const isFirstUser = usersSnapshot.empty;
-                const userRole = isFirstUser ? 'Admin' : 'Farmer';
+                 const adminsQuery = query(collection(db, "users"), where("role", "==", "Admin"));
+                const adminSnapshot = await getDocs(adminsQuery);
+                const isAdminPresent = !adminSnapshot.empty;
+                const userRole = isAdminPresent ? 'Farmer' : 'Admin';
 
                 await setDoc(userDocRef, {
                     uid: signedInUser.uid,
@@ -125,25 +129,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         } catch (error: any) {
             console.error("Google sign-in error", error);
-            if (error.code === 'auth/popup-closed-by-user') {
-                toast({
-                    variant: 'destructive',
-                    title: 'Google साइन-इन रद्द केले',
-                    description: 'तुम्ही साइन-इन विंडो बंद केली आहे.',
-                });
-            } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-blocked') {
-                toast({
-                    variant: 'destructive',
-                    title: 'Google साइन-इन अयशस्वी',
-                    description: 'पॉप-अप ब्लॉक किंवा रद्द केला गेला. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.',
-                });
-            } else {
-                toast({
-                    variant: 'destructive',
-                    title: 'Google साइन-इन अयशस्वी',
-                    description: 'कृपया पुन्हा प्रयत्न करा. तुमच्या फायरबेस प्रोजेक्टमध्ये SHA-1 की योग्यरित्या कॉन्फिगर केली आहे का, हे तपासण्याची शिफारस केली जाते.',
-                });
+            let title = 'Google साइन-इन अयशस्वी';
+            let description = 'एक अनपेक्षित त्रुटी आली. कृपया पुन्हा प्रयत्न करा.';
+
+            switch (error.code) {
+                case 'auth/popup-closed-by-user':
+                    title = 'Google साइन-इन रद्द केले';
+                    description = 'तुम्ही साइन-इन विंडो बंद केली आहे.';
+                    break;
+                case 'auth/cancelled-popup-request':
+                case 'auth/popup-blocked':
+                    title = 'Google साइन-इन अयशस्वी';
+                    description = 'पॉप-अप ब्लॉक किंवा रद्द केला गेला. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.';
+                    break;
+                 case 'auth/unauthorized-domain':
+                    title = 'डोमेन अधिकृत नाही';
+                    description = 'या डोमेनला Firebase प्रमाणीकरणासाठी अधिकृत केलेले नाही. कृपया तुमच्या Firebase कन्सोलमध्ये हे डोमेन जोडा.';
+                    break;
             }
+            
+            toast({
+                variant: 'destructive',
+                title: title,
+                description: description,
+            });
         }
     }, [toast]);
     

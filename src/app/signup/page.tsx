@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDocs, collection, query, limit } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDocs, collection, query, where } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -65,22 +65,24 @@ export default function SignupPage() {
     async function onSubmit(data: SignupFormValues) {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            const user = userCredential.user;
+            const newUser = userCredential.user;
 
-            // Check if this is the first user
-            const usersQuery = query(collection(db, "users"), limit(1));
-            const usersSnapshot = await getDocs(usersQuery);
-            const isFirstUser = usersSnapshot.empty;
-            const userRole = isFirstUser ? 'Admin' : 'Farmer';
+            // Check if there are any admin users yet.
+            const adminsQuery = query(collection(db, "users"), where("role", "==", "Admin"));
+            const adminSnapshot = await getDocs(adminsQuery);
+            const isAdminPresent = !adminSnapshot.empty;
 
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                email: user.email,
-                name: user.displayName || data.email.split('@')[0],
+            const userRole = isAdminPresent ? 'Farmer' : 'Admin';
+
+            await setDoc(doc(db, "users", newUser.uid), {
+                uid: newUser.uid,
+                email: newUser.email,
+                name: newUser.displayName || data.email.split('@')[0],
                 role: userRole,
                 disabled: false,
                 createdAt: serverTimestamp(),
             });
+
             toast({
                 title: "खाते तयार झाले!",
                 description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${userRole}`,
