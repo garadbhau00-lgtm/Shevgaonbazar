@@ -13,20 +13,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Leaf, Loader2 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect } from 'react';
-
-function GoogleIcon() {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-            <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-1.5c-1.1 0-1.5.9-1.5 1.5V12h3l-.5 3h-2.5v6.8c4.56-.93 8-4.96 8-9.8z"/>
-        </svg>
-    )
-}
 
 const signupSchema = z.object({
     name: z.string().min(2, { message: 'नाव आवश्यक आहे.' }),
@@ -44,7 +35,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function SignupPage() {
     const { toast } = useToast();
     const router = useRouter();
-    const { user, loading, handleGoogleSignIn } = useAuth();
+    const { user, loading } = useAuth();
     
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
@@ -191,15 +182,7 @@ export default function SignupPage() {
                             </Button>
                         </form>
                     </Form>
-                    <div className="my-6 flex items-center">
-                        <Separator className="flex-1" />
-                        <span className="mx-4 text-xs text-muted-foreground">OR CONTINUE WITH</span>
-                        <Separator className="flex-1" />
-                    </div>
-                    <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
-                        <GoogleIcon />
-                        Sign up with Google
-                    </Button>
+
                     <div className="mt-6 text-center text-sm">
                         आधीपासूनच खाते आहे?{' '}
                         <Link href="/login" className="font-medium text-primary hover:underline">
