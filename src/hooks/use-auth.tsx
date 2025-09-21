@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let unsubscribeProfile: Unsubscribe | undefined;
     
         if (user) {
+            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -54,19 +55,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             description: 'तुमचे खाते प्रशासकाने अक्षम केले आहे.' 
                         });
                         signOut(auth);
+                        setUserProfile(null);
                     } else {
                         setUserProfile(profileData);
                     }
                 }
+                setLoading(false);
             }, (error) => {
                 console.error("Error fetching user profile:", error);
-                // Handle potential errors, e.g., permissions
+                setLoading(false);
             });
         } else {
             setUserProfile(null);
+            setLoading(false);
         }
     
-        // Cleanup function
         return () => {
             if (unsubscribeProfile) {
                 unsubscribeProfile();
@@ -111,14 +114,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
         } catch (error: any) {
             console.error("Google sign-in error", error);
-             if (error.code === 'auth/popup-closed-by-user') {
-                 toast({
-                    variant: "destructive",
+            if (error.code === 'auth/popup-closed-by-user') {
+                toast({
+                    variant: 'destructive',
                     title: 'Google साइन-इन रद्द केले',
                     description: 'तुम्ही साइन-इन विंडो बंद केली आहे.',
                 });
             } else {
-                toast({ variant: 'destructive', title: 'Google साइन-इन अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
+                toast({
+                    variant: 'destructive',
+                    title: 'Google साइन-इन अयशस्वी',
+                    description: 'कृपया पुन्हा प्रयत्न करा.',
+                });
             }
         }
     }, [toast]);
