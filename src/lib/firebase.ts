@@ -8,10 +8,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // USERS
     // Allow users to read/update their own profile.
+    // Allow new users to create their own profile.
     // Admins can read/write any user profile.
     match /users/{userId} {
       allow read, update: if request.auth != null && request.auth.uid == userId;
-      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+      allow create: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
     // Admins can list all users.
      match /users/{document=**} {
