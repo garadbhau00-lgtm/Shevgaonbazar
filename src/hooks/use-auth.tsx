@@ -32,8 +32,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            setUser(firebaseUser);
-            setLoading(false);
+            setLoading(true);
+            if (firebaseUser) {
+                setUser(firebaseUser);
+            } else {
+                setUser(null);
+                setUserProfile(null);
+                setLoading(false);
+            }
         });
         return () => unsubscribeAuth();
     }, []);
@@ -56,15 +62,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUserProfile(profileData);
                     }
                 } else {
-                    // This case can happen briefly if the user document hasn't been created yet.
+                    // This can happen for a new user if the doc isn't created yet.
+                    // handleGoogleSignIn will create it.
                     setUserProfile(null);
                 }
+                setLoading(false);
             }, (error) => {
                 console.error("Error fetching user profile:", error);
                 setUserProfile(null);
+                setLoading(false);
             });
         } else {
-            setUserProfile(null);
+           setLoading(false);
         }
 
         return () => {
@@ -128,7 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 toast({
                     variant: 'destructive',
                     title: 'Google साइन-इन अयशस्वी',
-                    description: 'कृपया पुन्हा प्रयत्न करा किंवा तुमच्या फायरबेस प्रोजेक्टमध्ये SHA-1 की योग्यरित्या कॉन्फिगर केली आहे का ते तपासा.',
+                    description: 'कृपया पुन्हा प्रयत्न करा. तुमच्या फायरबेस प्रोजेक्टमध्ये SHA-1 की योग्यरित्या कॉन्फिगर केली आहे का, हे तपासण्याची शिफारस केली जाते.',
                 });
             }
         }
