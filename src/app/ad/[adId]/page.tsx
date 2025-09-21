@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -12,15 +13,25 @@ import { Loader2, BadgeIndianRupee, MapPin, Phone } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import AppHeader from '@/components/layout/app-header';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function AdDetailPage() {
     const { adId } = useParams();
     const router = useRouter();
     const { toast } = useToast();
+    const { user, loading: authLoading } = useAuth();
     const [ad, setAd] = useState<Ad | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (authLoading) return;
+
+        if (!user) {
+            toast({ variant: 'destructive', title: 'लॉगिन आवश्यक', description: 'जाहिरातीचे तपशील पाहण्यासाठी कृपया लॉगिन करा.' });
+            router.push('/login');
+            return;
+        }
+        
         const fetchAd = async () => {
             if (!adId) return;
             try {
@@ -29,8 +40,8 @@ export default function AdDetailPage() {
 
                 if (docSnap.exists()) {
                     const adData = { id: docSnap.id, ...docSnap.data() } as Ad;
-                     if (adData.status !== 'approved') {
-                        toast({ variant: 'destructive', title: 'Ad Not Available', description: 'This ad is not currently approved for viewing.' });
+                     if (adData.status !== 'approved' && adData.userId !== user.uid) {
+                        toast({ variant: 'destructive', title: 'Ad Not Available', description: 'This ad is not currently available for viewing.' });
                         router.push('/');
                     } else {
                         setAd(adData);
@@ -48,9 +59,9 @@ export default function AdDetailPage() {
         };
 
         fetchAd();
-    }, [adId, router, toast]);
+    }, [adId, router, toast, user, authLoading]);
 
-    if (loading) {
+    if (loading || authLoading) {
         return (
             <>
                 <AppHeader />
@@ -62,9 +73,8 @@ export default function AdDetailPage() {
     }
     
     if (!ad) {
-        return (
-            <div className="text-center p-8">Ad not found.</div>
-        )
+        // This will be shown briefly during redirect or if the ad is not found
+        return null;
     }
 
     return (
