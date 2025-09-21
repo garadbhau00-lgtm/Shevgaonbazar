@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -149,12 +150,6 @@ export default function Home() {
   return (
     <div>
       <header className="bg-card pb-4">
-        <div className="p-4 flex items-center justify-between">
-            <h1 className="text-xl font-bold text-primary">शेवगाव बाजार</h1>
-            <div className="flex items-center space-x-2">
-                {renderUserOptions()}
-            </div>
-        </div>
         <div className="relative h-32 w-full text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
@@ -168,8 +163,13 @@ export default function Home() {
                 <p className="text-xs max-w-md mt-1">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
             </div>
         </div>
-
-        <div className="relative mt-4 px-4">
+         <div className="p-4 flex items-center justify-between">
+            <h1 className="text-xl font-bold text-primary">शेवगाव बाजार</h1>
+            <div className="flex items-center space-x-2">
+                {renderUserOptions()}
+            </div>
+        </div>
+        <div className="relative px-4">
           <Search className="absolute left-7 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input placeholder="जाहिरात शोधा..." className="pl-10" />
         </div>
