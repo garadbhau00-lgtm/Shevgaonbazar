@@ -104,8 +104,8 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-            <h1 className="text-xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h1>
-            <p className="mt-2 text-sm max-w-xl">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
+            <h1 className="text-lg font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h1>
+            <p className="mt-2 text-xs max-w-xl">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
         </div>
       </div>
 
