@@ -169,9 +169,9 @@ export default function Home() {
       </header>
       
       <main>
-        <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pb-4">
+        <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pb-2">
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-            <ScrollArea className="w-full whitespace-nowrap [&>div>div]:!flex [&>div>div]:!flex-row [&>div>div]:!overflow-x-scroll">
+            <ScrollArea className="w-full whitespace-nowrap [&>div>div]:!flex [&>div>div]:!flex-row">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0 h-16 items-center overflow-y-hidden">
                 <TabsTrigger value="सर्व" className="h-auto flex flex-col items-center justify-center gap-1 p-1 text-[10px] rounded-lg border data-[state=active]:bg-primary/10">
                   <List className="h-4 w-4" />
