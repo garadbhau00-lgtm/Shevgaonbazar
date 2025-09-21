@@ -12,7 +12,7 @@ export default function AdCard({ ad }: AdCardProps) {
   return (
     <Link href={`/ad/${ad.id}`} passHref>
         <Card className="flex flex-col overflow-hidden shadow-md transition-shadow hover:shadow-lg h-full">
-        <div className="relative aspect-[4/3] bg-secondary">
+        <div className="relative aspect-square bg-secondary">
             {adPhotoUrl ? (
             <Image
                 src={adPhotoUrl}
@@ -27,19 +27,19 @@ export default function AdCard({ ad }: AdCardProps) {
             </div>
             )}
         </div>
-        <CardContent className="flex-grow p-3 flex flex-col">
+        <CardContent className="flex-grow p-2 flex flex-col">
           <div className="flex-grow">
-            <h3 className="font-semibold truncate">{ad.category}</h3>
+            <h3 className="font-medium text-sm truncate">{ad.category}</h3>
             {ad.subcategory && (
-            <p className="text-sm text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate">
                 {ad.subcategory}
             </p>
             )}
-            <p className="text-lg font-bold text-primary mt-1">
+            <p className="text-base font-bold text-primary mt-0.5">
             ₹{ad.price.toLocaleString('en-IN')}
             </p>
           </div>
-          <p className="text-sm text-muted-foreground truncate mt-auto pt-1">{ad.location}</p>
+          <p className="text-xs text-muted-foreground truncate mt-auto pt-1">{ad.location}</p>
         </CardContent>
         </Card>
     </Link>
