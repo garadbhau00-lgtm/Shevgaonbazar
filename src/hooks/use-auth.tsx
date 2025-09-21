@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(firebaseUser);
             if (!firebaseUser) {
                 setLoading(false);
+                setUserProfile(null);
             }
         });
         return () => unsubscribeAuth();
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let unsubscribeProfile: Unsubscribe | undefined;
 
         if (user) {
+            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -59,6 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUserProfile(profileData);
                     }
                 } else {
+                    // Profile doesn't exist, which might happen briefly during signup.
                     setUserProfile(null);
                 }
                 setLoading(false); 
@@ -70,6 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
         } else {
             setUserProfile(null);
+            setLoading(false);
         }
 
         return () => {
@@ -92,7 +96,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const handleGoogleSignIn = useCallback(async () => {
         const provider = new GoogleAuthProvider();
-        setLoading(true);
         try {
             const result = await signInWithPopup(auth, provider);
             const signedInUser = result.user;
@@ -122,6 +125,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 });
             }
         } catch (error: any) {
+            // If there's an error, especially a permissions error, sign the user out.
+            await signOut(auth);
+
             let title = 'Google साइन-इन अयशस्वी';
             let description = 'एक अनपेक्षित त्रुटी आली. कृपया पुन्हा प्रयत्न करा.';
 
@@ -144,7 +150,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 title: title,
                 description: description,
             });
-            setLoading(false);
         }
     }, [toast]);
     

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,9 +66,10 @@ export default function SignupPage() {
 
 
     async function onSubmit(data: SignupFormValues) {
+        let newUser;
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            const newUser = userCredential.user;
+            newUser = userCredential.user;
             
             await setDoc(doc(db, "users", newUser.uid), {
                 uid: newUser.uid,
@@ -84,13 +85,17 @@ export default function SignupPage() {
             });
             
         } catch (error: any) {
+            if (newUser) {
+                await signOut(auth);
+            }
+            
             let message = "खाते तयार करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
             if (error.code === 'auth/email-already-in-use') {
                 message = "हा ईमेल पत्ता आधीच वापरलेला आहे.";
+            } else if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED') {
+                message = "डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा.";
             }
-             else if (error.code === 'permission-denied' || error.code === 'PERMISSION_DENIED') {
-                message = "डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा."
-            }
+            
             toast({
                 variant: "destructive",
                 title: "त्रुटी!",
@@ -112,7 +117,7 @@ export default function SignupPage() {
     }
 
     return (
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
+        <div className="flex min-h-screen items-center justify-center bg-secondary/50 p-4">
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
                     <div className="mb-4 flex justify-center">
