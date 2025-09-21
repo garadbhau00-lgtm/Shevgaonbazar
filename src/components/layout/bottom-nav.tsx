@@ -11,6 +11,7 @@ import { Input } from '../ui/input';
 
 const baseNavItems = [
   { href: '/', label: 'होम', icon: Home },
+  { href: '/search', label: 'शोधा', icon: Search },
   { href: '/post-ad', label: 'जाहिरात टाका', icon: PlusCircle, requiresAuth: true },
   { href: '/my-ads', label: 'माझ्या जाहिराती', icon: LayoutList, requiresAuth: true },
   { href: '/more', label: 'अधिक', icon: Menu },
@@ -33,14 +34,8 @@ export default function BottomNav() {
   
   return (
     <div className="fixed bottom-0 z-10 w-full max-w-lg border-t bg-card">
-      <div className="p-2 border-b">
-         <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input placeholder="जाहिरात शोधा..." className="pl-10 bg-secondary text-foreground placeholder:text-muted-foreground" />
-        </div>
-      </div>
       <nav>
-        <div className={`grid h-14 font-medium grid-cols-${baseNavItems.length}`}>
+        <div className={`grid h-14 font-medium grid-cols-5`}>
           {baseNavItems.map((item) => {
             const isActive = pathname === item.href;
             const isAuthProtected = item.requiresAuth && !user;
