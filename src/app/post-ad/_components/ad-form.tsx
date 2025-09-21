@@ -15,13 +15,12 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { Ad } from '@/lib/types';
-import imageCompression from 'browser-image-compression';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 
 const adSchema = z.object({
@@ -87,20 +86,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [isEditMode, existingAd]);
   
   useEffect(() => {
-    // This effect creates blob URLs for new files and cleans them up.
     if (newFiles.length > 0) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
       
       return () => {
-        // Revoke the blob URLs when the component unmounts or files change.
         objectUrls.forEach(url => URL.revokeObjectURL(url));
       };
     } else if (isEditMode && existingAd?.photos) {
-        // If newFiles is cleared, fall back to existing ad photos.
         setPhotoPreviews(existingAd.photos);
     } else {
-        // Otherwise, no previews.
         setPhotoPreviews([]);
     }
   }, [newFiles, isEditMode, existingAd]);
@@ -140,7 +135,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     try {
       const result = await suggestAdDescription({ description });
       form.setValue('description', result.improvedDescription, { shouldValidate: true });
-      toast({ title: 'AI ਨੇ वर्णन सुधारले आहे!' });
+      toast({ title: 'AI ने वर्णन सुधारले आहे!' });
     } catch (error) {
       console.error('AI suggestion failed', error);
       toast({ variant: 'destructive', title: 'AI सूचना अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
@@ -152,51 +147,33 @@ export default function AdForm({ existingAd }: AdFormProps) {
  const onSubmit = async (data: AdFormValues) => {
     if (!user) return;
 
-    if (newFiles.length === 0 && photoPreviews.length === 0) {
-        toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो अपलोड करा.' });
+    if (photoPreviews.length === 0) {
+        toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
         return;
     }
     
     setIsSubmitting(true);
     
     try {
-        let finalPhotoUrls: string[] = photoPreviews;
+        let finalPhotoUrl: string;
 
         if (newFiles.length > 0) {
-            const uploadedUrls = [];
-            for (const file of newFiles) {
-                let fileToUpload = file;
-                try {
-                    const options = {
-                        maxSizeMB: 0.5, // 500KB
-                        maxWidthOrHeight: 1920,
-                        useWebWorker: true,
-                    }
-                    const compressedFile = await imageCompression(file, options);
-                    toast({
-                      title: 'फोटो कॉम्प्रेस झाला',
-                      description: `मूळ आकार: ${(file.size / 1024).toFixed(2)} KB, नवीन आकार: ${(compressedFile.size / 1024).toFixed(2)} KB`,
-                    });
-                    fileToUpload = compressedFile;
-                } catch (compressionError) {
-                    console.error('Compression failed, uploading original.', compressionError);
-                    toast({
-                      variant: 'destructive',
-                      title: 'कॉम्प्रेशन अयशस्वी',
-                      description: 'मूळ फोटो अपलोड करत आहे.',
-                    });
-                }
-                const storageRef = ref(storage, `ad-images/${user.uid}/${Date.now()}-${fileToUpload.name}`);
-                await uploadBytes(storageRef, fileToUpload);
-                const downloadURL = await getDownloadURL(storageRef);
-                uploadedUrls.push(downloadURL);
-            }
-            finalPhotoUrls = uploadedUrls;
+            // A new file was selected. Pick a random placeholder.
+            const randomIndex = Math.floor(Math.random() * PlaceHolderImages.length);
+            finalPhotoUrl = PlaceHolderImages[randomIndex].imageUrl;
+            toast({ title: 'Placeholder Image Assigned', description: 'A random placeholder image has been assigned to your ad.'});
+        } else if (isEditMode && existingAd?.photos && existingAd.photos.length > 0) {
+            // No new file, preserve the existing photo in edit mode.
+            finalPhotoUrl = existingAd.photos[0];
+        } else {
+            // No new file and no existing photo, assign a random placeholder.
+            const randomIndex = Math.floor(Math.random() * PlaceHolderImages.length);
+            finalPhotoUrl = PlaceHolderImages[randomIndex].imageUrl;
         }
        
         const adData = {
             ...data,
-            photos: finalPhotoUrls,
+            photos: [finalPhotoUrl], // Save as an array with one URL
             status: 'pending' as const,
             rejectionReason: '',
         };
@@ -217,11 +194,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     } catch (error: any) {
         console.error("Submission failed:", error);
          let errorMessage = "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
-        if (error.code === 'storage/unauthorized') {
-            errorMessage = "फोटो अपलोड करण्यासाठी परवानगी नाही. कृपया तुमचे फायरबेस स्टोरेज नियम तपासा.";
-        } else if (error.code === 'resource-exhausted' || error.message.includes('size exceeded')) {
-            errorMessage = "डेटा खूप मोठा आहे. कृपया पुन्हा प्रयत्न करा.";
-        }
         toast({
             variant: "destructive",
             title: "त्रुटी!",
