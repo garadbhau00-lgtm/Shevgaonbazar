@@ -79,7 +79,6 @@ export default function AppHeader() {
           isHomePage ? 'text-white' : 'text-primary'
       )}>
         <Store className="h-6 w-6" />
-        <span>शेवगाव बाजार</span>
       </Link>
       <div className="flex items-center gap-2">
         {renderUserOptions()}
