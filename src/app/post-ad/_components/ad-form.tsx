@@ -26,9 +26,20 @@ import { villageList } from '@/lib/villages';
 const adSchema = z.object({
   title: z.string().min(5, { message: 'शीर्षकासाठी किमान ५ अक्षरे आवश्यक आहेत.' }),
   description: z.string().min(10, { message: 'वर्णनासाठी किमान १० अक्षरे आवश्यक आहेत.' }),
-  category: z.enum(['पशुधन', 'शेती उत्पादन', 'उपकरणे'], {
-    required_error: 'कृपया एक श्रेणी निवडा.',
-  }),
+  category: z.enum(
+    [
+      'पशुधन',
+      'शेती उत्पादने',
+      'शेतीसाठी साधनं',
+      'शेती व गाव सेवा',
+      'गावातील गरज',
+      'व्यावसायिक सेवा',
+      'आर्थिक',
+    ],
+    {
+      required_error: 'कृपया एक श्रेणी निवडा.',
+    }
+  ),
   price: z.coerce.number().positive({ message: 'किंमत ० पेक्षा जास्त असावी.' }),
   location: z.string({ required_error: 'कृपया एक गाव निवडा.' }),
   mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }),
@@ -280,8 +291,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="पशुधन">पशुधन</SelectItem>
-                  <SelectItem value="शेती उत्पादन">शेती उत्पादन</SelectItem>
-                  <SelectItem value="उपकरणे">उपकरणे</SelectItem>
+                  <SelectItem value="शेती उत्पादने">शेती उत्पादने</SelectItem>
+                  <SelectItem value="शेतीसाठी साधनं">शेतीसाठी साधनं</SelectItem>
+                  <SelectItem value="शेती व गाव सेवा">शेती व गाव सेवा</SelectItem>
+                  <SelectItem value="गावातील गरज">गावातील गरज</SelectItem>
+                  <SelectItem value="व्यावसायिक सेवा">व्यावसायिक सेवा</SelectItem>
+                  <SelectItem value="आर्थिक">आर्थिक</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

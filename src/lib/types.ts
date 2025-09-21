@@ -1,8 +1,16 @@
+
 export type Ad = {
   id: string;
   title: string;
   description: string;
-  category: 'पशुधन' | 'शेती उत्पादन' | 'उपकरणे';
+  category:
+    | 'पशुधन'
+    | 'शेती उत्पादने'
+    | 'शेतीसाठी साधनं'
+    | 'शेती व गाव सेवा'
+    | 'गावातील गरज'
+    | 'व्यावसायिक सेवा'
+    | 'आर्थिक';
   price: number;
   location: string; // village
   mobileNumber: string;

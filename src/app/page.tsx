@@ -16,8 +16,17 @@ import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestor
 import { db } from '@/lib/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
-const categories = ['सर्व', 'पशुधन', 'शेती उत्पादन', 'उपकरणे'];
+const categories: Ad['category'][] = [
+  'पशुधन',
+  'शेती उत्पादने',
+  'शेतीसाठी साधनं',
+  'शेती व गाव सेवा',
+  'गावातील गरज',
+  'व्यावसायिक सेवा',
+  'आर्थिक',
+];
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -57,6 +66,7 @@ export default function Home() {
   const { toast } = useToast();
   const [ads, setAds] = useState<Ad[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('सर्व');
 
   useEffect(() => {
     const q = query(
@@ -90,10 +100,11 @@ export default function Home() {
 
     return () => unsubscribe();
   }, [toast]);
+  
+  const filteredAds = selectedCategory === 'सर्व'
+    ? ads
+    : ads.filter(ad => ad.category === selectedCategory);
 
-  const livestockAds = ads.filter((ad) => ad.category === 'पशुधन');
-  const produceAds = ads.filter((ad) => ad.category === 'शेती उत्पादन');
-  const equipmentAds = ads.filter((ad) => ad.category === 'उपकरणे');
 
   const onLogout = async () => {
     await handleLogout();
@@ -164,25 +175,21 @@ export default function Home() {
       </header>
 
       <main className="p-4">
-        <Tabs defaultValue="सर्व" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            {categories.map((category) => (
-              <TabsTrigger key={category} value={category}>
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <TabsContent value="सर्व" className="mt-4">
-            <AdList ads={ads} loading={adsLoading} />
-          </TabsContent>
-          <TabsContent value="पशुधन" className="mt-4">
-            <AdList ads={livestockAds} loading={adsLoading} />
-          </TabsContent>
-          <TabsContent value="शेती उत्पादन" className="mt-4">
-            <AdList ads={produceAds} loading={adsLoading} />
-          </TabsContent>
-          <TabsContent value="उपकरणे" className="mt-4">
-            <AdList ads={equipmentAds} loading={adsLoading} />
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+          <ScrollArea className="w-full whitespace-nowrap">
+            <TabsList className="inline-flex w-max">
+              <TabsTrigger value="सर्व">सर्व</TabsTrigger>
+              {categories.map((category) => (
+                <TabsTrigger key={category} value={category}>
+                  {category}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+             <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+          
+          <TabsContent value={selectedCategory} className="mt-4">
+            <AdList ads={filteredAds} loading={adsLoading} />
           </TabsContent>
         </Tabs>
       </main>
