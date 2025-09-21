@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -54,11 +54,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const isEditMode = !!existingAd;
 
   const form = useForm<AdFormValues>({
@@ -95,22 +90,26 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [isEditMode, existingAd]);
   
   useEffect(() => {
+    // This effect creates blob URLs for new files and cleans them up.
     if (newFiles.length > 0) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
       
       return () => {
+        // Revoke the blob URLs when the component unmounts or files change.
         objectUrls.forEach(url => URL.revokeObjectURL(url));
       };
     } else if (existingAd?.photos) {
-      setPhotoPreviews(existingAd.photos);
+        // If newFiles is cleared, fall back to existing ad photos.
+        setPhotoPreviews(existingAd.photos);
     } else {
-      setPhotoPreviews([]);
+        // Otherwise, no previews.
+        setPhotoPreviews([]);
     }
   }, [newFiles, existingAd]);
 
 
-  if (authLoading || !user) {
+  if (authLoading) {
       return (
           <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -126,6 +125,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
 
   const removePhoto = (index: number) => {
+    // This handles removing both newly selected files and existing photos in edit mode.
     if (newFiles.length > 0) {
         const newFileArray = [...newFiles];
         newFileArray.splice(index, 1);
@@ -136,6 +136,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         setPhotoPreviews(newPhotoPreviews);
     }
     
+    // Reset the file input so the user can re-select the same file if they want.
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -176,19 +177,28 @@ export default function AdForm({ existingAd }: AdFormProps) {
         if (newFiles.length > 0) {
             const uploadPromises = newFiles.map(async (file) => {
                 const options = {
-                    maxSizeMB: 0.5, // 500KB
+                    maxSizeMB: 0.5, // Target 500KB
                     maxWidthOrHeight: 1280,
                     useWebWorker: true,
                 };
-
+                
+                const originalSize = (file.size / 1024).toFixed(2);
                 let fileToUpload = file;
                 try {
                     const compressedFile = await imageCompression(file, options);
-                    toast({ title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला', description: `नवीन आकार: ${(compressedFile.size / 1024).toFixed(2)} KB` });
+                    const newSize = (compressedFile.size / 1024).toFixed(2);
+                    toast({ 
+                        title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला', 
+                        description: `मूळ आकार: ${originalSize} KB, नवीन आकार: ${newSize} KB` 
+                    });
                     fileToUpload = compressedFile;
                 } catch (compressionError) {
                     console.error('Image compression failed:', compressionError);
-                    toast({ variant: 'warning', title: 'फोटो कॉम्प्रेशन अयशस्वी', description: 'मूळ फोटो अपलोड करण्याचा प्रयत्न करत आहे.' });
+                    toast({ 
+                        variant: 'destructive', 
+                        title: 'फोटो कॉम्प्रेशन अयशस्वी', 
+                        description: 'मूळ फोटो अपलोड करण्याचा प्रयत्न करत आहे.' 
+                    });
                 }
 
                 const imageRef = storageRef(storage, `ad-images/${user.uid}/${Date.now()}-${fileToUpload.name}`);
@@ -226,8 +236,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
          let errorMessage = "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
         if (error.code === 'storage/unauthorized') {
             errorMessage = "फोटो अपलोड करण्यासाठी परवानगी नाही. कृपया तुमचे फायरबेस स्टोरेज नियम तपासा.";
-        } else if (error.code === 'resource-exhausted') {
-            errorMessage = "फाइलचा आकार खूप मोठा आहे. कृपया लहान फाइल अपलोड करा."
+        } else if (error.code === 'resource-exhausted' || error.message.includes('size exceeded')) {
+            errorMessage = "फाइलचा आकार खूप मोठा आहे. कृपया 5MB पेक्षा लहान फाइल अपलोड करा."
         }
         toast({
             variant: "destructive",
@@ -330,7 +340,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         <FormItem>
             <FormLabel>फोटो</FormLabel>
             <div className="flex flex-wrap gap-4">
-                {mounted && photoPreviews.map((preview, index) => (
+                {photoPreviews.map((preview, index) => (
                     <div key={index} className="relative w-32 aspect-square">
                         <Image src={preview} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
                         <Button
@@ -346,7 +356,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     </div>
                 ))}
 
-                {mounted && photoPreviews.length < MAX_FILES && (
+                {photoPreviews.length < MAX_FILES && (
                     <FormControl>
                         <div 
                             className={cn(
