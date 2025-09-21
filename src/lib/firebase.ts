@@ -43,12 +43,13 @@ service cloud.firestore {
     }
     // Rules for listing ads
     match /ads/{document=**} {
-      allow list: if request.auth != null
-                    && (
-                      (request.query.get("where.userId") == request.auth.uid)
-                      || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.get("where.status") == 'pending')
-                    )
-                  || (request.query.get("where.status") == 'approved');
+      allow list: if request.query.get("where.status") == 'approved'
+                  || (
+                      request.auth != null && (
+                        (request.query.get("where.userId") == request.auth.uid)
+                        || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.get("where.status") == 'pending')
+                      )
+                  );
     }
 
     // CONVERSATIONS & MESSAGES
