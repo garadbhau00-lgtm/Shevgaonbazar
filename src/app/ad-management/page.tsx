@@ -125,7 +125,9 @@ export default function AdManagementPage() {
     if (authLoading || pageLoading) {
         return (
             <>
-                <AppHeader />
+                <div className="relative h-28 w-full">
+                  <AppHeader />
+                </div>
                 <div className="flex justify-center items-center h-[calc(100vh-8rem)]">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
@@ -135,12 +137,22 @@ export default function AdManagementPage() {
 
     return (
         <>
-            <AppHeader />
-            <main className="p-4">
-                <div className="mb-4">
-                    <h1 className="text-2xl font-bold">जाहिरात व्यवस्थापन</h1>
-                    <p className="text-muted-foreground">प्रलंबित जाहिरातींचे पुनरावलोकन करा, स्वीकृत करा किंवा नाकारा.</p>
+            <div className="relative h-28 w-full">
+                <AppHeader />
+                <Image
+                  src="https://picsum.photos/seed/ad-management/1200/400"
+                  alt="Ad Management background"
+                  fill
+                  className="object-cover"
+                  data-ai-hint="farm checklist"
+                />
+                <div className="absolute inset-0 bg-black/50" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+                    <h1 className="text-lg font-bold">जाहिरात व्यवस्थापन</h1>
+                    <p className="mt-2 text-xs max-w-xl">प्रलंबित जाहिरातींचे पुनरावलोकन करा, स्वीकृत करा किंवा नाकारा.</p>
                 </div>
+            </div>
+            <main className="p-4">
                 <div className="space-y-4">
                     {ads.length > 0 ? ads.map((ad) => (
                         <Card key={ad.id} className="overflow-hidden">
@@ -218,3 +230,5 @@ export default function AdManagementPage() {
         </>
     );
 }
+
+    
