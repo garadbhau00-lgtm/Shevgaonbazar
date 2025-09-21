@@ -117,7 +117,7 @@ export default function Home() {
             <DropdownMenuTrigger asChild>
                <Avatar className="h-8 w-8 cursor-pointer">
                   {user.photoURL && <AvatarImage src={user.photoURL} />}
-                  <AvatarFallback className="font-bold">{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
+                  <AvatarFallback className="font-bold bg-black text-white">{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -150,7 +150,7 @@ export default function Home() {
   return (
     <div>
       <header className="bg-card">
-        <div className="relative w-full h-32 text-white">
+        <div className="relative w-full h-40 text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
                 alt="Header background"
@@ -165,7 +165,7 @@ export default function Home() {
                     </div>
                 </div>
                 <div className='space-y-1 mt-auto'>
-                    <h2 className="text-base font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
+                    <h2 className="text-sm font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
                     <p className="text-xs max-w-md">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
                 </div>
             </div>
