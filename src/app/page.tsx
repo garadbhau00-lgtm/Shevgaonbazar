@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -159,8 +158,7 @@ export default function Home() {
                 data-ai-hint="green forest"
             />
             <div className="absolute inset-0 bg-black/50 flex flex-col justify-between p-4">
-                <div className="flex items-start justify-between">
-                    <h1 className="text-xl font-bold text-white">शेवगाव बाजार</h1>
+                <div className="flex items-start justify-end">
                     <div className="flex items-center space-x-2">
                         {renderUserOptions()}
                     </div>
