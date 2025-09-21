@@ -117,24 +117,33 @@ export default function MyAdsPage() {
 
     if (authLoading || adsLoading) {
         return (
-            <>
+            <div>
                 <AppHeader />
                 <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
-            </>
+            </div>
         )
     }
 
     return (
-        <>
-            <AppHeader />
-            <main className="p-4 pb-20">
-                <div className="mb-4">
-                    <h1 className="text-2xl font-bold">माझ्या जाहिराती</h1>
-                    <p className="text-muted-foreground">तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.</p>
+        <div>
+             <div className="relative h-28 w-full">
+                <AppHeader />
+                <Image
+                    src="https://picsum.photos/seed/my-ads/1200/400"
+                    alt="My ads background"
+                    fill
+                    className="object-cover"
+                    data-ai-hint="farm tools"
+                />
+                <div className="absolute inset-0 bg-black/50" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+                    <h1 className="text-lg font-bold">माझ्या जाहिराती</h1>
+                    <p className="mt-2 text-xs max-w-xl">तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.</p>
                 </div>
-
+            </div>
+            <main className="p-4 pb-20">
                 {myAds.length > 0 ? (
                     <div className="space-y-4">
                         {myAds.map(ad => (
@@ -218,6 +227,6 @@ export default function MyAdsPage() {
                     </AlertDialogContent>
                 </AlertDialog>
             </main>
-        </>
+        </div>
     );
 }

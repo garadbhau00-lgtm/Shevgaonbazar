@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
-import { Store, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter, usePathname } from 'next/navigation';
@@ -27,7 +27,7 @@ export default function AppHeader() {
     router.push('/login');
   };
 
-  const isTransparentPage = pathname === '/' || pathname === '/post-ad';
+  const isTransparentPage = pathname === '/' || pathname === '/post-ad' || pathname === '/my-ads';
 
   const renderUserOptions = () => {
     if (!isClient || authLoading) {
