@@ -101,12 +101,6 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-white">
             <h1 className="text-2xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h1>
-            <Link href="/search" className="mt-4 w-full max-w-md">
-                <div className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground ring-offset-background">
-                    <Search className="h-4 w-4 mr-2"/>
-                    <span>काहीही शोधा...</span>
-                </div>
-            </Link>
         </div>
       </header>
 
