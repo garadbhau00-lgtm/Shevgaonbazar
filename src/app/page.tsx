@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, LogOut, Search } from 'lucide-react';
+import { Loader2, LogOut, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
@@ -19,8 +19,6 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { categories } from '@/lib/categories';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
-import { Input } from '@/components/ui/input';
-
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   if (loading) {
@@ -172,12 +170,20 @@ export default function Home() {
 
       <main>
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-          <div className="sticky top-[96px] z-20 bg-background p-4 pt-2">
+          <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pt-2">
             <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
-                <TabsTrigger value="सर्व" className="border">सर्व</TabsTrigger>
+                <TabsTrigger value="सर्व" className="flex-col h-auto gap-1 border p-3">
+                  <List className="h-5 w-5" />
+                  सर्व
+                </TabsTrigger>
                 {categories.map((category) => (
-                  <TabsTrigger key={category.name} value={category.name} className="border">
+                  <TabsTrigger
+                    key={category.name}
+                    value={category.name}
+                    className="flex-col h-auto gap-1 border p-3"
+                  >
+                    <category.icon className="h-5 w-5" />
                     {category.name}
                   </TabsTrigger>
                 ))}
