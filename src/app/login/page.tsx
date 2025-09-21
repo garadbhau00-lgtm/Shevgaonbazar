@@ -81,9 +81,9 @@ export default function LoginPage() {
         )
     }
     
-    // Redirect if user is already logged in and loading is complete.
+    // If loading is finished and user exists, the useEffect will trigger a redirect.
+    // If the user exists, we can return null to prevent a flash of the login form.
     if (user) {
-        // router.push('/'); // This is now handled by the useEffect
         return null; 
     }
 
