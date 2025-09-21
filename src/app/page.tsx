@@ -150,7 +150,7 @@ export default function Home() {
   return (
     <div>
       <header className="bg-card">
-        <div className="relative w-full h-28 text-white">
+        <div className="relative w-full h-24 text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
                 alt="Header background"
