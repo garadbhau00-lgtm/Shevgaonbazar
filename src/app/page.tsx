@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, LogOut, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
 import AdCard from '@/components/ad-card';
 import Link from 'next/link';
@@ -191,13 +191,10 @@ export default function Home() {
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>
-          
-          <div className="p-4">
-            <TabsContent value={selectedCategory} className="mt-0">
-              <AdList ads={filteredAds} loading={adsLoading} />
-            </TabsContent>
-          </div>
         </Tabs>
+        <div className="p-4">
+          <AdList ads={filteredAds} loading={adsLoading} />
+        </div>
       </main>
     </div>
   );
