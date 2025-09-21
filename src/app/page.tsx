@@ -149,7 +149,7 @@ export default function Home() {
 
   return (
     <div>
-      <header className="bg-card">
+      <header className="bg-card sticky top-0 z-20">
         <div className="relative w-full h-24 text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
@@ -170,23 +170,27 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="p-4">
+      <main>
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <TabsList className="inline-flex w-max">
-              <TabsTrigger value="सर्व">सर्व</TabsTrigger>
-              {categories.map((category) => (
-                <TabsTrigger key={category.name} value={category.name}>
-                  {category.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-             <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <div className="sticky top-[96px] z-20 bg-background p-4 pt-2">
+            <ScrollArea className="w-full whitespace-nowrap">
+              <TabsList className="inline-flex w-max">
+                <TabsTrigger value="सर्व">सर्व</TabsTrigger>
+                {categories.map((category) => (
+                  <TabsTrigger key={category.name} value={category.name}>
+                    {category.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </div>
           
-          <TabsContent value={selectedCategory} className="mt-4">
-            <AdList ads={filteredAds} loading={adsLoading} />
-          </TabsContent>
+          <div className="p-4">
+            <TabsContent value={selectedCategory} className="mt-0">
+              <AdList ads={filteredAds} loading={adsLoading} />
+            </TabsContent>
+          </div>
         </Tabs>
       </main>
     </div>
