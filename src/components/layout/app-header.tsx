@@ -31,15 +31,15 @@ export default function AppHeader() {
 
   const renderUserOptions = () => {
     if (!isClient || authLoading) {
-      return <Skeleton className="h-8 w-8 rounded-full bg-white/20" />;
+      return <Skeleton className="h-8 w-8 rounded-full" />;
     }
     if (user && userProfile) {
        return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-               <Avatar className="h-9 w-9 cursor-pointer border-2 border-white/80">
+               <Avatar className="h-9 w-9 cursor-pointer border-2 border-primary/50">
                   {user.photoURL && <AvatarImage src={user.photoURL} />}
-                  <AvatarFallback className="font-bold bg-black/50 text-white">{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
+                  <AvatarFallback className="font-bold bg-muted text-primary">{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -63,7 +63,7 @@ export default function AppHeader() {
       );
     }
     return (
-        <Button asChild variant={isHomePage ? 'outline' : 'default'} className={cn(isHomePage && 'border-white text-white hover:bg-white/20 hover:text-white')}>
+        <Button asChild>
             <Link href="/login">लॉगिन करा</Link>
         </Button>
     );
@@ -71,8 +71,8 @@ export default function AppHeader() {
 
   return (
     <header className={cn(
-        "sticky top-0 z-30 flex h-16 items-center justify-end px-4",
-        isHomePage ? 'absolute inset-x-0 bg-transparent' : 'border-b bg-card'
+        "flex h-16 items-center justify-end px-4",
+        isHomePage ? 'bg-transparent' : 'border-b bg-card'
     )}>
       <div className="flex items-center gap-2">
         {renderUserOptions()}
