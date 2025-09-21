@@ -31,7 +31,6 @@ service cloud.firestore {
     // ADS
     // Allow anyone to read approved ads.
     // Logged-in users can read their own ads regardless of status.
-    // Logged-in users can create ads.
     // Owners can update/delete their own ads.
     // Admins can read/write any ad.
     match /ads/{adId} {
@@ -44,27 +43,27 @@ service cloud.firestore {
     }
     // Rules for listing ads
     match /ads/{document=**} {
-      // Allow listing approved ads (homepage)
-      // Allow users to list their own ads (my-ads page)
-      // Allow admins to list ads for moderation
-      allow list: if (request.query.where.status == 'approved')
-                  || (request.auth != null && request.query.where.userId == request.auth.uid)
-                  || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
+      allow list: if request.auth != null
+                    && (
+                      (request.query.get("where.userId") == request.auth.uid)
+                      || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.get("where.status") == 'pending')
+                    )
+                  || (request.query.get("where.status") == 'approved');
     }
 
     // CONVERSATIONS & MESSAGES
     // Allow users to read, write, and create conversations they are a part of.
     match /conversations/{conversationId} {
-      allow read, write, create: if request.auth != null && request.resource.data.participants.hasAny([request.auth.uid]);
+      allow read, write, create: if request.auth != null && request.auth.uid in resource.data.participants;
 
       // Allow users to read and write messages within a conversation they are part of.
       match /messages/{messageId} {
-        allow read, write, create: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
+        allow read, write, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
       }
     }
     // Users can list conversations they are part of.
     match /conversations/{document=**} {
-      allow list: if request.auth != null && request.query.where.participants.hasAny([request.auth.uid]);
+      allow list: if request.auth != null && request.query.get("where.participants")['array-contains'] == request.auth.uid;
     }
   }
 }
@@ -97,7 +96,12 @@ You need to create composite indexes for the chat queries.
 - Collection ID: ads
 - Fields to index:
   1. userId (Ascending)
-  2. createdAt (Descending)
+- Query scope: Collection
+
+- Collection ID: ads
+- Fields to index:
+  1. status (Ascending)
+  2. createdAt (Ascending)
 - Query scope: Collection
 */
 
