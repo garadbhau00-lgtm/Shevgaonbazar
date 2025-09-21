@@ -32,8 +32,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            setUser(firebaseUser);
-            // The loading state will be managed by the profile fetching useEffect
+            if (firebaseUser) {
+                setUser(firebaseUser);
+            } else {
+                setUser(null);
+                setLoading(false);
+            }
         });
 
         return () => unsubscribeAuth();
@@ -43,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let unsubscribeProfile: Unsubscribe | undefined;
 
         if (user) {
-            setLoading(true); // Start loading when user object is available
+            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -59,10 +63,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUserProfile(profileData);
                     }
                 } else {
-                    // This can happen briefly if the user document hasn't been created yet
                     setUserProfile(null);
                 }
-                setLoading(false); // Stop loading once profile is processed
+                setLoading(false); 
             }, (error) => {
                 console.error("Error fetching user profile:", error);
                 toast({ variant: 'destructive', title: 'प्रोफाइल त्रुटी', description: 'वापरकर्ता प्रोफाइल आणण्यात अयशस्वी.' });
@@ -70,9 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setLoading(false);
             });
         } else {
-            // No user, clear profile and stop loading
             setUserProfile(null);
-            setLoading(false);
         }
 
         return () => {
