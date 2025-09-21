@@ -15,7 +15,7 @@ import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestor
 import { db } from '@/lib/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { categories } from '@/lib/categories';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
@@ -147,7 +147,7 @@ export default function Home() {
 
   return (
     <div>
-       <header className="bg-card sticky top-0 z-20">
+       <header className="sticky top-0 z-20 bg-card">
         <div className="relative w-full h-24 text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
@@ -171,7 +171,7 @@ export default function Home() {
       <main>
         <div className="sticky top-[96px] z-20 bg-background/95 backdrop-blur-sm p-4 pt-2 pb-2">
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-            <ScrollArea className="w-full whitespace-nowrap" type="scroll">
+            <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
                 <TabsTrigger value="सर्व" className="h-auto flex flex-col gap-1.5 p-2 text-[11px] rounded-lg">
                   <List className="h-4 w-4" />
@@ -188,6 +188,7 @@ export default function Home() {
                   </TabsTrigger>
                 ))}
               </TabsList>
+              <ScrollBar orientation="horizontal" className="invisible" />
             </ScrollArea>
             </Tabs>
         </div>
