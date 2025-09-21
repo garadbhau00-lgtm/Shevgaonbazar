@@ -30,25 +30,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     
+    // Handles user state changes
     useEffect(() => {
-        const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-            setLoading(true);
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             if (firebaseUser) {
                 setUser(firebaseUser);
             } else {
                 setUser(null);
-                setUserProfile(null);
                 setLoading(false);
             }
         });
-        return () => unsubscribeAuth();
+        return () => unsubscribe();
     }, []);
 
+    // Handles user profile fetching
     useEffect(() => {
-        let unsubscribeProfile: Unsubscribe | undefined;
         if (user) {
+            setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
-            unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
+            const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const profileData = docSnap.data() as UserProfile;
                      if (profileData.disabled) {
@@ -63,7 +63,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     }
                 } else {
                     // This can happen for a new user if the doc isn't created yet.
-                    // handleGoogleSignIn will create it.
                     setUserProfile(null);
                 }
                 setLoading(false);
@@ -72,15 +71,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUserProfile(null);
                 setLoading(false);
             });
+             return () => unsubscribeProfile();
         } else {
+            // No user, clear profile and finish loading
+           setUserProfile(null);
            setLoading(false);
         }
-
-        return () => {
-            if (unsubscribeProfile) {
-                unsubscribeProfile();
-            }
-        };
     }, [user, toast]);
 
 

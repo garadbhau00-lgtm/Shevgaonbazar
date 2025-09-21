@@ -10,7 +10,6 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Leaf, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -73,18 +72,8 @@ export default function LoginPage() {
         }
     }
 
-    if (loading) {
+    if (loading || user) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        )
-    }
-    
-    // If user is already logged in, they will be redirected by the useEffect.
-    // So we can safely render the form if there is no user.
-    if (user) {
-         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
             </div>
