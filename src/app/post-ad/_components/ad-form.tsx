@@ -15,11 +15,13 @@ import { suggestAdDescription } from '@/ai/flows/ad-description-suggester';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { Ad } from '@/lib/types';
+import imageCompression from 'browser-image-compression';
 
 
 const adSchema = z.object({
@@ -73,9 +75,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      toast({ variant: 'destructive', title: 'Unauthorized', description: 'Please log in to post an ad.' });
-      router.push('/login');
-      return;
+        toast({ variant: 'destructive', title: 'Unauthorized', description: 'Please log in to post an ad.' });
+        router.push('/login');
     }
   }, [authLoading, user, router, toast]);
   
@@ -122,7 +123,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const removePhoto = (index: number) => {
     setNewFiles([]);
-    setPhotoPreviews([]);
+    setPhotoPreviews(isEditMode && existingAd?.photos ? existingAd.photos : []);
     
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -139,7 +140,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     try {
       const result = await suggestAdDescription({ description });
       form.setValue('description', result.improvedDescription, { shouldValidate: true });
-      toast({ title: 'AI ने वर्णन सुधारले आहे!' });
+      toast({ title: 'AI ਨੇ वर्णन सुधारले आहे!' });
     } catch (error) {
       console.error('AI suggestion failed', error);
       toast({ variant: 'destructive', title: 'AI सूचना अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
@@ -159,16 +160,38 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let finalPhotoUrls: string[] = [];
+        let finalPhotoUrls: string[] = photoPreviews;
 
         if (newFiles.length > 0) {
-            // A new file was selected. Generate a new placeholder URL.
-            const seed = Date.now();
-            finalPhotoUrls = [`https://picsum.photos/seed/${seed}/600/400`];
-            toast({ title: "Placeholder Image Generated", description: "A new random placeholder image will be used for your ad." });
-        } else if (isEditMode && photoPreviews.length > 0) {
-            // No new file, but in edit mode. Keep existing photos.
-            finalPhotoUrls = photoPreviews;
+            const uploadedUrls = [];
+            for (const file of newFiles) {
+                let fileToUpload = file;
+                try {
+                    const options = {
+                        maxSizeMB: 0.5, // 500KB
+                        maxWidthOrHeight: 1920,
+                        useWebWorker: true,
+                    }
+                    const compressedFile = await imageCompression(file, options);
+                    toast({
+                      title: 'फोटो कॉम्प्रेस झाला',
+                      description: `मूळ आकार: ${(file.size / 1024).toFixed(2)} KB, नवीन आकार: ${(compressedFile.size / 1024).toFixed(2)} KB`,
+                    });
+                    fileToUpload = compressedFile;
+                } catch (compressionError) {
+                    console.error('Compression failed, uploading original.', compressionError);
+                    toast({
+                      variant: 'destructive',
+                      title: 'कॉम्प्रेशन अयशस्वी',
+                      description: 'मूळ फोटो अपलोड करत आहे.',
+                    });
+                }
+                const storageRef = ref(storage, `ad-images/${user.uid}/${Date.now()}-${fileToUpload.name}`);
+                await uploadBytes(storageRef, fileToUpload);
+                const downloadURL = await getDownloadURL(storageRef);
+                uploadedUrls.push(downloadURL);
+            }
+            finalPhotoUrls = uploadedUrls;
         }
        
         const adData = {
