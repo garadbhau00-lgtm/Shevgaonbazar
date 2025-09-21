@@ -5,12 +5,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
+import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import type { Ad } from '@/lib/types';
 import AppHeader from '@/components/layout/app-header';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, BadgeIndianRupee, MapPin, Phone } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Button } from '@/components/ui/button';
 
 export default function AdDetailPage() {
     const { adId } = useParams();
@@ -72,7 +74,7 @@ export default function AdDetailPage() {
     return (
         <div>
             <AppHeader showUserOptions={false} />
-            <main>
+            <main className="pb-24">
                 <div className="p-4 bg-card">
                    <Carousel className="w-full">
                         <CarouselContent>
@@ -117,6 +119,15 @@ export default function AdDetailPage() {
                         <Phone className="h-5 w-5 mr-2" />
                         <span>{ad.mobileNumber}</span>
                     </div>
+                </div>
+
+                <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-background border-t">
+                    <Link href={`tel:${ad.mobileNumber}`} className="w-full">
+                        <Button className="w-full" size="lg">
+                            <Phone className="mr-2 h-5 w-5" />
+                            कॉल करा
+                        </Button>
+                    </Link>
                 </div>
             </main>
         </div>
