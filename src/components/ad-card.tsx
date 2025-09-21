@@ -12,7 +12,7 @@ export default function AdCard({ ad }: AdCardProps) {
   return (
     <Link href={`/ad/${ad.id}`} passHref>
         <Card className="flex flex-col overflow-hidden shadow-md transition-shadow hover:shadow-lg h-full">
-        <div className="relative aspect-[16/9] bg-secondary">
+        <div className="relative aspect-video bg-secondary">
             {adPhotoUrl ? (
             <Image
                 src={adPhotoUrl}
