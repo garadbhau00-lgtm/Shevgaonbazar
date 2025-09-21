@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import AppHeader from '@/components/layout/app-header';
+import Image from 'next/image';
 
 
 const baseMenuItems = [
@@ -91,8 +92,22 @@ export default function MorePage() {
 
 
     return (
-        <>
-            <AppHeader />
+        <div>
+            <div className="relative h-28 w-full">
+                <AppHeader />
+                <Image
+                    src="https://picsum.photos/seed/more-page/1200/400"
+                    alt="More page background"
+                    fill
+                    className="object-cover"
+                    data-ai-hint="farm settings"
+                />
+                <div className="absolute inset-0 bg-black/50" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+                    <h1 className="text-lg font-bold">अधिक पर्याय</h1>
+                    <p className="mt-2 text-xs max-w-xl">तुमचे खाते, सेटिंग्ज आणि बरेच काही व्यवस्थापित करा.</p>
+                </div>
+            </div>
             <main className="p-4">
                 {renderUserProfile()}
 
@@ -124,6 +139,6 @@ export default function MorePage() {
                     )}
                 </div>
             </main>
-        </>
+        </div>
     );
 }
