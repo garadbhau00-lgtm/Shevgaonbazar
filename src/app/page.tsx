@@ -15,7 +15,7 @@ import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestor
 import { db } from '@/lib/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { categories } from '@/lib/categories';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
@@ -173,7 +173,7 @@ export default function Home() {
             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
             <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
-                <TabsTrigger value="सर्व" className="h-auto flex flex-col gap-1.5 border p-2 text-[11px]">
+                <TabsTrigger value="सर्व" className="h-auto flex flex-col gap-1.5 p-2 text-[11px]">
                   <List className="h-4 w-4" />
                   सर्व
                 </TabsTrigger>
@@ -181,7 +181,7 @@ export default function Home() {
                   <TabsTrigger
                     key={category.name}
                     value={category.name}
-                    className="h-auto flex flex-col gap-1.5 border p-2 text-[11px]"
+                    className="h-auto flex flex-col gap-1.5 p-2 text-[11px]"
                   >
                     <category.icon className="h-4 w-4" />
                     {category.name}
