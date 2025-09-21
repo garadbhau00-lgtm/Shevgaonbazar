@@ -5,10 +5,12 @@ export type Ad = {
   category: 'पशुधन' | 'शेती उत्पादन' | 'उपकरणे';
   price: number;
   location: string; // village
+  mobileNumber: string;
   photos: string[]; // image urls
   status: 'pending' | 'approved' | 'rejected';
   userId: string;
   createdAt: any; // Firestore timestamp
+  updatedAt?: any; // Firestore timestamp
   rejectionReason?: string;
 };
 

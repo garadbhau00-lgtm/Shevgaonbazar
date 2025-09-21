@@ -30,6 +30,7 @@ const adSchema = z.object({
   }),
   price: z.coerce.number().positive({ message: 'किंमत ० पेक्षा जास्त असावी.' }),
   location: z.string().min(2, { message: 'तुमच्या गावाचे नाव टाका.' }),
+  mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }),
 });
 
 type AdFormValues = z.infer<typeof adSchema>;
@@ -62,22 +63,25 @@ export default function AdForm({ existingAd }: AdFormProps) {
         category: existingAd.category,
         price: existingAd.price,
         location: existingAd.location,
+        mobileNumber: existingAd.mobileNumber,
     } : {
       title: '',
       description: '',
       price: undefined,
       location: '',
+      mobileNumber: '',
     },
   });
 
-  useEffect(() => {
-    if (authLoading) return;
+   useEffect(() => {
+        if (authLoading) return;
 
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Unauthorized', description: 'Please log in to post an ad.' });
-        router.push('/login');
-    }
-  }, [user, authLoading, router, toast]);
+        if (!user) {
+            // Use a toast and redirect inside useEffect to avoid updating during render.
+            toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.' });
+            router.push('/login');
+        }
+    }, [user, authLoading, router, toast]);
 
   
   useEffect(() => {
@@ -87,13 +91,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [isEditMode, existingAd]);
   
   useEffect(() => {
-    // This effect creates temporary blob URLs for previews.
-    // It does not affect the final uploaded file.
     if (newFiles.length > 0) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
       
-      // Cleanup function to revoke the blob URLs when the component unmounts or files change.
       return () => {
         objectUrls.forEach(url => URL.revokeObjectURL(url));
       };
@@ -121,12 +122,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
 
   const removePhoto = (index: number) => {
-    // Clear the newly selected files
     setNewFiles([]);
-    // Reset the preview to the original ad photos if in edit mode, otherwise clear it
     setPhotoPreviews(isEditMode && existingAd?.photos ? existingAd.photos : []);
     
-    // Reset the file input so the user can select the same file again if they want
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -154,7 +152,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
  const onSubmit = async (data: AdFormValues) => {
     if (!user) return;
 
-    // A photo is required. Check if there are previews (either from existing ad or new files).
     if (photoPreviews.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
         return;
@@ -163,10 +160,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let photoUrls: string[] = [];
+        let finalPhotoUrls: string[] = [];
 
+        // Scenario 1: New files were selected by the user.
         if (newFiles.length > 0) {
-            // A new file was selected. Compress it and convert to Data URL.
             const imageFile = newFiles[0];
             const options = {
                 maxSizeMB: 0.2, // Compress to max 200KB
@@ -175,12 +172,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
             };
 
             try {
+                console.log(`Original file size: ${(imageFile.size / 1024).toFixed(2)} KB`);
                 const compressedFile = await imageCompression(imageFile, options);
+                console.log(`Compressed file size: ${(compressedFile.size / 1024).toFixed(2)} KB`);
+
                 const dataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
-                photoUrls = [dataUrl];
+                finalPhotoUrls = [dataUrl];
+                
                 toast({ 
                     title: 'फोटो यशस्वीरित्या कॉम्प्रेस केला',
-                    description: `मूळ आकार: ${(imageFile.size / 1024).toFixed(2)} KB, नवीन आकार: ${(compressedFile.size / 1024).toFixed(2)} KB`
+                    description: `नवीन आकार: ${(compressedFile.size / 1024).toFixed(2)} KB`
                 });
 
             } catch (compressionError) {
@@ -188,25 +189,20 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 toast({
                     variant: 'destructive',
                     title: 'फोटो कॉम्प्रेस करण्यात अयशस्वी',
-                    description: 'मूळ फोटो अपलोड करण्याचा प्रयत्न करत आहे.',
+                    description: 'एक मोठी त्रुटी आली. कृपया लहान आकाराचा फोटो निवडा.',
                 });
-                // Fallback: try to convert original file to data URL if it's small enough
-                 if (imageFile.size < 1024 * 1024) { // 1MB
-                    const dataUrl = await imageCompression.getDataUrlFromFile(imageFile);
-                    photoUrls = [dataUrl];
-                } else {
-                    throw new Error("File is too large to be stored directly.");
-                }
+                setIsSubmitting(false);
+                return; 
             }
-
-        } else if (isEditMode && existingAd?.photos) {
-            // No new file, preserve the existing photo URLs in edit mode.
-            photoUrls = existingAd.photos;
+        } 
+        // Scenario 2: No new files selected, but in edit mode with existing photos.
+        else if (isEditMode && existingAd?.photos) {
+            finalPhotoUrls = existingAd.photos;
         }
        
         const adData = {
             ...data,
-            photos: photoUrls,
+            photos: finalPhotoUrls,
             status: 'pending' as const,
             rejectionReason: '',
         };
@@ -227,8 +223,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
     } catch (error: any) {
         console.error("Submission failed:", error);
          let errorMessage = "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
-         if (error.message.includes('resource exhausted') || error.message.includes('too large')) {
+         if (error.code === 'resource-exhausted' || error.message.includes('too large')) {
              errorMessage = "फोटो खूप मोठा आहे. कृपया लहान आकाराचा फोटो निवडा.";
+         } else if (error.code === 'permission-denied') {
+             errorMessage = "जाहिरात सेव्ह करण्यासाठी परवानगी नाही. कृपया तुमच्या फायरस्टोअर नियमांची तपासणी करा.";
          }
         toast({
             variant: "destructive",
@@ -328,6 +326,19 @@ export default function AdForm({ existingAd }: AdFormProps) {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="mobileNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>मोबाईल नंबर</FormLabel>
+              <FormControl>
+                <Input type="tel" placeholder="तुमचा मोबाईल नंबर" {...field} disabled={isSubmitting}/>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormItem>
             <FormLabel>फोटो</FormLabel>
             <div className="flex flex-wrap gap-4">
@@ -383,5 +394,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
-
-    
