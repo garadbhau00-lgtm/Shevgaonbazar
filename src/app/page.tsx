@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -150,7 +149,7 @@ export default function Home() {
   return (
     <div>
       <header className="bg-card">
-        <div className="relative w-full text-white">
+        <div className="relative w-full h-48 text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
                 alt="Header background"
@@ -164,13 +163,15 @@ export default function Home() {
                         {renderUserOptions()}
                     </div>
                 </div>
-                 <div className='text-center'>
-                    <h2 className="text-xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
-                    <p className="text-xs max-w-md mt-1 mx-auto">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
-                </div>
-                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input placeholder="जाहिरात शोधा..." className="pl-10 bg-white/90 text-black placeholder:text-muted-foreground" />
+                <div className='space-y-2'>
+                    <div className='text-center'>
+                        <h2 className="text-xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
+                        <p className="text-xs max-w-md mt-1 mx-auto">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
+                    </div>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input placeholder="जाहिरात शोधा..." className="pl-10 bg-white/90 text-black placeholder:text-muted-foreground" />
+                    </div>
                 </div>
             </div>
         </div>
