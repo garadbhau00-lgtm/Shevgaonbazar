@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDocs, collection, query, where } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -58,31 +58,23 @@ export default function SignupPage() {
     
     const { isSubmitting } = form.formState;
 
-    useEffect(() => {
-        if (!loading && user) {
-            router.push('/');
-        }
-    }, [user, loading, router]);
-
     async function onSubmit(data: SignupFormValues) {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const newUser = userCredential.user;
-
-            const userRole = 'Farmer';
-
+            
             await setDoc(doc(db, "users", newUser.uid), {
                 uid: newUser.uid,
                 email: newUser.email,
                 name: data.name,
-                role: userRole,
+                role: 'Farmer',
                 disabled: false,
                 createdAt: serverTimestamp(),
             });
 
             toast({
                 title: "खाते तयार झाले!",
-                description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${userRole}`,
+                description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: Farmer`,
             });
             
         } catch (error: any) {
@@ -109,7 +101,10 @@ export default function SignupPage() {
         )
     }
 
-    if (user) return null; // Redirect is happening in useEffect
+    if (user) {
+        router.push('/');
+        return null;
+    }
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">

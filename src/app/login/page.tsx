@@ -55,6 +55,7 @@ export default function LoginPage() {
         }
     }, [user, loading, router]);
 
+
     async function onSubmit(data: LoginFormValues) {
         try {
             await signInWithEmailAndPassword(auth, data.email, data.password);
@@ -80,7 +81,11 @@ export default function LoginPage() {
         )
     }
     
-    if (user) return null; // Redirect is happening in useEffect
+    // Redirect if user is already logged in and loading is complete.
+    if (user) {
+        // router.push('/'); // This is now handled by the useEffect
+        return null; 
+    }
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
