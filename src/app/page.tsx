@@ -141,7 +141,7 @@ export default function Home() {
       );
     }
     return (
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="text-white border-white hover:bg-white/10 hover:text-white">
             <Link href="/login">लॉगिन करा</Link>
         </Button>
     );
@@ -150,7 +150,7 @@ export default function Home() {
   return (
     <div>
       <header className="bg-card pb-4">
-        <div className="relative h-32 w-full text-white">
+        <div className="relative h-48 w-full text-white">
             <Image
                 src="https://picsum.photos/seed/header/1200/300"
                 alt="Header background"
@@ -158,20 +158,23 @@ export default function Home() {
                 className="object-cover"
                 data-ai-hint="green forest"
             />
-            <div className="absolute inset-0 bg-black/50 flex flex-col justify-center items-center text-center p-4">
-                <h2 className="text-2xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
-                <p className="text-xs max-w-md mt-1">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
+            <div className="absolute inset-0 bg-black/50 flex flex-col justify-between p-4">
+                <div className="flex items-start justify-between">
+                    <h1 className="text-xl font-bold text-white">शेवगाव बाजार</h1>
+                    <div className="flex items-center space-x-2">
+                        {renderUserOptions()}
+                    </div>
+                </div>
+                 <div className='text-center'>
+                    <h2 className="text-2xl font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h2>
+                    <p className="text-xs max-w-md mt-1 mx-auto">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
+                </div>
             </div>
         </div>
-         <div className="p-4 flex items-center justify-between">
-            <h1 className="text-xl font-bold text-primary">शेवगाव बाजार</h1>
-            <div className="flex items-center space-x-2">
-                {renderUserOptions()}
-            </div>
-        </div>
-        <div className="relative px-4">
+        
+        <div className="relative px-4 -mt-6 z-10">
           <Search className="absolute left-7 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input placeholder="जाहिरात शोधा..." className="pl-10" />
+          <Input placeholder="जाहिरात शोधा..." className="pl-10 bg-white" />
         </div>
       </header>
 
@@ -197,3 +200,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
