@@ -40,24 +40,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     useEffect(() => {
-        if (!user) {
-            setUserProfile(null);
-            return;
-        }
-
-        const unsubscribeProfile = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
-            if (docSnap.exists()) {
-                const profileData = docSnap.data() as UserProfile;
-                if (profileData.disabled) {
-                    toast({ variant: 'destructive', title: 'खाते अक्षम केले आहे', description: 'तुमचे खाते प्रशासकाने अक्षम केले आहे.' });
-                    signOut(auth);
-                } else {
-                    setUserProfile(profileData);
+        let unsubscribeProfile: Unsubscribe | undefined;
+    
+        if (user) {
+            const userDocRef = doc(db, 'users', user.uid);
+            unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const profileData = docSnap.data() as UserProfile;
+                    if (profileData.disabled) {
+                        toast({ 
+                            variant: 'destructive', 
+                            title: 'खाते अक्षम केले आहे', 
+                            description: 'तुमचे खाते प्रशासकाने अक्षम केले आहे.' 
+                        });
+                        signOut(auth);
+                    } else {
+                        setUserProfile(profileData);
+                    }
                 }
+            }, (error) => {
+                console.error("Error fetching user profile:", error);
+                // Handle potential errors, e.g., permissions
+            });
+        } else {
+            setUserProfile(null);
+        }
+    
+        // Cleanup function
+        return () => {
+            if (unsubscribeProfile) {
+                unsubscribeProfile();
             }
-        });
-
-        return () => unsubscribeProfile();
+        };
     }, [user, toast]);
 
 
