@@ -443,7 +443,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="flex flex-col items-center justify-center rounded-lg bg-secondary p-6 gap-4">
-                 <Image src={upiQrUrl} alt="UPI QR Code" width={150} height={150} />
+                 {/* eslint-disable-next-line @next/next/no-img-element */}
+                 <img src={upiQrUrl} alt="UPI QR Code" width={150} height={150} />
                 <div className="text-center">
                     <p className="text-sm text-muted-foreground">एकूण देय रक्कम</p>
                     <p className="text-4xl font-bold flex items-center justify-center">
@@ -466,3 +467,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
+
+    
