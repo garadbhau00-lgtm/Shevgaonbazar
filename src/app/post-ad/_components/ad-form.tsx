@@ -66,13 +66,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const form = useForm<AdFormValues>({
     resolver: zodResolver(adSchema),
-    defaultValues: isEditMode ? {
-        category: existingAd.category,
-        subcategory: existingAd.subcategory,
-        price: existingAd.price,
-        location: existingAd.location,
-        mobileNumber: existingAd.mobileNumber,
-    } : {
+    defaultValues: {
       price: undefined,
       location: undefined,
       mobileNumber: '',
@@ -96,10 +90,21 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [user, authLoading, router, toast]);
   
   useEffect(() => {
-    if (isEditMode && existingAd?.photos) {
-      setPhotoPreviews(existingAd.photos);
+    if (isEditMode && existingAd) {
+      form.reset({
+        category: existingAd.category,
+        subcategory: existingAd.subcategory,
+        price: existingAd.price,
+        location: existingAd.location,
+        mobileNumber: existingAd.mobileNumber,
+      });
+      if (existingAd.photos) {
+        setPhotoPreviews(existingAd.photos);
+      }
+    } else if (userProfile) {
+       form.setValue('mobileNumber', userProfile.mobileNumber || '');
     }
-  }, [isEditMode, existingAd]);
+  }, [isEditMode, existingAd, userProfile, form]);
   
   useEffect(() => {
     if (newFiles.length > 0) {
@@ -118,7 +123,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   useEffect(() => {
     // Reset subcategory when main category changes
-    form.setValue('subcategory', undefined);
+    if (!form.formState.isSubmitted) {
+        form.setValue('subcategory', undefined);
+    }
   }, [selectedCategory, form]);
 
 
@@ -170,12 +177,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
             try {
                 const compressedFile = await imageCompression(imageFile, options);
-                const originalSize = (imageFile.size / 1024).toFixed(2);
-                const compressedSize = (compressedFile.size / 1024).toFixed(2);
-                toast({
-                    title: 'फोटो यशस्वीरित्या कॉम्प्रेस झाला',
-                    description: `मूळ आकार: ${originalSize} KB, नवीन आकार: ${compressedSize} KB`,
-                });
                 const dataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
                 finalPhotoUrls = [dataUrl];
             } catch (compressionError) {
@@ -216,6 +217,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
             });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
         }
+        
+        // Sync mobile number back to user profile if it's different
+        if (data.mobileNumber && data.mobileNumber !== userProfile.mobileNumber) {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, { mobileNumber: data.mobileNumber });
+        }
+
         router.push('/my-ads');
     } catch (error: any) {
         console.error("Submission failed:", error);
@@ -392,3 +400,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
