@@ -63,6 +63,14 @@ service cloud.firestore {
     match /conversations/{document=**} {
        allow list: if request.auth != null && request.auth.uid == request.query.where.participants['array-contains'];
     }
+
+    // CONFIG
+    // Allow anyone to read public configuration.
+    // Only admins can write to configuration.
+     match /config/{configId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
   }
 }
 */

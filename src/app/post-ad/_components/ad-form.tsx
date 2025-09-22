@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Loader2, Upload, X as XIcon, BadgeIndianRupee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -74,6 +74,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [formData, setFormData] = useState<AdFormValues | null>(null);
 
+  const [paymentConfig, setPaymentConfig] = useState<{ qrCodeUrl: string; upiId: string } | null>(null);
+  const [paymentConfigLoading, setPaymentConfigLoading] = useState(true);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!existingAd;
@@ -102,6 +105,24 @@ export default function AdForm({ existingAd }: AdFormProps) {
         router.push('/login');
     }
   }, [user, authLoading, router, toast]);
+
+  useEffect(() => {
+        const fetchPaymentConfig = async () => {
+            try {
+                const configDocRef = doc(db, 'config', 'payment');
+                const docSnap = await getDoc(configDocRef);
+                if (docSnap.exists()) {
+                    setPaymentConfig(docSnap.data() as { qrCodeUrl: string; upiId: string });
+                }
+            } catch (error) {
+                console.error("Error fetching payment config:", error);
+                toast({ variant: 'destructive', title: 'त्रुटी', description: 'पेमेंट सेटिंग्ज लोड करण्यात अयशस्वी.' });
+            } finally {
+                setPaymentConfigLoading(false);
+            }
+        };
+        fetchPaymentConfig();
+  }, [toast]);
   
   useEffect(() => {
     if (isEditMode && existingAd) {
@@ -143,7 +164,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [selectedCategory, form]);
 
 
-  if (authLoading) {
+  if (authLoading || paymentConfigLoading) {
       return (
           <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -275,10 +296,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 };
 
   const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
-
-  const upiQrUrl = `https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/Pay-Utilities-Here-QR-Code.png`;
-
-
+  
   return (
     <>
       <Form {...form}>
@@ -427,7 +445,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
               <FormMessage />
           </FormItem>
 
-          <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
+          <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting || paymentConfigLoading}>
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
           </Button>
@@ -439,11 +457,18 @@ export default function AdForm({ existingAd }: AdFormProps) {
             <AlertDialogHeader>
                 <AlertDialogTitle>पेमेंट करण्यासाठी स्कॅन करा</AlertDialogTitle>
                 <AlertDialogDescription>
-                    जाहिरात पोस्ट करण्यासाठी, कृपया खालील QR कोड स्कॅन करून ₹१० भरा. (टीप: हे केवळ एक नमुना आहे.)
+                    जाहिरात पोस्ट करण्यासाठी, कृपया खालील QR कोड स्कॅन करून ₹१० भरा.
+                    {paymentConfig?.upiId && ` UPI आयडी: ${paymentConfig.upiId}`}
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="flex flex-col items-center justify-center rounded-lg bg-secondary p-6 gap-4">
-                 <img src={upiQrUrl} alt="UPI QR Code" width={150} height={150} />
+                 {paymentConfig?.qrCodeUrl ? (
+                    <img src={paymentConfig.qrCodeUrl} alt="UPI QR Code" width={150} height={150} />
+                 ) : (
+                    <div className="h-[150px] w-[150px] flex items-center justify-center bg-muted-foreground/10 rounded-md">
+                        <p className="text-xs text-center text-muted-foreground">QR कोड उपलब्ध नाही.</p>
+                    </div>
+                 )}
                 <div className="text-center">
                     <p className="text-sm text-muted-foreground">एकूण देय रक्कम</p>
                     <p className="text-4xl font-bold flex items-center justify-center">
@@ -466,7 +491,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
-    
-
-    
