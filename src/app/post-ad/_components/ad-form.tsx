@@ -22,6 +22,7 @@ import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const adSchema = z.object({
   category: z.enum(
@@ -228,32 +229,20 @@ export default function AdForm({ existingAd }: AdFormProps) {
     
     try {
         let finalPhotoUrls: string[] = [];
-        let hasNewUpload = newFiles.length > 0;
-
-        if (hasNewUpload) {
-            const imageFile = newFiles[0];
-            const options = {
-                maxSizeMB: 0.2, // Compress to max 200KB
-                maxWidthOrHeight: 800,
-                useWebWorker: true,
-            };
-
-            try {
-                const compressedFile = await imageCompression(imageFile, options);
-                const dataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
-                finalPhotoUrls = [dataUrl];
-            } catch (compressionError) {
-                console.error('Image compression failed:', compressionError);
-                toast({
-                    variant: 'destructive',
-                    title: 'फोटो कॉम्प्रेस करण्यात अयशस्वी',
-                    description: 'एक मोठी त्रुटी आली. कृपया लहान आकाराचा फोटो निवडा.',
-                });
-                setIsSubmitting(false);
-                return; 
+        const hasNewUpload = newFiles.length > 0;
+        const hasExistingPhoto = isEditMode && existingAd?.photos && existingAd.photos.length > 0;
+        
+        // This is the custom logic requested by the user.
+        if (hasNewUpload || hasExistingPhoto) {
+            // A photo is required, but we will use a random placeholder instead of the uploaded one.
+            const randomIndex = Math.floor(Math.random() * PlaceHolderImages.length);
+            const randomPlaceholder = PlaceHolderImages[randomIndex];
+            if (randomPlaceholder) {
+                finalPhotoUrls = [randomPlaceholder.imageUrl];
+            } else {
+                // Fallback in case the placeholder list is empty, though it shouldn't be.
+                finalPhotoUrls = [];
             }
-        } else if (isEditMode && existingAd?.photos) {
-            finalPhotoUrls = existingAd.photos;
         }
        
         const generatedTitle = data.subcategory ? `${data.category} - ${data.subcategory}` : data.category;
