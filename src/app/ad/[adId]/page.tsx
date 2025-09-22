@@ -120,7 +120,7 @@ export default function AdDetailPage() {
                     <span>{ad.location}</span>
                 </div>
                  
-                 <Link href={`tel:${ad.mobileNumber}`} className="flex items-center text-muted-foreground">
+                 <Link href={`tel:${ad.mobileNumber}`} className="flex items-center font-bold text-green-600">
                     <Phone className="h-5 w-5 mr-2" />
                     <span>{ad.mobileNumber}</span>
                 </Link>
