@@ -1,86 +1,50 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Function to check if the requesting user is an Admin
+    // Helper function to check if the requesting user is an admin.
     function isAdmin() {
       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
-    // USERS Collection
+    // Users can only read and update their own profile.
+    // Admins can read, update, and list any user profile.
     match /users/{userId} {
-      // Anyone can read any user profile (for displaying names, etc.)
-      allow read: if true;
-      
-      // Any authenticated user can create their own user document
-      allow create: if request.auth != null && request.auth.uid == userId;
-
-      // A user can only update their own document
-      allow update: if request.auth != null && request.auth.uid == userId;
-
-      // An admin can write to any user document
-      allow write: if isAdmin();
-    }
-    
-    // Allow admins to list all users
-    match /users/{document=**} {
-       allow list: if isAdmin();
+      allow read, update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == userId; // Allow user creation during signup
+      allow list: if isAdmin();
     }
 
-
-    // ADS Collection
+    // Ads can be read by anyone if they are 'approved'.
+    // Users can read their own ads regardless of status.
+    // Authenticated users can create ads.
+    // Owners and admins can update/delete ads.
+    // Admins can list ads for moderation.
     match /ads/{adId} {
-      // Read is allowed if:
-      // 1. The ad is approved.
-      // 2. The user is the owner of the ad.
-      // 3. The user is an admin.
-      allow read: if resource.data.status == 'approved'
-                   || (request.auth != null && resource.data.userId == request.auth.uid)
-                   || isAdmin();
-
-      // Authenticated users can create ads.
+      allow read: if resource.data.status == 'approved' || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow list: if request.auth != null;
       allow create: if request.auth != null;
-
-      // The ad's owner or an admin can update or delete it.
       allow update, delete: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
     }
-    
-    // Rules for LISTING ads (queries)
-    match /ads/{document=**} {
-        // This rule is tricky. A simple `allow list: if true` would work for public queries,
-        // but we need to restrict based on the query itself.
-        // Let's allow queries for approved ads, user's own ads, and pending ads for admins.
-        // Note: Firestore rules cannot check every possible 'where' clause, so this is an approximation.
-        // The most important queries must be enabled.
-        allow list: if true; 
-    }
 
-
-    // CONVERSATIONS & MESSAGES
-    match /conversations/{conversationId} {
-      // Users can only access conversations they are a part of.
-      allow read, write, create: if request.auth != null && request.auth.uid in resource.data.participants;
-
-      // Messages subcollection
-      match /messages/{messageId} {
-        // Users can only access messages in conversations they are a part of.
-        allow read, write, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-      }
-    }
-
-    // Listing conversations
-    match /conversations/{document=**} {
-       // Users can only list conversations where they are a participant.
-       allow list: if request.auth != null && request.query.where[0][2] == request.auth.uid;
-    }
-
-
-    // CONFIG Collection
-    match /config/{configId} {
-      // Anyone can read configuration (e.g., payment QR code)
+    // Payment configuration is readable by everyone but only writable by admins.
+    match /config/payment {
       allow read: if true;
-      // Only admins can write/update configuration
       allow write: if isAdmin();
+    }
+
+    // Participants in a conversation can read/write messages and read the conversation document.
+    // Authenticated users can create new conversations.
+    match /conversations/{conversationId} {
+      allow get, list: if request.auth != null && request.auth.uid in resource.data.participants;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid in resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+      }
     }
   }
 }
