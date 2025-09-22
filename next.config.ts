@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'api.qrserver.com',
+        hostname: 'storage.googleapis.com',
         port: '',
         pathname: '/**',
       },
