@@ -147,9 +147,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   useEffect(() => {
     // Reset subcategory when main category changes
-    if (!form.formState.isSubmitted) {
-        form.setValue('subcategory', undefined);
-    }
+    form.setValue('subcategory', undefined);
   }, [selectedCategory, form]);
 
 
@@ -170,7 +168,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const removePhoto = () => {
     setNewFiles([]);
-    setPhotoPreviews(isEditMode && existingAd?.photos ? existingAd.photos : []);
+    if (isEditMode && existingAd?.photos) {
+        setPhotoPreviews(existingAd.photos)
+    } else {
+        setPhotoPreviews([]);
+    }
     
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
