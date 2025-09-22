@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
@@ -333,7 +334,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="एक उप-श्रेणी निवडा" />
-                      </Trigger>
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {subcategories.map(subcat => (
