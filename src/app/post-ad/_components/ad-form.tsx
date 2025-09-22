@@ -345,7 +345,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                   <FormMessage />
                 </FormItem>
               )}
-            )}
+            />
+          )}
 
           <FormField
             control={form.control}
@@ -475,3 +476,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
+
+    
