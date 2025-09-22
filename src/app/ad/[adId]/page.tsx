@@ -119,11 +119,11 @@ export default function AdDetailPage() {
                     <MapPin className="h-5 w-5 mr-2" />
                     <span>{ad.location}</span>
                 </div>
-
-                 <div className="flex items-center text-muted-foreground">
+                 
+                 <Link href={`tel:${ad.mobileNumber}`} className="flex items-center text-muted-foreground">
                     <Phone className="h-5 w-5 mr-2" />
                     <span>{ad.mobileNumber}</span>
-                </div>
+                </Link>
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-background border-t">
