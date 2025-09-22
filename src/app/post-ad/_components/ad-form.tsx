@@ -276,7 +276,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
 
-  const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=example@upi&pn=Shevgaon%20Bazar&am=10.00&cu=INR`;
+  const upiQrUrl = `https://storage.googleapis.com/stedi-studio-files/e04b4d53-a55e-4537-8898-90235e4033c9/phonepe-qr.png`;
 
 
   return (
