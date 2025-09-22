@@ -9,11 +9,13 @@ import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import type { Ad } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BadgeIndianRupee, MapPin, Phone, User } from 'lucide-react';
+import { Loader2, BadgeIndianRupee, MapPin, Phone, User, CalendarDays } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import AppHeader from '@/components/layout/app-header';
 import { useAuth } from '@/hooks/use-auth';
+import { format } from 'date-fns';
+
 
 export default function AdDetailPage() {
     const { adId } = useParams();
@@ -76,6 +78,8 @@ export default function AdDetailPage() {
         // This will be shown briefly during redirect or if the ad is not found
         return null;
     }
+    
+    const formattedDate = ad.createdAt?.toDate ? format(ad.createdAt.toDate(), 'dd/MM/yyyy') : 'N/A';
 
     return (
         <main className="pb-24">
@@ -129,6 +133,11 @@ export default function AdDetailPage() {
                     <Phone className="h-5 w-5 mr-2" />
                     <span>{ad.mobileNumber}</span>
                 </Link>
+                
+                 <div className="flex items-center text-muted-foreground">
+                    <CalendarDays className="h-5 w-5 mr-2" />
+                    <span>पोस्ट केले: {formattedDate}</span>
+                </div>
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-background border-t">
