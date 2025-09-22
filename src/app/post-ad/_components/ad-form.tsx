@@ -21,7 +21,7 @@ import type { Ad } from '@/lib/types';
 import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 const adSchema = z.object({
   category: z.enum(
@@ -46,10 +46,6 @@ const adSchema = z.object({
 
 type AdFormValues = z.infer<typeof adSchema>;
 
-type ProcessedAdData = AdFormValues & {
-    photos: string[];
-};
-
 type AdFormProps = {
     existingAd?: Ad;
 };
@@ -69,9 +65,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPaymentChoice, setShowPaymentChoice] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const adDataToSubmit = useRef<ProcessedAdData | null>(null);
+  const adDataToSubmit = useRef<Omit<Ad, 'id' | 'createdAt' | 'updatedAt'> | null>(null);
 
   const isEditMode = !!existingAd;
 
@@ -90,21 +87,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     control: form.control,
     name: 'category',
   });
-  
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && adDataToSubmit.current) {
-        processAdSubmission();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -177,8 +159,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
  const handleFormSubmit = async (data: AdFormValues) => {
     setIsSubmitting(true);
-    let finalPhotoUrls: string[] = existingAd?.photos || [];
-
+    let finalPhotoUrl: string | null = (isEditMode && existingAd?.photos?.[0]) || null;
+    
     if (newFiles.length > 0) {
         try {
             const compressedFile = await imageCompression(newFiles[0], {
@@ -186,23 +168,38 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 maxWidthOrHeight: 1280,
                 useWebWorker: true,
             });
-            const dataUri = await imageCompression.getDataUrlFromFile(compressedFile);
-            finalPhotoUrls = [dataUri];
+            finalPhotoUrl = await imageCompression.getDataUrlFromFile(compressedFile);
         } catch (error) {
             console.error("Image compression failed:", error);
             toast({ variant: 'destructive', title: 'फोटो एरर', description: 'फोटोवर प्रक्रिया करण्यात अयशस्वी.' });
             setIsSubmitting(false);
             return;
         }
-    } else if (photoPreviews.length === 0) {
+    }
+    
+    if (!finalPhotoUrl) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
         setIsSubmitting(false);
         return;
     }
+    
+    if (!user || !userProfile) {
+       toast({ variant: 'destructive', title: 'त्रुटी', description: 'वापरकर्ता प्रमाणीकरण अयशस्वी झाले.' });
+       setIsSubmitting(false);
+       return;
+    }
 
+    const generatedTitle = data.subcategory ? `${data.category} - ${data.subcategory}` : data.category;
+    
     adDataToSubmit.current = {
+        userId: user.uid,
+        userName: userProfile.name || user.email || 'Unknown User',
+        title: generatedTitle,
+        description: '',
+        status: 'pending' as const,
+        rejectionReason: '',
         ...data,
-        photos: finalPhotoUrls,
+        photos: [finalPhotoUrl],
     };
     
     setIsSubmitting(false);
@@ -228,51 +225,36 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
     toast({
         title: 'पेमेंट ॲपवर रीडायरेक्ट करत आहे...',
-        description: 'पेमेंटनंतर कृपया या पेजवर परत या.',
+        description: 'पेमेंटनंतर कृपया या पेजवर परत या आणि सबमिशनची पुष्टी करा.',
         duration: 8000,
     });
 
     window.location.href = upiUrl;
 
-    setTimeout(() => {
-        if (adDataToSubmit.current) {
-           processAdSubmission();
-        }
-    }, 20000); 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setShowConfirmation(true);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
  };
  
  const processAdSubmission = async () => {
+    setShowConfirmation(false);
     const dataToSubmit = adDataToSubmit.current;
     if (!user || !userProfile || !dataToSubmit || isSubmitting) return;
     
     setIsSubmitting(true);
-    adDataToSubmit.current = null;
     
     try {
-        const generatedTitle = dataToSubmit.subcategory ? `${dataToSubmit.category} - ${dataToSubmit.subcategory}` : dataToSubmit.category;
-
-        const adData = {
-            category: dataToSubmit.category,
-            subcategory: dataToSubmit.subcategory,
-            price: dataToSubmit.price,
-            location: dataToSubmit.location,
-            mobileNumber: dataToSubmit.mobileNumber,
-            title: generatedTitle,
-            userName: userProfile.name || user.email,
-            description: '',
-            photos: dataToSubmit.photos,
-            status: 'pending' as const,
-            rejectionReason: '',
-        };
-
         if (isEditMode && existingAd) {
             const adDocRef = doc(db, 'ads', existingAd.id);
-            await updateDoc(adDocRef, { ...adData, updatedAt: serverTimestamp() });
+            await updateDoc(adDocRef, { ...dataToSubmit, updatedAt: serverTimestamp() });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
         } else {
             await addDoc(collection(db, 'ads'), {
-                ...adData,
-                userId: user.uid,
+                ...dataToSubmit,
                 createdAt: serverTimestamp(),
             });
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
@@ -282,7 +264,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, { mobileNumber: dataToSubmit.mobileNumber });
         }
-
+        adDataToSubmit.current = null;
         router.push('/my-ads');
     } catch (error: any) {
         console.error("Submission failed:", error);
@@ -480,6 +462,24 @@ export default function AdForm({ existingAd }: AdFormProps) {
             </div>
             <AlertDialogFooter>
                 <AlertDialogCancel>रद्द करा</AlertDialogCancel>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>सबमिशनची पुष्टी करा</AlertDialogTitle>
+                <AlertDialogDescription>
+                    तुम्ही पेमेंट पूर्ण केले असल्यास, कृपया जाहिरात पोस्ट करण्यासाठी 'पुष्टी करा' बटण दाबा. तुम्ही पेमेंट रद्द केले असल्यास, 'रद्द करा' दाबा.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => adDataToSubmit.current = null} disabled={isSubmitting}>रद्द करा</AlertDialogCancel>
+                <AlertDialogAction onClick={processAdSubmission} disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    पुष्टी करा
+                </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
