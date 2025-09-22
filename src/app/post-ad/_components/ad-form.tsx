@@ -95,7 +95,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && adDataToSubmit.current) {
         processAdSubmission();
-        adDataToSubmit.current = null;
       }
     };
 
@@ -238,7 +237,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setTimeout(() => {
         if (adDataToSubmit.current) {
            processAdSubmission();
-           adDataToSubmit.current = null;
         }
     }, 20000); 
  };
@@ -248,6 +246,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     if (!user || !userProfile || !dataToSubmit || isSubmitting) return;
     
     setIsSubmitting(true);
+    adDataToSubmit.current = null;
     
     try {
         const generatedTitle = dataToSubmit.subcategory ? `${dataToSubmit.category} - ${dataToSubmit.subcategory}` : dataToSubmit.category;
