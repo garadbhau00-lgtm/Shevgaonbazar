@@ -22,7 +22,6 @@ import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const adSchema = z.object({
   category: z.enum(
@@ -228,21 +227,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let finalPhotoUrls: string[] = [];
-        const hasNewUpload = newFiles.length > 0;
-        const hasExistingPhoto = isEditMode && existingAd?.photos && existingAd.photos.length > 0;
-        
-        // This is the custom logic requested by the user.
-        if (hasNewUpload || hasExistingPhoto) {
-            // A photo is required, but we will use a random placeholder instead of the uploaded one.
-            const randomIndex = Math.floor(Math.random() * PlaceHolderImages.length);
-            const randomPlaceholder = PlaceHolderImages[randomIndex];
-            if (randomPlaceholder) {
-                finalPhotoUrls = [randomPlaceholder.imageUrl];
-            } else {
-                // Fallback in case the placeholder list is empty, though it shouldn't be.
-                finalPhotoUrls = [];
-            }
+        let finalPhotoUrls: string[] = isEditMode && existingAd?.photos ? existingAd.photos : [];
+
+        if (newFiles.length > 0) {
+            const compressedFile = await imageCompression(newFiles[0], {
+                maxSizeMB: 0.5,
+                maxWidthOrHeight: 1280,
+                useWebWorker: true,
+            });
+            const dataUri = await imageCompression.getDataUrlFromFile(compressedFile);
+            finalPhotoUrls = [dataUri];
         }
        
         const generatedTitle = data.subcategory ? `${data.category} - ${data.subcategory}` : data.category;
