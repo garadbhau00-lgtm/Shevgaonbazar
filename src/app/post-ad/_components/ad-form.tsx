@@ -21,6 +21,7 @@ import type { Ad } from '@/lib/types';
 import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
 const adSchema = z.object({
   category: z.enum(
@@ -63,7 +64,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [newFiles, setNewFiles] = useState<File[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showPaymentChoice, setShowPaymentChoice] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const adDataToSubmit = useRef<AdFormValues | null>(null);
@@ -89,6 +90,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && adDataToSubmit.current) {
+        // The user has returned to the app. We can assume payment was attempted.
         processAdSubmission(adDataToSubmit.current);
         adDataToSubmit.current = null; // Clear after processing
       }
@@ -185,39 +187,43 @@ export default function AdForm({ existingAd }: AdFormProps) {
       // For edits, we don't need payment again.
       await processAdSubmission(data);
     } else {
-      setIsProcessingPayment(true);
       adDataToSubmit.current = data;
-      
-      // Generate a unique transaction note
-      const transactionNote = `AdPost-${user?.uid.slice(0, 5)}-${Date.now()}`;
-      
-      // Construct the PhonePe UPI URL
-      const upiUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
-      
-      toast({
-        title: 'PhonePe वर रीडायरेक्ट करत आहे...',
+      setShowPaymentChoice(true);
+    }
+ };
+
+ const handlePaymentRedirect = (app: 'phonepe' | 'gpay') => {
+    setShowPaymentChoice(false);
+    
+    const transactionNote = `AdPost-${user?.uid.slice(0, 5)}-${Date.now()}`;
+    let upiUrl = '';
+
+    if (app === 'phonepe') {
+        upiUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+    } else if (app === 'gpay') {
+        upiUrl = `gpay://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+    }
+
+    toast({
+        title: 'पेमेंट ॲपवर रीडायरेक्ट करत आहे...',
         description: 'पेमेंटनंतर कृपया या पेजवर परत या.',
         duration: 8000,
-      });
+    });
 
-      // Redirect to the UPI app
-      window.location.href = upiUrl;
+    window.location.href = upiUrl;
 
-      // As a fallback, if the redirect doesn't work, we'll try to submit after a delay.
-      setTimeout(() => {
-        setIsProcessingPayment(false);
-        if (adDataToSubmit.current) { // if the submission hasn't happened yet
+    // Fallback timer in case the visibilitychange event doesn't fire
+    setTimeout(() => {
+        if (adDataToSubmit.current) {
            processAdSubmission(adDataToSubmit.current);
            adDataToSubmit.current = null;
         }
-      }, 15000); // 15-second fallback
-    }
+    }, 20000); 
  };
  
  const processAdSubmission = async (data: AdFormValues) => {
     if (!user || !userProfile || isSubmitting) return;
     
-    setIsProcessingPayment(false);
     setIsSubmitting(true);
     
     try {
@@ -275,7 +281,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
         }
         
-        // Sync mobile number back to user profile if it's different
         if (data.mobileNumber && data.mobileNumber !== userProfile.mobileNumber) {
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, { mobileNumber: data.mobileNumber });
@@ -301,7 +306,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 };
 
   const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
-  const isLoading = isSubmitting || isProcessingPayment;
+  const isLoading = isSubmitting;
   
   return (
     <>
@@ -453,10 +458,36 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
           <Button type="submit" className="w-full !mt-8" size="lg" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isProcessingPayment ? 'पेमेंटची तयारी करत आहे...' : (isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'पेमेंट करा आणि पोस्ट करा'))}
+              {isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
           </Button>
         </form>
       </Form>
+
+      <AlertDialog open={showPaymentChoice} onOpenChange={setShowPaymentChoice}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>पेमेंट पद्धत निवडा</AlertDialogTitle>
+                <AlertDialogDescription>
+                    तुमची जाहिरात पोस्ट करण्यासाठी कृपया ₹१० चे पेमेंट पूर्ण करा.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="grid grid-cols-2 gap-4 py-4">
+                <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePaymentRedirect('phonepe')}>
+                    <Image src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" width={80} height={25} />
+                    PhonePe
+                </Button>
+                 <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePaymentRedirect('gpay')}>
+                    <Image src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" width={60} height={25} />
+                    Google Pay
+                </Button>
+            </div>
+            <AlertDialogFooter>
+                <AlertDialogCancel>रद्द करा</AlertDialogCancel>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
+
+    
