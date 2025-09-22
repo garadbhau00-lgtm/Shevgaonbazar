@@ -46,6 +46,10 @@ const adSchema = z.object({
 
 type AdFormValues = z.infer<typeof adSchema>;
 
+type ProcessedAdData = AdFormValues & {
+    photos: string[];
+};
+
 type AdFormProps = {
     existingAd?: Ad;
 };
@@ -67,7 +71,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [showPaymentChoice, setShowPaymentChoice] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const adDataToSubmit = useRef<AdFormValues | null>(null);
+  const adDataToSubmit = useRef<ProcessedAdData | null>(null);
 
   const isEditMode = !!existingAd;
 
@@ -90,9 +94,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && adDataToSubmit.current) {
-        // The user has returned to the app. We can assume payment was attempted.
-        processAdSubmission(adDataToSubmit.current);
-        adDataToSubmit.current = null; // Clear after processing
+        processAdSubmission();
+        adDataToSubmit.current = null;
       }
     };
 
@@ -135,21 +138,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
       
-      // Cleanup function to revoke the object URLs
       return () => {
         objectUrls.forEach(url => URL.revokeObjectURL(url));
       };
     } else if (isEditMode && existingAd?.photos) {
-        // If files are removed, revert to existing ad's photos if in edit mode
         setPhotoPreviews(existingAd.photos);
     } else {
-        // Otherwise, clear previews
         setPhotoPreviews([]);
     }
   }, [newFiles, isEditMode, existingAd]);
 
   useEffect(() => {
-    // Reset subcategory when main category changes
     form.setValue('subcategory', undefined);
   }, [selectedCategory, form]);
 
@@ -171,8 +170,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const removePhoto = () => {
     setNewFiles([]);
-    // Do not revert to old photos here, just clear the preview.
-    // The logic in processAdSubmission will handle keeping old photos if new ones aren't submitted.
     setPhotoPreviews([]);
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -180,16 +177,40 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
   
  const handleFormSubmit = async (data: AdFormValues) => {
-    if (photoPreviews.length === 0 && newFiles.length === 0) {
+    setIsSubmitting(true);
+    let finalPhotoUrls: string[] = existingAd?.photos || [];
+
+    if (newFiles.length > 0) {
+        try {
+            const compressedFile = await imageCompression(newFiles[0], {
+                maxSizeMB: 0.5,
+                maxWidthOrHeight: 1280,
+                useWebWorker: true,
+            });
+            const dataUri = await imageCompression.getDataUrlFromFile(compressedFile);
+            finalPhotoUrls = [dataUri];
+        } catch (error) {
+            console.error("Image compression failed:", error);
+            toast({ variant: 'destructive', title: 'फोटो एरर', description: 'फोटोवर प्रक्रिया करण्यात अयशस्वी.' });
+            setIsSubmitting(false);
+            return;
+        }
+    } else if (photoPreviews.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
+        setIsSubmitting(false);
         return;
     }
 
+    adDataToSubmit.current = {
+        ...data,
+        photos: finalPhotoUrls,
+    };
+    
+    setIsSubmitting(false);
+
     if (isEditMode) {
-      // For edits, we don't need payment again.
-      await processAdSubmission(data);
+      await processAdSubmission();
     } else {
-      adDataToSubmit.current = data;
       setShowPaymentChoice(true);
     }
  };
@@ -214,46 +235,33 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
     window.location.href = upiUrl;
 
-    // Fallback timer in case the visibilitychange event doesn't fire
     setTimeout(() => {
         if (adDataToSubmit.current) {
-           processAdSubmission(adDataToSubmit.current);
+           processAdSubmission();
            adDataToSubmit.current = null;
         }
     }, 20000); 
  };
  
- const processAdSubmission = async (data: AdFormValues) => {
-    if (!user || !userProfile || isSubmitting) return;
+ const processAdSubmission = async () => {
+    const dataToSubmit = adDataToSubmit.current;
+    if (!user || !userProfile || !dataToSubmit || isSubmitting) return;
     
     setIsSubmitting(true);
     
     try {
-        let finalPhotoUrls: string[] = existingAd?.photos || [];
-
-        if (newFiles.length > 0) {
-            const compressedFile = await imageCompression(newFiles[0], {
-                maxSizeMB: 0.5,
-                maxWidthOrHeight: 1280,
-                useWebWorker: true,
-            });
-            const dataUri = await imageCompression.getDataUrlFromFile(compressedFile);
-            finalPhotoUrls = [dataUri];
-        } else if (photoPreviews.length === 0) {
-            // This covers the case where an existing photo was removed but no new one was added.
-             toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
-             setIsSubmitting(false);
-             return;
-        }
-       
-        const generatedTitle = data.subcategory ? `${data.category} - ${data.subcategory}` : data.category;
+        const generatedTitle = dataToSubmit.subcategory ? `${dataToSubmit.category} - ${dataToSubmit.subcategory}` : dataToSubmit.category;
 
         const adData = {
-            ...data,
+            category: dataToSubmit.category,
+            subcategory: dataToSubmit.subcategory,
+            price: dataToSubmit.price,
+            location: dataToSubmit.location,
+            mobileNumber: dataToSubmit.mobileNumber,
             title: generatedTitle,
             userName: userProfile.name || user.email,
             description: '',
-            photos: finalPhotoUrls,
+            photos: dataToSubmit.photos,
             status: 'pending' as const,
             rejectionReason: '',
         };
@@ -271,9 +279,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
             toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
         }
         
-        if (data.mobileNumber && data.mobileNumber !== userProfile.mobileNumber) {
+        if (dataToSubmit.mobileNumber && dataToSubmit.mobileNumber !== userProfile.mobileNumber) {
             const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, { mobileNumber: data.mobileNumber });
+            await updateDoc(userDocRef, { mobileNumber: dataToSubmit.mobileNumber });
         }
 
         router.push('/my-ads');
@@ -479,3 +487,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
+
+    
