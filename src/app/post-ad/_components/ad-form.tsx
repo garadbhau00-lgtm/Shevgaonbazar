@@ -61,7 +61,7 @@ type AdFormProps = {
 };
 
 const MAX_FILES = 1;
-const DEFAULT_UPI_ID = 'hari.garad@ybl';
+const DEFAULT_UPI_ID = '9545886257';
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
@@ -437,7 +437,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             <AlertDialogHeader>
                 <AlertDialogTitle>पेमेंट सूचना</AlertDialogTitle>
                 <AlertDialogDescription>
-                    तुमची जाहिरात पोस्ट करण्यासाठी, कृपया ₹१० भरा. एकदा पेमेंट झाल्यावर तुमची जाहिरात मंजूर होईल.
+                   post your ad please pay 10rupees once payment done your ad will approved
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="rounded-lg bg-secondary p-4">
@@ -458,3 +458,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
+
+    
