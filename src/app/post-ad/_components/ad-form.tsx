@@ -228,9 +228,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
         const adData = {
             ...data,
             title: generatedTitle,
+            userName: userProfile.name || user.email,
             description: '',
             photos: finalPhotoUrls,
-            userName: userProfile.name || user.email,
             status: 'pending' as const,
             rejectionReason: '',
         };
@@ -276,7 +276,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
 
-  const upiQrUrl = `https://storage.googleapis.com/stedi-studio-files/e04b4d53-a55e-4537-8898-90235e4033c9/phonepe-qr.png`;
+  const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=example@upi&pn=Shevgaon%20Bazar&am=10.00&cu=INR`;
 
 
   return (
@@ -443,8 +443,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="flex flex-col items-center justify-center rounded-lg bg-secondary p-6 gap-4">
-                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                 <img src={upiQrUrl} alt="UPI QR Code" width={150} height={150} />
+                 <Image src={upiQrUrl} alt="UPI QR Code" width={150} height={150} />
                 <div className="text-center">
                     <p className="text-sm text-muted-foreground">एकूण देय रक्कम</p>
                     <p className="text-4xl font-bold flex items-center justify-center">
