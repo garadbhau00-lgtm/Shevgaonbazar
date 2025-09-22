@@ -3,19 +3,17 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
     // USERS
-    // Allow anyone to read user profiles to display seller names.
+    // Allow anyone to read user profiles to display names.
     // Allow new users to create their own profile.
     // Allow users to update their own profile.
-    // Admins can write any user profile.
+    // Admins can write any user profile and list all users.
     match /users/{userId} {
       allow read: if true;
       allow create: if request.auth != null;
       allow update: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
-    }
-    // Admins can list all users.
-     match /users/{document=**} {
+      allow delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
       allow list: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
@@ -23,39 +21,36 @@ service cloud.firestore {
     // Allow anyone to read approved ads.
     // Logged-in users can read their own ads regardless of status.
     // Owners can update/delete their own ads.
-    // Admins can read/write any ad.
+    // Admins can read/write/delete any ad.
     match /ads/{adId} {
       allow read: if resource.data.status == 'approved'
                    || (request.auth != null && resource.data.userId == request.auth.uid)
                    || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
       allow create: if request.auth != null;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
       allow delete: if request.auth != null && (resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+      allow list: if (request.query.where.size() > 0 && request.query.where[0][2] == 'approved')
+                  || (request.auth != null && request.query.where.size() > 0 && request.query.where[0][2] == request.auth.uid)
+                  || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
     }
-    // Rules for listing ads
-     match /ads/{document=**} {
-      allow list: if request.auth != null && (
-      		(request.query.where.status == 'approved') ||
-      		(request.query.where.userId == request.auth.uid) ||
-          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin')
-      );
-    }
-
 
     // CONVERSATIONS & MESSAGES
-    // Allow users to read, write, and create conversations they are a part of.
+    // Allow users to read, write, and create conversations and messages they are a part of.
     match /conversations/{conversationId} {
       allow read, write, create: if request.auth != null && request.auth.uid in resource.data.participants;
-
-      // Allow users to read and write messages within a conversation they are part of.
+      allow list: if request.auth != null && request.query.where.size() > 0 && request.auth.uid == request.query.where[0][2];
+      
       match /messages/{messageId} {
         allow read, write, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
       }
     }
-    // Users can list conversations they are part of.
-    match /conversations/{document=**} {
-       allow list: if request.auth != null && request.auth.uid == request.query.where.participants['array-contains'];
+
+    // CONFIG
+    // Allow anyone to read public configuration.
+    // Only admins can write to configuration.
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
   }
 }
