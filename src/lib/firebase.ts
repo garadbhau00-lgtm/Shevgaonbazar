@@ -43,9 +43,9 @@ service cloud.firestore {
     }
     // Rules for listing ads
     match /ads/{document=**} {
-      allow list: if (request.query.where.status == 'approved')
-                  || (request.auth != null && request.query.where.userId == request.auth.uid)
-                  || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.where.status == 'pending');
+      allow list: if (request.query.where[0][2] == 'approved')
+                  || (request.auth != null && request.query.where[0][2] == request.auth.uid)
+                  || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' && request.query.where[0][2] == 'pending');
     }
 
 
@@ -61,7 +61,7 @@ service cloud.firestore {
     }
     // Users can list conversations they are part of.
     match /conversations/{document=**} {
-       allow list: if request.auth != null && request.auth.uid == request.query.where.participants['array-contains'];
+       allow list: if request.auth != null && request.query.where[0][2] == request.auth.uid;
     }
 
     // CONFIG
