@@ -201,7 +201,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     if (app === 'phonepe') {
         upiUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
     } else if (app === 'gpay') {
-        upiUrl = `gpay://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+        upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
     }
 
     toast({
@@ -489,5 +489,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
-    
