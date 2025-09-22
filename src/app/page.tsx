@@ -109,7 +109,7 @@ export default function Home() {
         </div>
       </div>
 
-      <main>
+      <main className="overflow-y-auto">
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
            <div className="w-full overflow-x-auto p-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
              <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
