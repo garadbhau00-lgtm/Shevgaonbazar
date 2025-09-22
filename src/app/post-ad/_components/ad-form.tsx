@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Upload, X as XIcon, BadgeIndianRupee } from 'lucide-react';
+import { Loader2, Upload, X as XIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { collection, addDoc, updateDoc, doc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -21,17 +21,6 @@ import type { Ad } from '@/lib/types';
 import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
 
 const adSchema = z.object({
   category: z.enum(
@@ -61,7 +50,9 @@ type AdFormProps = {
 };
 
 const MAX_FILES = 1;
-const DEFAULT_UPI_ID = '9545886257';
+const UPI_ID = '9545886257@ybl';
+const PAYEE_NAME = 'Shevgaon Bazar';
+const PAYMENT_AMOUNT = '10.00';
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
@@ -72,10 +63,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [newFiles, setNewFiles] = useState<File[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<AdFormValues | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const adDataToSubmit = useRef<AdFormValues | null>(null);
 
   const isEditMode = !!existingAd;
 
@@ -94,6 +85,22 @@ export default function AdForm({ existingAd }: AdFormProps) {
     control: form.control,
     name: 'category',
   });
+  
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && adDataToSubmit.current) {
+        processAdSubmission(adDataToSubmit.current);
+        adDataToSubmit.current = null; // Clear after processing
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -175,24 +182,43 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
 
     if (isEditMode) {
+      // For edits, we don't need payment again.
       await processAdSubmission(data);
     } else {
-      setFormData(data);
-      setIsPaymentDialogOpen(true);
-    }
- };
- 
- const handlePaymentConfirm = async () => {
-    if (formData) {
-        await processAdSubmission(formData);
+      setIsProcessingPayment(true);
+      adDataToSubmit.current = data;
+      
+      // Generate a unique transaction note
+      const transactionNote = `AdPost-${user?.uid.slice(0, 5)}-${Date.now()}`;
+      
+      // Construct the UPI URL
+      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+      
+      toast({
+        title: 'पेमेंटसाठी रीडायरेक्ट करत आहे...',
+        description: 'तुमचे पेमेंट अॅप उघडेल. पेमेंटनंतर कृपया या पेजवर परत या.',
+        duration: 8000,
+      });
+
+      // Redirect to the UPI app
+      window.location.href = upiUrl;
+
+      // As a fallback, if the redirect doesn't work, we'll try to submit after a delay.
+      setTimeout(() => {
+        setIsProcessingPayment(false);
+        if (adDataToSubmit.current) { // if the submission hasn't happened yet
+           processAdSubmission(adDataToSubmit.current);
+           adDataToSubmit.current = null;
+        }
+      }, 15000); // 15-second fallback
     }
  };
  
  const processAdSubmission = async (data: AdFormValues) => {
-    if (!user || !userProfile) return;
+    if (!user || !userProfile || isSubmitting) return;
     
+    setIsProcessingPayment(false);
     setIsSubmitting(true);
-    setIsPaymentDialogOpen(false);
     
     try {
         let finalPhotoUrls: string[] = [];
@@ -271,11 +297,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
         });
     } finally {
         setIsSubmitting(false);
-        setFormData(null);
     }
 };
 
   const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
+  const isLoading = isSubmitting || isProcessingPayment;
   
   return (
     <>
@@ -288,7 +314,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>श्रेणी</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="एक श्रेणी निवडा" />
@@ -306,13 +332,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
           />
 
           {subcategories && subcategories.length > 0 && (
-             <FormField
+            <FormField
               control={form.control}
               name="subcategory"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>उप-श्रेणी</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="एक उप-श्रेणी निवडा" />
@@ -337,7 +363,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
               <FormItem>
                 <FormLabel>किंमत (₹)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="उदा. १५०००" {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} disabled={isSubmitting}/>
+                  <Input type="number" placeholder="उदा. १५०००" {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} disabled={isLoading}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -349,7 +375,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>गाव</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="एक गाव निवडा" />
@@ -372,7 +398,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
               <FormItem>
                 <FormLabel>मोबाईल नंबर</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder="तुमचा मोबाईल नंबर" {...field} disabled={isSubmitting}/>
+                  <Input type="tel" placeholder="तुमचा मोबाईल नंबर" {...field} disabled={isLoading}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -390,7 +416,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                               size="icon"
                               className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
                               onClick={() => removePhoto()}
-                              disabled={isSubmitting}
+                              disabled={isLoading}
                           >
                               <XIcon className="h-4 w-4" />
                           </Button>
@@ -402,9 +428,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
                           <div 
                               className={cn(
                                   "flex h-32 w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
-                                isSubmitting ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
+                                isLoading ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
                               )}
-                              onClick={() => !isSubmitting && fileInputRef.current?.click()}
+                              onClick={() => !isLoading && fileInputRef.current?.click()}
                           >
                               <Upload className="h-8 w-8 text-muted-foreground" />
                               <p className="mt-2 text-sm text-muted-foreground text-center">फोटो अपलोड करा</p>
@@ -414,7 +440,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                                   className="hidden" 
                                   accept="image/*" 
                                   onChange={handleFileChange} 
-                                  disabled={isSubmitting}
+                                  disabled={isLoading}
                                   multiple={false}
                               />
                           </div>
@@ -425,36 +451,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
               <FormMessage />
           </FormItem>
 
-          <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
+          <Button type="submit" className="w-full !mt-8" size="lg" disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isProcessingPayment ? 'पेमेंटची तयारी करत आहे...' : (isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'पेमेंट करा आणि पोस्ट करा'))}
           </Button>
         </form>
       </Form>
-
-       <AlertDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>पेमेंट सूचना</AlertDialogTitle>
-                <AlertDialogDescription>
-                   post your ad please pay 10rupees once payment done your ad will approved
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="rounded-lg bg-secondary p-4">
-                <p className="text-sm text-muted-foreground">यावर पेमेंट करा:</p>
-                <p className="font-mono font-semibold text-lg">{DEFAULT_UPI_ID}</p>
-            </div>
-            <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setFormData(null)} disabled={isSubmitting}>
-                    रद्द करा
-                </AlertDialogCancel>
-                <AlertDialogAction onClick={handlePaymentConfirm} disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    पेमेंटची पुष्टी करा आणि पोस्ट करा
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
+
+    
