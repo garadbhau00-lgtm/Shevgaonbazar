@@ -53,7 +53,7 @@ const MAX_FILES = 1;
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
   
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
@@ -147,7 +147,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
   
  const onSubmit = async (data: AdFormValues) => {
-    if (!user) return;
+    if (!user || !userProfile) return;
 
     if (photoPreviews.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
@@ -199,6 +199,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             title: generatedTitle,
             description: '',
             photos: finalPhotoUrls,
+            userName: userProfile.name || user.email,
             status: 'pending' as const,
             rejectionReason: '',
         };

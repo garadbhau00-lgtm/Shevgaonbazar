@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import type { Ad } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BadgeIndianRupee, MapPin, Phone } from 'lucide-react';
+import { Loader2, BadgeIndianRupee, MapPin, Phone, User } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import AppHeader from '@/components/layout/app-header';
@@ -113,6 +113,11 @@ export default function AdDetailPage() {
                 <div className="flex items-center text-2xl font-bold text-primary">
                     <BadgeIndianRupee className="h-6 w-6 mr-2" />
                     <span>{ad.price.toLocaleString('en-IN')}</span>
+                </div>
+                
+                 <div className="flex items-center text-lg font-semibold">
+                    <User className="h-5 w-5 mr-2" />
+                    <span>{ad.userName}</span>
                 </div>
 
                 <div className="flex items-center text-lg font-semibold text-green-600">
