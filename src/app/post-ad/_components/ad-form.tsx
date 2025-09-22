@@ -191,12 +191,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
       // Generate a unique transaction note
       const transactionNote = `AdPost-${user?.uid.slice(0, 5)}-${Date.now()}`;
       
-      // Construct the UPI URL
-      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
+      // Construct the PhonePe UPI URL
+      const upiUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
       
       toast({
-        title: 'पेमेंटसाठी रीडायरेक्ट करत आहे...',
-        description: 'तुमचे पेमेंट अॅप उघडेल. पेमेंटनंतर कृपया या पेजवर परत या.',
+        title: 'PhonePe वर रीडायरेक्ट करत आहे...',
+        description: 'पेमेंटनंतर कृपया या पेजवर परत या.',
         duration: 8000,
       });
 
@@ -460,5 +460,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
-    
