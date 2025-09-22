@@ -30,7 +30,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 
@@ -277,6 +276,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
 
+  const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=example@upi&pn=Shevgaon%20Bazar&am=10.00&cu=INR`;
+
+
   return (
     <>
       <Form {...form}>
@@ -432,15 +434,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
         </form>
       </Form>
 
-      <AlertDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+       <AlertDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>पेमेंट कन्फर्म करा</AlertDialogTitle>
+                <AlertDialogTitle>पेमेंट करण्यासाठी स्कॅन करा</AlertDialogTitle>
                 <AlertDialogDescription>
-                    जाहिरात पोस्ट करण्यासाठी तुम्हाला ₹१० भरावे लागतील. तुम्ही पुढे जाऊ इच्छिता का?
+                    जाहिरात पोस्ट करण्यासाठी, कृपया खालील QR कोड स्कॅन करून ₹१० भरा. (टीप: हे केवळ एक नमुना आहे.)
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="flex items-center justify-center rounded-lg bg-secondary p-6">
+            <div className="flex flex-col items-center justify-center rounded-lg bg-secondary p-6 gap-4">
+                 <Image src={upiQrUrl} alt="UPI QR Code" width={150} height={150} />
                 <div className="text-center">
                     <p className="text-sm text-muted-foreground">एकूण देय रक्कम</p>
                     <p className="text-4xl font-bold flex items-center justify-center">
@@ -455,7 +458,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 </AlertDialogCancel>
                 <AlertDialogAction onClick={handlePaymentConfirm} disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    पे करा आणि जाहिरात पोस्ट करा
+                    पेमेंटची पुष्टी करा आणि पोस्ट करा
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
