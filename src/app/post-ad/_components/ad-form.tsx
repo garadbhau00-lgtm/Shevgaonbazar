@@ -455,27 +455,18 @@ export default function AdForm({ existingAd }: AdFormProps) {
        <AlertDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>पेमेंट करण्यासाठी स्कॅन करा</AlertDialogTitle>
+                <AlertDialogTitle>पेमेंट सूचना</AlertDialogTitle>
                 <AlertDialogDescription>
-                    जाहिरात पोस्ट करण्यासाठी, कृपया खालील QR कोड स्कॅन करून ₹१० भरा.
-                    {paymentConfig?.upiId && ` UPI आयडी: ${paymentConfig.upiId}`}
+                    तुमची जाहिरात पोस्ट करण्यासाठी, कृपया ₹१० भरा. एकदा पेमेंट झाल्यावर तुमची जाहिरात मंजूर होईल.
                 </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="flex flex-col items-center justify-center rounded-lg bg-secondary p-6 gap-4">
-                 {paymentConfig?.qrCodeUrl ? (
-                    <img src={paymentConfig.qrCodeUrl} alt="UPI QR Code" width={150} height={150} />
-                 ) : (
-                    <div className="h-[150px] w-[150px] flex items-center justify-center bg-muted-foreground/10 rounded-md">
-                        <p className="text-xs text-center text-muted-foreground">QR कोड उपलब्ध नाही.</p>
-                    </div>
-                 )}
-                <div className="text-center">
-                    <p className="text-sm text-muted-foreground">एकूण देय रक्कम</p>
-                    <p className="text-4xl font-bold flex items-center justify-center">
-                        <BadgeIndianRupee className="h-8 w-8 mr-1" />
-                        १०
-                    </p>
-                </div>
+            <div className="rounded-lg bg-secondary p-4">
+                <p className="text-sm text-muted-foreground">यावर पेमेंट करा:</p>
+                {paymentConfig?.upiId ? (
+                    <p className="font-mono font-semibold text-lg">{paymentConfig.upiId}</p>
+                ) : (
+                    <p className="text-muted-foreground text-sm">UPI आयडी उपलब्ध नाही.</p>
+                )}
             </div>
             <AlertDialogFooter>
                 <AlertDialogCancel onClick={() => setFormData(null)} disabled={isSubmitting}>
