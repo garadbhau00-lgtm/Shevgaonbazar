@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AccessManagementPage() {
     const { userProfile, loading: authLoading } = useAuth();
@@ -22,8 +21,6 @@ export default function AccessManagementPage() {
 
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
-    const [isPaymentEnabled, setIsPaymentEnabled] = useState(false);
-    const [isPaymentToggleLoading, setIsPaymentToggleLoading] = useState(true);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -46,19 +43,6 @@ export default function AccessManagementPage() {
                 return;
             }
             fetchUsers();
-            
-            const settingsDocRef = doc(db, 'config', 'settings');
-            const unsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    setIsPaymentEnabled(docSnap.data().isPaymentEnabled);
-                }
-                setIsPaymentToggleLoading(false);
-            }, (error) => {
-                console.error("Error fetching payment settings:", error);
-                setIsPaymentToggleLoading(false);
-            });
-            
-            return () => unsubscribe();
         }
     }, [authLoading, userProfile, router, toast]);
 
@@ -74,21 +58,6 @@ export default function AccessManagementPage() {
             toast({ variant: 'destructive', title: 'त्रुटी', description: 'वापरकर्त्याची स्थिती अद्यतनित करण्यात अयशस्वी.' });
         }
     };
-    
-    const handlePaymentToggle = async (enabled: boolean) => {
-        setIsPaymentToggleLoading(true);
-        try {
-            const settingsDocRef = doc(db, 'config', 'settings');
-            await updateDoc(settingsDocRef, { isPaymentEnabled: enabled });
-            setIsPaymentEnabled(enabled); // Optimistic update
-             toast({ title: 'यशस्वी', description: `जाहिरात पेमेंट यशस्वीरित्या ${enabled ? 'सक्षम' : 'अक्षम'} केले आहे.` });
-        } catch (error) {
-            console.error("Error updating payment settings:", error);
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'पेमेंट सेटिंग्ज अद्यतनित करण्यात अयशस्वी.' });
-        } finally {
-            setIsPaymentToggleLoading(false);
-        }
-    }
     
     if (authLoading || pageLoading) {
         return (
@@ -117,31 +86,10 @@ export default function AccessManagementPage() {
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
                     <h1 className="text-lg font-bold">प्रवेश व्यवस्थापन</h1>
-                    <p className="mt-2 text-xs max-w-xl">वापरकर्ता खाती आणि पेमेंट सेटिंग्ज सक्षम किंवा अक्षम करा.</p>
+                    <p className="mt-2 text-xs max-w-xl">वापरकर्ता खाती सक्षम किंवा अक्षम करा.</p>
                 </div>
             </div>
             <main className="p-4">
-                 <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle className="text-base">Global Settings</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-semibold">जाहिरात पेमेंट</p>
-                                <p className="text-sm text-muted-foreground">जाहिरात पोस्ट करण्यासाठी १० रुपये पेमेंट आवश्यक आहे का.</p>
-                            </div>
-                            {isPaymentToggleLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                                 <Switch
-                                    checked={isPaymentEnabled}
-                                    onCheckedChange={handlePaymentToggle}
-                                    aria-label="Toggle Ad Payment"
-                                />
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-
                 <h2 className="text-lg font-bold mb-2">वापरकर्ते</h2>
                 <div className="space-y-4">
                     {users.length > 0 ? users.map((user) => (

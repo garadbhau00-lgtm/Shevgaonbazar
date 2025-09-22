@@ -74,7 +74,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [formData, setFormData] = useState<AdFormValues | null>(null);
-  const [isPaymentEnabled, setIsPaymentEnabled] = useState<boolean | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,23 +94,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     control: form.control,
     name: 'category',
   });
-
-  useEffect(() => {
-    const fetchPaymentSettings = async () => {
-        try {
-            const settingsDoc = await getDoc(doc(db, 'config', 'settings'));
-            if (settingsDoc.exists()) {
-                setIsPaymentEnabled(settingsDoc.data().isPaymentEnabled);
-            } else {
-                setIsPaymentEnabled(false); // Default to false if not set
-            }
-        } catch (error) {
-            console.error("Error fetching payment settings:", error);
-            setIsPaymentEnabled(false); // Default to false on error
-        }
-    };
-    fetchPaymentSettings();
-  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -162,7 +144,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [selectedCategory, form]);
 
 
-  if (authLoading || isPaymentEnabled === null) {
+  if (authLoading) {
       return (
           <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -192,7 +174,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         return;
     }
 
-    if (isEditMode || !isPaymentEnabled) {
+    if (isEditMode) {
       await processAdSubmission(data);
     } else {
       setFormData(data);
@@ -324,7 +306,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
           />
 
           {subcategories && subcategories.length > 0 && (
-            <FormField
+             <FormField
               control={form.control}
               name="subcategory"
               render={({ field }) => (
