@@ -122,7 +122,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         location: existingAd.location,
         mobileNumber: existingAd.mobileNumber,
       });
-      if (existingAd.photos) {
+      if (existingAd.photos && existingAd.photos.length > 0) {
         setPhotoPreviews(existingAd.photos);
       }
     } else if (userProfile) {
@@ -135,12 +135,15 @@ export default function AdForm({ existingAd }: AdFormProps) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
       
+      // Cleanup function to revoke the object URLs
       return () => {
         objectUrls.forEach(url => URL.revokeObjectURL(url));
       };
     } else if (isEditMode && existingAd?.photos) {
+        // If files are removed, revert to existing ad's photos if in edit mode
         setPhotoPreviews(existingAd.photos);
     } else {
+        // Otherwise, clear previews
         setPhotoPreviews([]);
     }
   }, [newFiles, isEditMode, existingAd]);
@@ -168,19 +171,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const removePhoto = () => {
     setNewFiles([]);
-    if (isEditMode && existingAd?.photos) {
-        setPhotoPreviews(existingAd.photos)
-    } else {
-        setPhotoPreviews([]);
-    }
-    
+    // Do not revert to old photos here, just clear the preview.
+    // The logic in processAdSubmission will handle keeping old photos if new ones aren't submitted.
+    setPhotoPreviews([]);
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
   };
   
  const handleFormSubmit = async (data: AdFormValues) => {
-    if (photoPreviews.length === 0) {
+    if (photoPreviews.length === 0 && newFiles.length === 0) {
         toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
         return;
     }
@@ -229,7 +229,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     
     try {
-        let finalPhotoUrls: string[] = isEditMode && existingAd?.photos ? existingAd.photos : [];
+        let finalPhotoUrls: string[] = existingAd?.photos || [];
 
         if (newFiles.length > 0) {
             const compressedFile = await imageCompression(newFiles[0], {
@@ -239,6 +239,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
             });
             const dataUri = await imageCompression.getDataUrlFromFile(compressedFile);
             finalPhotoUrls = [dataUri];
+        } else if (photoPreviews.length === 0) {
+            // This covers the case where an existing photo was removed but no new one was added.
+             toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
+             setIsSubmitting(false);
+             return;
         }
        
         const generatedTitle = data.subcategory ? `${data.category} - ${data.subcategory}` : data.category;
@@ -474,5 +479,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
-    
