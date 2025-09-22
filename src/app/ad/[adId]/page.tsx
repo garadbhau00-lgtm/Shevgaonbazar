@@ -115,7 +115,7 @@ export default function AdDetailPage() {
                     <span>{ad.price.toLocaleString('en-IN')}</span>
                 </div>
 
-                <div className="flex items-center text-muted-foreground">
+                <div className="flex items-center text-lg font-semibold text-green-600">
                     <MapPin className="h-5 w-5 mr-2" />
                     <span>{ad.location}</span>
                 </div>
