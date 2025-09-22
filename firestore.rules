@@ -3,61 +3,80 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check for Admin role
-    function isAdmin(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'Admin';
+  
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Rules for the 'users' collection
-    match /users/{userId} {
-      // Any authenticated user can create their own profile during signup
-      allow create: if request.auth != null && request.auth.uid == userId;
-      // Users can read their own profile. Admins can read any profile.
-      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin(request.auth.uid));
-      // Users can update their own profile. Admins can update any profile (e.g., to disable an account).
-      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin(request.auth.uid));
-      // Only admins can delete user profiles.
-      allow delete: if request.auth != null && isAdmin(request.auth.uid);
-      // Admins can list all users.
-      allow list: if request.auth != null && isAdmin(request.auth.uid);
-    }
-
-    // Rules for the 'ads' collection
-    match /ads/{adId} {
-      // Any authenticated user can create an ad.
-      allow create: if request.auth != null;
-      // Any user (even unauthenticated) can read approved ads.
-      // Authenticated users can read their own ads regardless of status.
-      // Admins can read any ad regardless of status.
-      allow read: if resource.data.status == 'approved' || 
-                   (request.auth != null && (request.auth.uid == resource.data.userId || isAdmin(request.auth.uid)));
-      // Users can update their own ads. Admins can update any ad (e.g., to approve/reject).
-      allow update: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin(request.auth.uid));
-      // Users can delete their own ads. Admins can delete any ad.
-      allow delete: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin(request.auth.uid));
-      // Allow listing of ads. Further filtering is done in the app's query.
-      allow list: if true;
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
     
-    // Rules for the 'config' collection (for payment settings)
-    match /config/{docId} {
-        // Everyone can read the configuration
-        allow read: if true;
-        // Only Admins can write to the configuration
-        allow write: if request.auth != null && isAdmin(request.auth.uid);
+    function getRole(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role;
     }
 
-    // Rules for 'conversations' collection and 'messages' subcollection
-    match /conversations/{conversationId} {
-        // Only participants of a conversation can access it.
-        allow read, write, delete: if request.auth != null && request.auth.uid in resource.data.participants;
-        allow create: if request.auth != null;
+    function isAdmin(userId) {
+      return getRole(userId) == 'Admin';
+    }
 
-        match /messages/{messageId} {
-            // Only participants of the parent conversation can access messages.
-            allow read, write, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-        }
+    // Default: Deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId) && request.resource.data.keys().hasOnly(['name', 'mobileNumber']);
+      allow delete: if false;
+      
+      // Admin Access for Users collection
+      allow read, write: if isSignedIn() && isAdmin(request.auth.uid);
+    }
+    
+    // Config Collection
+    match /config/settings {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && isAdmin(request.auth.uid);
+    }
+    
+    // Ads Collection
+    match /ads/{adId} {
+      // Read access:
+      // 1. Anyone signed in can read 'approved' ads.
+      // 2. A user can read their own ads regardless of status.
+      // 3. An admin can read any ad regardless of status.
+      allow read: if isSignedIn() && (
+                    resource.data.status == 'approved' ||
+                    isOwner(resource.data.userId) ||
+                    isAdmin(request.auth.uid)
+                  );
+                  
+      // Create access:
+      // Any signed-in user can create an ad, but they must be the owner.
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      
+      // Update access:
+      // 1. A user can update their own ad.
+      // 2. An admin can update any ad (e.g., to change status).
+      allow update: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin(request.auth.uid));
+      
+      // Delete access:
+      // 1. A user can delete their own ad.
+      // 2. An admin can delete any ad.
+      allow delete: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin(request.auth.uid));
+    }
+    
+    // Conversations & Messages
+    match /conversations/{conversationId} {
+      allow read, write: if isSignedIn() && request.auth.uid in resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow read, write: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+      }
     }
   }
 }
