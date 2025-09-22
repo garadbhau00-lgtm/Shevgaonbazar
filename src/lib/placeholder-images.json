@@ -36,12 +36,6 @@
       "description": "A modern farming plough.",
       "imageUrl": "https://picsum.photos/seed/ad6/600/400",
       "imageHint": "farming plough"
-    },
-    {
-      "id": "qr-management",
-      "description": "QR code management page background.",
-      "imageUrl": "https://picsum.photos/seed/qr-management/1200/400",
-      "imageHint": "payment settings"
     }
   ]
 }

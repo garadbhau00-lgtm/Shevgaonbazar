@@ -61,6 +61,7 @@ type AdFormProps = {
 };
 
 const MAX_FILES = 1;
+const DEFAULT_UPI_ID = 'hari.garad@ybl';
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
@@ -73,9 +74,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [formData, setFormData] = useState<AdFormValues | null>(null);
-
-  const [paymentConfig, setPaymentConfig] = useState<{ qrCodeUrl: string; upiId: string } | null>(null);
-  const [paymentConfigLoading, setPaymentConfigLoading] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,24 +104,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   }, [user, authLoading, router, toast]);
 
-  useEffect(() => {
-        const fetchPaymentConfig = async () => {
-            try {
-                const configDocRef = doc(db, 'config', 'payment');
-                const docSnap = await getDoc(configDocRef);
-                if (docSnap.exists()) {
-                    setPaymentConfig(docSnap.data() as { qrCodeUrl: string; upiId: string });
-                }
-            } catch (error) {
-                console.error("Error fetching payment config:", error);
-                toast({ variant: 'destructive', title: 'त्रुटी', description: 'पेमेंट सेटिंग्ज लोड करण्यात अयशस्वी.' });
-            } finally {
-                setPaymentConfigLoading(false);
-            }
-        };
-        fetchPaymentConfig();
-  }, [toast]);
-  
   useEffect(() => {
     if (isEditMode && existingAd) {
       form.reset({
@@ -164,7 +144,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [selectedCategory, form]);
 
 
-  if (authLoading || paymentConfigLoading) {
+  if (authLoading) {
       return (
           <div className="flex justify-center items-center h-64">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -445,7 +425,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
               <FormMessage />
           </FormItem>
 
-          <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting || paymentConfigLoading}>
+          <Button type="submit" className="w-full !mt-8" size="lg" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
           </Button>
@@ -462,11 +442,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             </AlertDialogHeader>
             <div className="rounded-lg bg-secondary p-4">
                 <p className="text-sm text-muted-foreground">यावर पेमेंट करा:</p>
-                {paymentConfig?.upiId ? (
-                    <p className="font-mono font-semibold text-lg">{paymentConfig.upiId}</p>
-                ) : (
-                    <p className="text-muted-foreground text-sm">UPI आयडी उपलब्ध नाही.</p>
-                )}
+                <p className="font-mono font-semibold text-lg">{DEFAULT_UPI_ID}</p>
             </div>
             <AlertDialogFooter>
                 <AlertDialogCancel onClick={() => setFormData(null)} disabled={isSubmitting}>
