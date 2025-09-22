@@ -9,7 +9,7 @@ import type { Ad } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Check, X, BadgeIndianRupee } from 'lucide-react';
+import { Loader2, Check, X, BadgeIndianRupee, Phone } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -173,6 +173,10 @@ export default function AdManagementPage() {
                                 <div className="mt-2 flex items-center font-semibold text-primary">
                                     <BadgeIndianRupee className="h-5 w-5 mr-1" />
                                     <span>{ad.price.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div className="mt-2 flex items-center text-sm font-semibold text-muted-foreground">
+                                    <Phone className="h-4 w-4 mr-2" />
+                                    <span>{ad.mobileNumber}</span>
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-end gap-2 bg-secondary/50 p-3">
