@@ -91,26 +91,25 @@ export default function Home() {
     : ads.filter(ad => ad.category === selectedCategory);
 
   return (
-    <div>
-      <div className="relative h-28 w-full">
-        <AppHeader />
-        <Image
-            src="https://picsum.photos/seed/header/1200/400"
-            alt="Header background"
-            fill
-            className="object-cover"
-            data-ai-hint="farm landscape"
-            priority
-        />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-            <h1 className="text-lg font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h1>
-            <p className="mt-2 text-xs max-w-xl">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
+    <div className="flex flex-col h-[calc(100vh-theme(spacing.28))]">
+      <header className="sticky top-0 z-20">
+        <div className="relative h-28 w-full">
+          <AppHeader />
+          <Image
+              src="https://picsum.photos/seed/header/1200/400"
+              alt="Header background"
+              fill
+              className="object-cover"
+              data-ai-hint="farm landscape"
+              priority
+          />
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+              <h1 className="text-lg font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h1>
+              <p className="mt-2 text-xs max-w-xl">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
+          </div>
         </div>
-      </div>
-
-      <main className="overflow-y-auto">
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b">
+         <div className="bg-background/95 backdrop-blur-sm border-b">
            <div className="w-full overflow-x-auto p-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
              <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
                 <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
@@ -132,6 +131,8 @@ export default function Home() {
               </Tabs>
             </div>
         </div>
+      </header>
+      <main className="flex-1 overflow-y-auto">
         <div className="p-4">
           <AdList ads={filteredAds} loading={adsLoading} />
         </div>
