@@ -1,59 +1,69 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Helper function to check if a user is an Admin
+    function isAdmin(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)) &&
+             get(/databases/$(database)/documents/users/$(userId)).data.role == 'Admin';
+    }
 
-    // Helper functions
-    function isSignedIn() {
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
       return request.auth != null;
     }
 
+    // Helper function to check if the user is the owner of a document
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    function isProfileOwner(uid) {
-      return request.auth.uid == uid;
-    }
-    
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
-    }
-
-    // Users can read their own profile, admins can read any profile.
-    // Users can create their own profile.
-    // Users can only update their own name and mobileNumber.
-    match /users/{uid} {
-      allow read: if isSignedIn() && (isProfileOwner(uid) || isAdmin());
-      allow create: if isSignedIn() && isProfileOwner(uid);
-      allow update: if isSignedIn() && isProfileOwner(uid) && request.resource.data.keys().hasOnly(['name', 'mobileNumber']);
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Admins can read and write to any user's profile
+      // Users can create their own profile
+      // Users can read their own profile
+      // Users can update their own name and mobileNumber
+      allow read, update: if isAdmin(request.auth.uid) || isOwner(userId);
+      allow create: if isOwner(userId);
     }
 
-    // Admins can manage all user records (for disabling/enabling).
-    match /users/{uid} {
-      allow write: if isAdmin();
-    }
-    
-    // Ads can be read by anyone if they are approved.
-    // Ads can be read by their owner or an admin regardless of status.
-    // Logged-in users can create ads.
-    // Owners can update their own ads. Owners can delete their own ads.
-    // Admins can update or delete any ad.
+    // Rules for the 'ads' collection
     match /ads/{adId} {
-      allow read: if resource.data.status == 'approved' || (isSignedIn() && (isOwner(resource.data.userId) || isAdmin()));
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin());
+      // Anyone can read an ad that has been approved
+      allow get: if resource.data.status == 'approved';
+      
+      // Logged-in users can read ads that are not theirs but are approved
+      allow list: if isAuthenticated() && resource.data.status == 'approved';
+      
+      // The owner of an ad or an admin can read the ad, regardless of status
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin(request.auth.uid));
+
+      // A logged-in user can create a new ad, but must be the owner.
+      // Status must be set to 'pending' on creation.
+      allow create: if isAuthenticated() 
+                    && isOwner(request.resource.data.userId) 
+                    && request.resource.data.status == 'pending';
+      
+      // The owner can update their own ad.
+      // An admin can update any ad (for approval/rejection).
+      allow update: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin(request.auth.uid));
+
+      // The owner or an admin can delete an ad.
+      allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin(request.auth.uid));
     }
-
-    // Participants of a conversation can read and write messages.
+    
+    // Rules for conversations
     match /conversations/{conversationId} {
-      allow read, write: if isSignedIn() && request.auth.uid in resource.data.participants;
+        // Only participants of the conversation or admins can read/write
+        allow read, write: if isAuthenticated() && (request.auth.uid in resource.data.participants || isAdmin(request.auth.uid));
 
-      match /messages/{messageId} {
-        allow read, create: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-        allow update, delete: if false; // Messages are immutable
-      }
+        // Rules for messages within a conversation
+        match /messages/{messageId} {
+            // Only participants of the parent conversation can read/write messages
+            allow read, write: if isAuthenticated() && (request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants || isAdmin(request.auth.uid));
+        }
     }
   }
 }
