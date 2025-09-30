@@ -114,14 +114,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
             const objectUrls = newFiles.map(file => URL.createObjectURL(file));
             setPhotoPreviews(objectUrls);
             return () => objectUrls.forEach(url => URL.revokeObjectURL(url));
-        } else if (isEditMode && existingAd?.photos) {
-            setPhotoPreviews(existingAd.photos);
-        } else {
-            setPhotoPreviews([]);
         }
     };
     generatePreviews();
-  }, [newFiles, isEditMode, existingAd]);
+  }, [newFiles]);
 
 
   useEffect(() => {
