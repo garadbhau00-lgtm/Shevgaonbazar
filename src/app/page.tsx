@@ -72,10 +72,10 @@ export default function Home() {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
   const sortOptions: { value: SortOption, label: string }[] = [
-    { value: 'newest', label: 'नवीनतम' },
-    { value: 'oldest', label: 'सर्वात जुने' },
-    { value: 'price-asc', label: 'किंमत: कमी ते जास्त' },
-    { value: 'price-desc', label: 'किंमत: जास्त ते कमी' },
+    { value: 'newest', label: dictionary.home.sortOptions.newest },
+    { value: 'oldest', label: dictionary.home.sortOptions.oldest },
+    { value: 'price-asc', label: dictionary.home.sortOptions.priceAsc },
+    { value: 'price-desc', label: dictionary.home.sortOptions.priceDesc },
   ];
 
   useEffect(() => {
@@ -94,22 +94,22 @@ export default function Home() {
         if (error.code === 'failed-precondition' && error.message.includes('index')) {
           toast({
             variant: 'destructive',
-            title: 'डेटाबेस त्रुटी: इंडेक्स आवश्यक',
-            description: 'जाहिराती आणण्यासाठी फायरस्टोअर इंडेक्स आवश्यक आहे. कृपया फायरबेस कन्सोलमध्ये इंडेक्स तयार करा.',
+            title: dictionary.home.dbError.title,
+            description: dictionary.home.dbError.description,
             duration: 10000,
           })
         } else {
            toast({
             variant: 'destructive',
-            title: 'त्रुटी',
-            description: 'जाहिराती आणण्यात अयशस्वी.'
+            title: dictionary.home.fetchError.title,
+            description: dictionary.home.fetchError.description,
            })
         }
         setAdsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, dictionary]);
   
   const sortedAndFilteredAds = useMemo(() => {
     let filtered = ads;
@@ -149,7 +149,8 @@ export default function Home() {
   
   const subcategoriesForSelectedCategory = useMemo(() => {
     if (selectedCategory === 'सर्व') return [];
-    return categories.find(cat => cat.name === selectedCategory)?.subcategories || [];
+    const categoryData = categories.find(cat => cat.name === selectedCategory);
+    return categoryData?.subcategories || [];
   }, [selectedCategory]);
 
   const resetFilters = () => {
@@ -214,7 +215,7 @@ export default function Home() {
                   <SheetTrigger asChild>
                       <Button variant="outline" size="sm">
                           <Filter className="h-4 w-4 mr-2" />
-                          <span>Filter & Sort</span>
+                          <span>{dictionary.home.filterSort.button}</span>
                           {activeFilterCount > 0 && (
                             <span className="ml-2 h-5 w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
                               {activeFilterCount}
@@ -224,11 +225,11 @@ export default function Home() {
                   </SheetTrigger>
                   <SheetContent>
                       <SheetHeader>
-                          <SheetTitle>Filter & Sort Ads</SheetTitle>
+                          <SheetTitle>{dictionary.home.filterSort.title}</SheetTitle>
                       </SheetHeader>
                       <div className="py-4 space-y-6">
                            <div>
-                              <Label className="text-base font-semibold">Sort by</Label>
+                              <Label className="text-base font-semibold">{dictionary.home.filterSort.sortBy}</Label>
                               <RadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)} className="mt-2 space-y-1">
                                 {sortOptions.map(option => (
                                   <div key={option.value} className="flex items-center space-x-2">
@@ -241,13 +242,13 @@ export default function Home() {
                           
                           {subcategoriesForSelectedCategory.length > 0 && (
                             <div>
-                                <Label htmlFor="subcategory-filter" className="text-base font-semibold">Sub-category</Label>
+                                <Label htmlFor="subcategory-filter" className="text-base font-semibold">{dictionary.home.filterSort.subcategory}</Label>
                                 <DropdownSelect value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
                                     <SelectTrigger id="subcategory-filter" className="mt-2">
-                                        <SelectValue placeholder="Select a sub-category" />
+                                        <SelectValue placeholder={dictionary.home.filterSort.selectSubcategory} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Sub-categories</SelectItem>
+                                        <SelectItem value="all">{dictionary.home.filterSort.allSubcategories}</SelectItem>
                                         {subcategoriesForSelectedCategory.map(subcat => (
                                             <SelectItem key={subcat.key} value={subcat.name}>
                                                 {dictionary.subcategories[subcat.key] || subcat.name}
@@ -259,13 +260,13 @@ export default function Home() {
                           )}
 
                            <div>
-                                <Label htmlFor="village-filter" className="text-base font-semibold">Village</Label>
+                                <Label htmlFor="village-filter" className="text-base font-semibold">{dictionary.home.filterSort.village}</Label>
                                 <DropdownSelect value={selectedVillage} onValueChange={setSelectedVillage}>
                                     <SelectTrigger id="village-filter" className="mt-2">
-                                        <SelectValue placeholder="Select a village" />
+                                        <SelectValue placeholder={dictionary.home.filterSort.selectVillage} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Villages</SelectItem>
+                                        <SelectItem value="all">{dictionary.home.filterSort.allVillages}</SelectItem>
                                         {villageList.map(village => (
                                             <SelectItem key={village} value={village}>{village}</SelectItem>
                                         ))}
@@ -275,7 +276,7 @@ export default function Home() {
 
                            <div>
                                 <div className="flex justify-between items-center mb-2">
-                                     <Label className="text-base font-semibold">Max Price</Label>
+                                     <Label className="text-base font-semibold">{dictionary.home.filterSort.maxPrice}</Label>
                                      <span className="text-sm font-medium text-primary">
                                         ₹{maxPrice.toLocaleString('en-IN')}
                                      </span>
@@ -293,8 +294,8 @@ export default function Home() {
                            </div>
                       </div>
                        <SheetFooter className="mt-6 flex-col-reverse sm:flex-row gap-2">
-                          <Button variant="outline" onClick={resetFilters} className="w-full">Clear Filters</Button>
-                          <Button onClick={() => setIsFilterSheetOpen(false)} className="w-full">Apply</Button>
+                          <Button variant="outline" onClick={resetFilters} className="w-full">{dictionary.home.filterSort.clearButton}</Button>
+                          <Button onClick={() => setIsFilterSheetOpen(false)} className="w-full">{dictionary.home.filterSort.applyButton}</Button>
                       </SheetFooter>
                   </SheetContent>
               </Sheet>

@@ -9,6 +9,34 @@
         "all": "सभी",
         "adCard": {
             "noPhoto": "कोई फ़ोटो नहीं"
+        },
+        "dbError": {
+            "title": "डेटाबेस त्रुटि: इंडेक्स आवश्यक",
+            "description": "विज्ञापन लाने के लिए फायरस्टोर इंडेक्स आवश्यक है। कृपया फायरबेस कंसोल में इंडेक्स बनाएं।"
+        },
+        "fetchError": {
+            "title": "त्रुटि",
+            "description": "विज्ञापन लाने में विफल।"
+        },
+        "sortOptions": {
+            "newest": "नवीनतम",
+            "oldest": "सबसे पुराना",
+            "priceAsc": "कीमत: कम से ज्यादा",
+            "priceDesc": "कीमत: ज्यादा से कम"
+        },
+        "filterSort": {
+            "button": "फ़िल्टर और छाँटें",
+            "title": "विज्ञापन फ़िल्टर और छाँटें",
+            "sortBy": "इसके अनुसार छाँटें",
+            "subcategory": "उप-श्रेणी",
+            "selectSubcategory": "एक उप-श्रेणी चुनें",
+            "allSubcategories": "सभी उप-श्रेणियाँ",
+            "village": "गाँव",
+            "selectVillage": "एक गाँव चुनें",
+            "allVillages": "सभी गाँव",
+            "maxPrice": "अधिकतम कीमत",
+            "clearButton": "फ़िल्टर साफ़ करें",
+            "applyButton": "लागू करें"
         }
     },
     "bottomNav": {
