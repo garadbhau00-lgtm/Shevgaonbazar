@@ -13,13 +13,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { mr } from 'date-fns/locale/mr';
-import { hi } from 'date-fns/locale/hi';
-import { enUS } from 'date-fns/locale/en-US';
+import { hi, enUS } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 
-const locales: { [key: string]: Locale } = { mr, hi, en: enUS };
+const locales: { [key: string]: Locale } = { hi, en: enUS };
 
 export default function InboxPage() {
     const { user, loading: authLoading } = useAuth();
@@ -80,7 +78,8 @@ export default function InboxPage() {
 
     const formatTimestamp = (timestamp: any) => {
         if (!timestamp) return '';
-        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: locales[language] });
+        const locale = locales[language] || enUS;
+        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale });
     };
 
     return (
