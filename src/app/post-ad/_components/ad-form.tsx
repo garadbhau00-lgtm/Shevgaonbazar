@@ -161,6 +161,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
     setIsSubmitting(true);
     try {
         let photoUrl = '';
+        
+        // If there's a new file, upload it
         if (newFiles.length > 0) {
             const file = newFiles[0];
             const compressedFile = await imageCompression(file, {
@@ -174,9 +176,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
             const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
             photoUrl = await getDownloadURL(uploadResult.ref);
         } else if (isEditMode && existingAd?.photos?.[0]) {
+             // If in edit mode and no new file, use the existing photo
             photoUrl = existingAd.photos[0];
         }
 
+        // If after all that, we still don't have a photo, something is wrong.
         if (!photoUrl) {
             throw new Error(adFormDictionary.toast.photoRequiredDescription);
         }
