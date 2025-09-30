@@ -16,7 +16,8 @@
         "search": "Search",
         "postAd": "Post Ad",
         "myAds": "My Ads",
-        "more": "More"
+        "more": "More",
+        "inbox": "Inbox"
     },
     "more": {
         "title": "More Options",
@@ -368,5 +369,3 @@
         }
     }
 }
-
-    

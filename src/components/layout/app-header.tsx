@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
-import { Bell, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter, usePathname } from 'next/navigation';
@@ -36,16 +36,6 @@ export default function AppHeader() {
     if (user && userProfile) {
        return (
         <>
-          <Link href="/inbox" passHref>
-             <Button
-                variant="ghost"
-                size="icon"
-                className={cn("h-9 w-9 rounded-full", isTransparentPage ? 'text-primary-foreground/80 hover:bg-white/20 hover:text-white' : 'text-muted-foreground hover:bg-muted')}
-              >
-                <Bell className="h-5 w-5" />
-                <span className="sr-only">Inbox</span>
-              </Button>
-          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
                <Avatar className={cn("h-9 w-9 cursor-pointer border-2", isTransparentPage ? 'border-primary-foreground/50' : 'border-primary/50')}>
@@ -61,6 +51,9 @@ export default function AppHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/my-ads')}>
                 माझ्या जाहिराती
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/inbox')}>
+                Inbox
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/more')}>
                 More Options
