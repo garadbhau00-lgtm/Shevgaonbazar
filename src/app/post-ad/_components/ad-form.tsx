@@ -51,9 +51,9 @@ type AdFormProps = {
 };
 
 const MAX_FILES = 1;
-const UPI_ID = '9545886257@ybl';
+const UPI_ID = 'your-upi-id@oksbi';
 const PAYEE_NAME = 'Shevgaon Bazar';
-const PAYMENT_AMOUNT = '10.00';
+const PAYMENT_AMOUNT = '15.00';
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
@@ -447,7 +447,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             <AlertDialogHeader>
                 <AlertDialogTitle>पेमेंट पद्धत निवडा</AlertDialogTitle>
                 <AlertDialogDescription>
-                    तुमची जाहिरात पोस्ट करण्यासाठी कृपया ₹१० चे पेमेंट पूर्ण करा.
+                    तुमची जाहिरात पोस्ट करण्यासाठी कृपया ₹{PAYMENT_AMOUNT} चे पेमेंट पूर्ण करा.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
