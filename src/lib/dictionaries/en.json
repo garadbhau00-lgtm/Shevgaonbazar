@@ -135,7 +135,7 @@
         "photo": {
             "label": "Photo",
             "uploadText": "Upload Photo",
-            "limitText": "You can upload up to ${maxFiles} photos."
+            "limitText": "Please upload one photo for your ad."
         },
         "updateAdButton": "Update Ad",
         "postAdButton": "Post Ad",
@@ -368,3 +368,5 @@
         }
     }
 }
+
+    
