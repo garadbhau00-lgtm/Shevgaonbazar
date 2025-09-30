@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
@@ -7,6 +6,7 @@ import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp } from 'f
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { useToast } from './use-toast';
+import { useLanguage } from '@/contexts/language-context';
 
 interface AuthContextType {
     user: FirebaseUser | null;
@@ -29,6 +29,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const { dictionary } = useLanguage();
+    
+    const authDict = dictionary.auth;
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
@@ -53,21 +56,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                      if (profileData.disabled) {
                         toast({ 
                             variant: 'destructive', 
-                            title: 'खाते अक्षम केले आहे', 
-                            description: 'तुमचे खाते प्रशासकाने अक्षम केले आहे.' 
+                            title: authDict.accountDisabledTitle, 
+                            description: authDict.accountDisabledDescription
                         });
                         signOut(auth);
                     } else {
                         setUserProfile(profileData);
                     }
                 } else {
-                    // Profile doesn't exist, which might happen briefly during signup.
                     setUserProfile(null);
                 }
                 setLoading(false); 
             }, (error) => {
                 console.error("Error fetching user profile:", error);
-                toast({ variant: 'destructive', title: 'प्रोफाइल त्रुटी', description: 'वापरकर्ता प्रोफाइल आणण्यात अयशस्वी.' });
+                toast({ variant: 'destructive', title: authDict.profileErrorTitle, description: authDict.profileErrorDescription });
                 setUserProfile(null);
                 setLoading(false);
             });
@@ -81,18 +83,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 unsubscribeProfile();
             }
         };
-    }, [user, toast]);
+    }, [user, toast, authDict]);
 
 
     const handleLogout = useCallback(async () => {
         try {
             await signOut(auth);
-            toast({ title: 'तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.' });
+            toast({ title: authDict.logoutSuccess });
         } catch (error) {
             console.error("Logout error", error);
-            toast({ variant: 'destructive', title: 'लॉगआउट अयशस्वी', description: 'कृपया पुन्हा प्रयत्न करा.' });
+            toast({ variant: 'destructive', title: authDict.logoutFailedTitle, description: authDict.logoutFailedDescription });
         }
-    }, [toast]);
+    }, [toast, authDict]);
 
     const handleGoogleSignIn = useCallback(async () => {
         const provider = new GoogleAuthProvider();
@@ -104,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
-                // This is a new user, create their profile
                 const userRole = 'Farmer';
                 try {
                     await setDoc(userDocRef, {
@@ -117,42 +118,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         createdAt: serverTimestamp(),
                     });
                      toast({
-                        title: "खाते तयार झाले!",
-                        description: `शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${userRole}`,
+                        title: authDict.accountCreatedTitle,
+                        description: authDict.accountCreatedDescription(userRole),
                     });
                 } catch (dbError: any) {
-                    // If creating the doc fails, sign out the user to prevent an inconsistent state
                     await signOut(auth);
                     if (dbError.code === 'permission-denied' || dbError.code === 'PERMISSION_DENIED') {
                          toast({
                             variant: 'destructive',
-                            title: 'परवानगी नाकारली',
-                            description: "डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा.",
+                            title: authDict.permissionDeniedTitle,
+                            description: authDict.permissionDeniedDescription,
                         });
                     } else {
-                        throw dbError; // re-throw other database errors
+                        throw dbError; 
                     }
                 }
             } else {
-                 // This is a returning user
                  toast({
-                    title: "लॉगिन यशस्वी!",
-                    description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+                    title: authDict.loginSuccessTitle,
+                    description: authDict.welcomeBack,
                 });
             }
         } catch (error: any) {
-            let title = 'Google साइन-इन अयशस्वी';
-            let description = 'एक अनपेक्षित त्रुटी आली. कृपया पुन्हा प्रयत्न करा.';
+            let title = authDict.googleSignInFailedTitle;
+            let description = authDict.googleSignInFailedDescription;
 
             if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-                // Don't show a toast if the user intentionally closed the popup
                 return;
             } else if (error.code === 'auth/popup-blocked') {
-                title = 'पॉप-अप ब्लॉक केला';
-                description = 'तुमच्या ब्राउझरने Google साइन-in पॉप-अप ब्लॉक केला आहे. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.';
+                title = authDict.popupBlockedTitle;
+                description = authDict.popupBlockedDescription;
             } else if (error.code === 'auth/unauthorized-domain') {
-                title = 'डोमेन अधिकृत नाही';
-                description = 'हे डोमेन Google साइन-इनसाठी अधिकृत नाही. कृपया तुमच्या फायरबेस कन्सोल > Authentication > Settings > Authorized domains मध्ये तुमच्या ॲपचे डोमेन (उदा. project.vercel.app) जोडा.';
+                title = authDict.unauthorizedDomainTitle;
+                description = authDict.unauthorizedDomainDescription;
             }
             
             toast({
@@ -162,7 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 duration: 9000,
             });
         }
-    }, [toast]);
+    }, [toast, authDict]);
     
     return (
         <AuthContext.Provider value={{ user, userProfile, loading, handleLogout, handleGoogleSignIn }}>
@@ -172,3 +170,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+    

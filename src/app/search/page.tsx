@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -12,13 +11,15 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
+import { useLanguage } from '@/contexts/language-context';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
+  const { dictionary } = useLanguage();
   if (loading) {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-2 text-muted-foreground">जाहिराती लोड होत आहेत...</p>
+        <p className="mt-2 text-muted-foreground">{dictionary.search.loading}</p>
       </div>
     );
   }
@@ -28,10 +29,10 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
       <div className="flex h-64 flex-col items-center justify-center text-center p-4">
          <SearchIcon className="h-16 w-16 text-muted-foreground/50" />
         <p className="mt-4 text-lg font-semibold text-muted-foreground">
-          कोणतेही परिणाम आढळले नाहीत.
+          {dictionary.search.noResultsTitle}
         </p>
         <p className="text-sm text-muted-foreground">
-          वेगळा शोध शब्द वापरून पहा.
+          {dictionary.search.noResultsDescription}
         </p>
       </div>
     );
@@ -49,6 +50,7 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
 export default function SearchPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { dictionary } = useLanguage();
   const [allAds, setAllAds] = useState<Ad[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,14 +70,14 @@ export default function SearchPage() {
         console.error("Error fetching ads: ", error);
         toast({
             variant: 'destructive',
-            title: 'त्रुटी',
-            description: 'जाहिराती आणण्यात अयशस्वी.'
+            title: dictionary.search.errorTitle,
+            description: dictionary.search.errorDescription
         });
         setAdsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, dictionary]);
   
   const filteredAds = useMemo(() => {
     if (!searchTerm) {
@@ -105,8 +107,8 @@ export default function SearchPage() {
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-          <h1 className="text-lg font-bold">जाहिराती शोधा</h1>
-          <p className="mt-2 text-xs max-w-xl">तुम्हाला जे हवे आहे ते शोधा, जलद आणि सहज.</p>
+          <h1 className="text-lg font-bold">{dictionary.search.title}</h1>
+          <p className="mt-2 text-xs max-w-xl">{dictionary.search.description}</p>
         </div>
       </div>
       <header className="sticky top-0 z-20 bg-background p-2 border-b">
@@ -115,7 +117,7 @@ export default function SearchPage() {
               <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="जाहिराती शोधा..."
+                placeholder={dictionary.search.placeholder}
                 className="w-full rounded-lg bg-secondary pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -135,10 +137,10 @@ export default function SearchPage() {
              <div className="flex h-64 flex-col items-center justify-center text-center p-4">
                 <SearchIcon className="h-16 w-16 text-muted-foreground/50" />
                 <p className="mt-4 text-lg font-semibold text-muted-foreground">
-                    तुमच्या गरजेनुसार काहीही शोधा
+                    {dictionary.search.initialStateTitle}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                    उदा. 'ट्रॅक्टर', 'कांदा', किंवा 'शेवगाव'
+                    {dictionary.search.initialStateDescription}
                 </p>
             </div>
         ) : (
@@ -148,3 +150,4 @@ export default function SearchPage() {
     </div>
   );
 }
+    

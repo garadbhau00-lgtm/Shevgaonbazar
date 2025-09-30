@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -13,11 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function AccessManagementPage() {
     const { userProfile, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
+    const { dictionary } = useLanguage();
 
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
@@ -30,7 +31,7 @@ export default function AccessManagementPage() {
                 setUsers(usersList);
             } catch (error) {
                 console.error("Error fetching users:", error);
-                toast({ variant: 'destructive', title: 'त्रुटी', description: 'वापरकर्त्यांची सूची आणण्यात अयशस्वी. कृपया तुमच्या फायरस्टोअर नियमांची तपासणी करा.' });
+                toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorFetchUsers });
             } finally {
                 setPageLoading(false);
             }
@@ -38,13 +39,13 @@ export default function AccessManagementPage() {
 
         if (!authLoading) {
             if (userProfile?.role !== 'Admin') {
-                toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'तुमच्याकडे ही संसाधने पाहण्याची परवानगी नाही.' });
+                toast({ variant: 'destructive', title: dictionary.accessManagement.accessDeniedTitle, description: dictionary.accessManagement.accessDeniedDescription });
                 router.push('/more');
                 return;
             }
             fetchUsers();
         }
-    }, [authLoading, userProfile, router, toast]);
+    }, [authLoading, userProfile, router, toast, dictionary]);
 
 
     const handleUserToggle = async (uid: string, currentStatus: boolean) => {
@@ -52,10 +53,10 @@ export default function AccessManagementPage() {
             const userDoc = doc(db, 'users', uid);
             await updateDoc(userDoc, { disabled: currentStatus });
             setUsers(users.map(u => u.uid === uid ? { ...u, disabled: currentStatus } : u));
-            toast({ title: 'यशस्वी', description: `वापरकर्ता यशस्वीरित्या ${!currentStatus ? 'अक्षम' : 'सक्षम'} झाला आहे.` });
+            toast({ title: dictionary.accessManagement.successTitle, description: `User successfully ${!currentStatus ? 'disabled' : 'enabled'}.` });
         } catch (error) {
             console.error("Error updating user status:", error);
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'वापरकर्त्याची स्थिती अद्यतनित करण्यात अयशस्वी.' });
+            toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorUpdateStatus });
         }
     };
     
@@ -85,12 +86,12 @@ export default function AccessManagementPage() {
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">प्रवेश व्यवस्थापन</h1>
-                    <p className="mt-2 text-xs max-w-xl">वापरकर्ता खाती सक्षम किंवा अक्षम करा.</p>
+                    <h1 className="text-lg font-bold">{dictionary.accessManagement.title}</h1>
+                    <p className="mt-2 text-xs max-w-xl">{dictionary.accessManagement.description}</p>
                 </div>
             </div>
             <main className="p-4">
-                <h2 className="text-lg font-bold mb-2">वापरकर्ते</h2>
+                <h2 className="text-lg font-bold mb-2">{dictionary.accessManagement.users}</h2>
                 <div className="space-y-4">
                     {users.length > 0 ? users.map((user) => (
                         <div key={user.uid} className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm">
@@ -106,7 +107,7 @@ export default function AccessManagementPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className={`text-sm font-medium ${user.disabled ? 'text-destructive' : 'text-primary'}`}>
-                                    {user.disabled ? 'अक्षम' : 'सक्षम'}
+                                    {user.disabled ? dictionary.accessManagement.disabled : dictionary.accessManagement.enabled}
                                 </span>
                                 <Switch
                                     checked={!user.disabled}
@@ -118,7 +119,7 @@ export default function AccessManagementPage() {
                         </div>
                     )) : (
                         <div className="text-center text-muted-foreground mt-8">
-                            कोणतेही वापरकर्ते आढळले नाहीत.
+                            {dictionary.accessManagement.noUsersFound}
                         </div>
                     )}
                 </div>
@@ -126,3 +127,4 @@ export default function AccessManagementPage() {
         </>
     );
 }
+    

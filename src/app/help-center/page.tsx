@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -6,28 +5,12 @@ import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
-
-const faqs = [
-    {
-        question: "जाहिरात कशी पोस्ट करावी?",
-        answer: "नवीन जाहिरात पोस्ट करण्यासाठी, होम स्क्रीनवरील 'जाहिरात टाका' बटणावर टॅप करा. त्यानंतर, तुमची श्रेणी निवडा, आवश्यक माहिती भरा, फोटो अपलोड करा आणि 'पोस्ट करा' बटणावर क्लिक करा. तुमची जाहिरात समीक्षेसाठी पाठवली जाईल."
-    },
-    {
-        question: "माझी जाहिरात का नाकारली गेली?",
-        answer: "तुमची जाहिरात अनेक कारणांमुळे नाकारली जाऊ शकते, जसे की अस्पष्ट फोटो, चुकीची माहिती किंवा आमच्या मार्गदर्शक तत्त्वांचे उल्लंघन. 'माझ्या जाहिराती' विभागात तुम्हाला नाकारण्याचे विशिष्ट कारण दिसेल."
-    },
-    {
-        question: "मी माझा पासवर्ड कसा बदलू शकतो?",
-        answer: "सध्या, प्रोफाइलमधून थेट पासवर्ड बदलण्याची सुविधा उपलब्ध नाही. पासवर्ड रीसेट करण्यासाठी, कृपया लॉगआउट करा आणि लॉगिन पेजवरील 'पासवर्ड विसरलात?' लिंक वापरा."
-    },
-    {
-        question: "एखाद्या वस्तूसाठी मी विक्रेत्याशी संपर्क कसा साधू?",
-        answer: "जाहिरातीच्या तपशील पेजवर, तुम्हाला विक्रेत्याशी संपर्क साधण्यासाठी 'कॉल करा' बटण दिसेल. या बटणावर टॅप करून तुम्ही थेट विक्रेत्याला कॉल करू शकता."
-    }
-];
-
+import { useLanguage } from '@/contexts/language-context';
 
 export default function HelpCenterPage() {
+    const { dictionary } = useLanguage();
+    const faqs = dictionary.helpCenter.faqs;
+
     return (
         <div>
             <div className="relative h-28 w-full">
@@ -41,13 +24,13 @@ export default function HelpCenterPage() {
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">मदत केंद्र</h1>
-                    <p className="mt-2 text-xs max-w-xl">तुम्हाला असलेले प्रश्न आणि त्यांची उत्तरे येथे शोधा.</p>
+                    <h1 className="text-lg font-bold">{dictionary.helpCenter.title}</h1>
+                    <p className="mt-2 text-xs max-w-xl">{dictionary.helpCenter.description}</p>
                 </div>
             </div>
             <main className="p-4">
                  <Accordion type="single" collapsible className="w-full space-y-2">
-                    {faqs.map((faq, index) => (
+                    {faqs.map((faq: { question: string, answer: string }, index: number) => (
                         <AccordionItem key={index} value={`item-${index}`} className="rounded-lg bg-card px-4 shadow-sm">
                             <AccordionTrigger className="text-left font-semibold">{faq.question}</AccordionTrigger>
                             <AccordionContent className="text-muted-foreground">
@@ -58,9 +41,9 @@ export default function HelpCenterPage() {
                 </Accordion>
 
                 <div className="mt-8 rounded-lg bg-card p-6 text-center shadow-sm">
-                    <h3 className="text-lg font-semibold">अधिक मदतीची गरज आहे?</h3>
+                    <h3 className="text-lg font-semibold">{dictionary.helpCenter.moreHelpTitle}</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        तुम्हाला येथे उत्तर न सापडल्यास, कृपया आमच्याशी संपर्क साधा.
+                        {dictionary.helpCenter.moreHelpDescription}
                     </p>
                     <a href="mailto:support@shevgavbazar.com" className="mt-4 inline-block font-semibold text-primary hover:underline">
                         support@shevgavbazar.com
@@ -69,14 +52,15 @@ export default function HelpCenterPage() {
 
                 <div className="mt-8 text-center text-xs text-muted-foreground">
                     <Link href="#" className="hover:underline">
-                        सेवा अटी
+                        {dictionary.helpCenter.termsOfService}
                     </Link>
                     <Separator orientation="vertical" className="mx-2 h-3 inline-block" />
                     <Link href="#" className="hover:underline">
-                        गोपनीयता धोरण
+                        {dictionary.helpCenter.privacyPolicy}
                     </Link>
                 </div>
             </main>
         </div>
     )
 }
+    

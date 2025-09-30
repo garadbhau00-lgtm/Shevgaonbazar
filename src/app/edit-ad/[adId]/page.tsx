@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,19 +10,21 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
 import AppHeader from '@/components/layout/app-header';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function EditAdPage() {
     const { adId } = useParams();
     const router = useRouter();
     const { toast } = useToast();
     const { user, loading: authLoading } = useAuth();
+    const { dictionary } = useLanguage();
     const [ad, setAd] = useState<Ad | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (authLoading) return;
         if (!user) {
-            toast({ variant: 'destructive', title: 'Unauthorized', description: 'Please log in to edit an ad.' });
+            toast({ variant: 'destructive', title: dictionary.editAd.unauthorizedTitle, description: dictionary.editAd.unauthorizedDescription });
             router.push('/login');
             return;
         }
@@ -36,18 +37,18 @@ export default function EditAdPage() {
                 if (docSnap.exists()) {
                     const adData = { id: docSnap.id, ...docSnap.data() } as Ad;
                     if (adData.userId !== user.uid) {
-                        toast({ variant: 'destructive', title: 'Forbidden', description: 'You do not have permission to edit this ad.' });
+                        toast({ variant: 'destructive', title: dictionary.editAd.forbiddenTitle, description: dictionary.editAd.forbiddenDescription });
                         router.push('/my-ads');
                     } else {
                         setAd(adData);
                     }
                 } else {
-                    toast({ variant: 'destructive', title: 'Not Found', description: 'Ad not found.' });
+                    toast({ variant: 'destructive', title: dictionary.editAd.notFoundTitle, description: dictionary.editAd.notFoundDescription });
                     router.push('/my-ads');
                 }
             } catch (error) {
                 console.error("Error fetching ad:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch ad details.' });
+                toast({ variant: 'destructive', title: dictionary.editAd.errorTitle, description: dictionary.editAd.errorDescription });
             } finally {
                 setLoading(false);
             }
@@ -56,7 +57,7 @@ export default function EditAdPage() {
         if (adId) {
             fetchAd();
         }
-    }, [adId, user, authLoading, router, toast]);
+    }, [adId, user, authLoading, router, toast, dictionary]);
 
     if (loading || authLoading) {
         return (
@@ -74,11 +75,12 @@ export default function EditAdPage() {
             <AppHeader />
             <main className="p-4">
                 <div className="mb-4">
-                    <h1 className="text-2xl font-bold">जाहिरात संपादित करा</h1>
-                    <p className="text-muted-foreground">तुमच्या जाहिरातीमधील तपशील बदला.</p>
+                    <h1 className="text-2xl font-bold">{dictionary.editAd.title}</h1>
+                    <p className="text-muted-foreground">{dictionary.editAd.description}</p>
                 </div>
-                {ad ? <AdForm existingAd={ad} /> : <p>जाहिरात लोड होत आहे...</p>}
+                {ad ? <AdForm existingAd={ad} /> : <p>{dictionary.editAd.loadingAd}</p>}
             </main>
         </>
     );
 }
+    

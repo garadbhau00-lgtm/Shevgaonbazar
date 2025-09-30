@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -13,14 +12,18 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { hi as mr } from 'date-fns/locale';
+import { mr, hi, enUS } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import AppHeader from '@/components/layout/app-header';
+import { useLanguage } from '@/contexts/language-context';
+
+const locales: { [key: string]: Locale } = { mr, hi, en: enUS };
 
 export default function InboxPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
+    const { dictionary, language } = useLanguage();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
 
@@ -30,8 +33,8 @@ export default function InboxPage() {
         if (!user) {
             toast({
                 variant: 'destructive',
-                title: 'प्रवेश प्रतिबंधित',
-                description: 'तुमचा इनबॉक्स पाहण्यासाठी कृपया लॉगिन करा.',
+                title: dictionary.inbox.accessDeniedTitle,
+                description: dictionary.inbox.accessDeniedDescription,
             });
             router.push('/login');
             return;
@@ -50,15 +53,15 @@ export default function InboxPage() {
         }, (error) => {
             console.error("Error fetching conversations:", error);
             if (error.message.includes("requires an index")) {
-                 toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमचे चॅट्स आणण्यात अयशस्वी. कृपया फायरस्टोअर इंडेक्स तपासा.' });
+                 toast({ variant: 'destructive', title: dictionary.inbox.errorTitle, description: dictionary.inbox.errorIndex });
             } else {
-                 toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमचे चॅट्स आणण्यात अयशस्वी.' });
+                 toast({ variant: 'destructive', title: dictionary.inbox.errorTitle, description: dictionary.inbox.errorFetch });
             }
             setPageLoading(false);
         });
 
         return () => unsubscribe();
-    }, [user, authLoading, router, toast]);
+    }, [user, authLoading, router, toast, dictionary]);
 
     if (authLoading || pageLoading) {
         return (
@@ -78,7 +81,7 @@ export default function InboxPage() {
 
     const formatTimestamp = (timestamp: any) => {
         if (!timestamp) return '';
-        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: mr });
+        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: locales[language] });
     };
 
     return (
@@ -86,8 +89,8 @@ export default function InboxPage() {
             <AppHeader />
             <main className="flex-1">
                 <div className="border-b p-4">
-                    <h1 className="text-2xl font-bold">इनबॉक्स</h1>
-                    <p className="text-muted-foreground">तुमचे संभाषण येथे पहा.</p>
+                    <h1 className="text-2xl font-bold">{dictionary.inbox.title}</h1>
+                    <p className="text-muted-foreground">{dictionary.inbox.description}</p>
                 </div>
                 
                 {conversations.length > 0 ? (
@@ -95,7 +98,7 @@ export default function InboxPage() {
                         {conversations.map(convo => {
                             const otherParticipant = getOtherParticipant(convo);
                             const isUnread = user && convo.unreadBy && convo.unreadBy[user.uid];
-                            const lastMessagePrefix = user && convo.lastMessageSenderId === user.uid ? "तुम्ही: " : "";
+                            const lastMessagePrefix = user && convo.lastMessageSenderId === user.uid ? `${dictionary.inbox.you}: ` : "";
 
                             return (
                                 <Link href={`/inbox/${convo.id}`} key={convo.id}>
@@ -112,9 +115,9 @@ export default function InboxPage() {
                                                     </p>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-muted-foreground">सोबत: {otherParticipant?.name || 'अज्ञात'}</p>
+                                            <p className="text-sm text-muted-foreground">{dictionary.inbox.with}: {otherParticipant?.name || dictionary.inbox.unknownUser}</p>
                                             <p className={`text-sm truncate ${isUnread ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
-                                                {lastMessagePrefix}{convo.lastMessage || 'अद्याप कोणतेही संदेश नाहीत.'}
+                                                {lastMessagePrefix}{convo.lastMessage || dictionary.inbox.noMessages}
                                             </p>
                                         </div>
                                         {isUnread && <div className="h-3 w-3 rounded-full bg-primary flex-shrink-0 mt-1"></div>}
@@ -127,13 +130,13 @@ export default function InboxPage() {
                     <div className="flex h-[calc(100vh-14rem)] flex-col items-center justify-center text-center p-4">
                         <MessageSquarePlus className="h-16 w-16 text-muted-foreground/50" />
                         <p className="mt-4 text-lg font-semibold text-muted-foreground">
-                            तुमचा इनबॉक्स रिकामा आहे.
+                            {dictionary.inbox.emptyTitle}
                         </p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            एखाद्या जाहिरातीवर 'चॅट करा' बटण दाबून संभाषण सुरू करा.
+                            {dictionary.inbox.emptyDescription}
                         </p>
                         <Button className="mt-6" onClick={() => router.push('/')}>
-                            जाहिराती ब्राउझ करा
+                            {dictionary.inbox.browseAdsButton}
                         </Button>
                     </div>
                 )}
@@ -141,3 +144,4 @@ export default function InboxPage() {
         </>
     );
 }
+    

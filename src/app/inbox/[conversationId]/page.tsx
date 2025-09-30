@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -13,12 +12,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function ChatPage() {
     const { conversationId } = useParams();
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
+    const { dictionary } = useLanguage();
 
     const [conversation, setConversation] = useState<Conversation | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -37,37 +38,34 @@ export default function ChatPage() {
 
         const conversationRef = doc(db, 'conversations', conversationId as string);
 
-        // Fetch conversation details
         const unsubscribeConvo = onSnapshot(conversationRef, async (docSnap) => {
             if (docSnap.exists()) {
                 const convoData = { id: docSnap.id, ...docSnap.data() } as Conversation;
                 
                 if (!convoData.participants.includes(user.uid)) {
-                    toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'तुम्ही या संभाषणाचा भाग नाही.' });
+                    toast({ variant: 'destructive', title: dictionary.chat.accessDeniedTitle, description: dictionary.chat.accessDeniedDescription });
                     router.push('/inbox');
                     return;
                 }
                 
                 setConversation(convoData);
                 
-                // Mark messages as read
                 if (convoData.unreadBy && convoData.unreadBy[user.uid]) {
                     await updateDoc(conversationRef, {
                         [`unreadBy.${user.uid}`]: false
                     });
                 }
             } else {
-                toast({ variant: 'destructive', title: 'संभाषण आढळले नाही', description: 'हे संभाषण अस्तित्वात नाही.' });
+                toast({ variant: 'destructive', title: dictionary.chat.notFoundTitle, description: dictionary.chat.notFoundDescription });
                 router.push('/inbox');
             }
             setLoading(false);
         }, (error) => {
             console.error("Error fetching conversation:", error);
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'संभाषण लोड करण्यात अयशस्वी.' });
+            toast({ variant: 'destructive', title: dictionary.chat.errorTitle, description: dictionary.chat.errorLoad });
             router.push('/inbox');
         });
 
-        // Fetch messages
         const messagesRef = collection(db, 'conversations', conversationId as string, 'messages');
         const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
@@ -81,7 +79,7 @@ export default function ChatPage() {
             unsubscribeMessages();
         };
 
-    }, [conversationId, user, authLoading, router, toast]);
+    }, [conversationId, user, authLoading, router, toast, dictionary]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -96,7 +94,6 @@ export default function ChatPage() {
             const messageText = newMessage.trim();
             setNewMessage('');
             
-            // Add message to subcollection
             const messagesRef = collection(db, 'conversations', conversationId as string, 'messages');
             await addDoc(messagesRef, {
                 text: messageText,
@@ -104,7 +101,6 @@ export default function ChatPage() {
                 timestamp: serverTimestamp(),
             });
 
-            // Update last message on conversation
             const conversationRef = doc(db, 'conversations', conversationId as string);
             const otherParticipantId = conversation.participants.find(p => p !== user.uid);
             await updateDoc(conversationRef, {
@@ -116,8 +112,8 @@ export default function ChatPage() {
 
         } catch (error) {
             console.error('Error sending message:', error);
-            setNewMessage(newMessage); // Re-set the message on error
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'संदेश पाठवण्यात अयशस्वी.' });
+            setNewMessage(messageText); 
+            toast({ variant: 'destructive', title: dictionary.chat.errorTitle, description: dictionary.chat.errorSend });
         } finally {
             setIsSending(false);
         }
@@ -140,7 +136,7 @@ export default function ChatPage() {
     }
     
     if (!conversation) {
-        return null; // or a 'not found' component
+        return null; 
     }
 
     const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
@@ -157,7 +153,7 @@ export default function ChatPage() {
                     <AvatarFallback>{otherParticipantProfile?.name.charAt(0) || '?'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 overflow-hidden">
-                    <h2 className="font-semibold truncate">{otherParticipantProfile?.name || 'अज्ञात'}</h2>
+                    <h2 className="font-semibold truncate">{otherParticipantProfile?.name || dictionary.chat.unknownUser}</h2>
                     <Link href={`/ad/${conversation.adId}`} className="text-xs text-muted-foreground hover:underline truncate">
                         {conversation.adTitle}
                     </Link>
@@ -187,7 +183,7 @@ export default function ChatPage() {
             <footer className="sticky bottom-0 border-t bg-card p-2">
                 <form onSubmit={handleSendMessage} className="relative flex items-center">
                     <Input 
-                        placeholder="मेसेज टाइप करा..." 
+                        placeholder={dictionary.chat.messagePlaceholder}
                         className="pr-12" 
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
@@ -201,3 +197,4 @@ export default function ChatPage() {
         </div>
     )
 }
+    

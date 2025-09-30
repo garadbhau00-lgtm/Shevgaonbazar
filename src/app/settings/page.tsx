@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -19,20 +18,23 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-
-const profileSchema = z.object({
-  name: z.string().min(2, { message: 'नाव किमान २ अक्षरी असावे.' }),
-  mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }).optional().or(z.literal('')),
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
+import { useLanguage } from '@/contexts/language-context';
 
 export default function SettingsPage() {
     const { user, userProfile, loading, handleLogout } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
+    const { dictionary } = useLanguage();
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const settingsDict = dictionary.settings;
+
+    const profileSchema = z.object({
+      name: z.string().min(2, { message: settingsDict.validation.nameMin }),
+      mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: settingsDict.validation.mobileInvalid }).optional().or(z.literal('')),
+    });
+    
+    type ProfileFormValues = z.infer<typeof profileSchema>;
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -65,10 +67,10 @@ export default function SettingsPage() {
                 name: data.name,
                 mobileNumber: data.mobileNumber
             });
-            toast({ title: 'यशस्वी', description: 'तुमचे प्रोफाइल यशस्वीरित्या अद्यतनित झाले आहे.' });
+            toast({ title: settingsDict.toast.updateSuccessTitle, description: settingsDict.toast.updateSuccessDescription });
         } catch (error) {
             console.error('Error updating profile:', error);
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'प्रोफाइल अद्यतनित करण्यात अयशस्वी.' });
+            toast({ variant: 'destructive', title: settingsDict.toast.errorTitle, description: settingsDict.toast.updateErrorDescription });
         } finally {
             setIsSubmitting(false);
         }
@@ -76,21 +78,21 @@ export default function SettingsPage() {
     
     const handlePasswordReset = async () => {
         if (!user?.email) {
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमचा ईमेल पत्ता सापडला नाही.' });
+            toast({ variant: 'destructive', title: settingsDict.toast.errorTitle, description: settingsDict.toast.noEmailError });
             return;
         }
         try {
             await sendPasswordResetEmail(auth, user.email);
             toast({
-                title: 'पासवर्ड रीसेट लिंक पाठवली',
-                description: 'तुमचा पासवर्ड रीसेट करण्यासाठी तुमच्या ईमेलवर एक लिंक पाठवली आहे.',
+                title: settingsDict.toast.resetEmailSentTitle,
+                description: settingsDict.toast.resetEmailSentDescription,
             });
         } catch (error) {
             console.error('Error sending password reset email:', error);
              toast({
                 variant: 'destructive',
-                title: 'त्रुटी',
-                description: 'पासवर्ड रीसेट ईमेल पाठवण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
+                title: settingsDict.toast.errorTitle,
+                description: settingsDict.toast.resetEmailError,
             });
         }
     }
@@ -124,8 +126,8 @@ export default function SettingsPage() {
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">सेटिंग्ज</h1>
-                    <p className="mt-2 text-xs max-w-xl">तुमची खाते माहिती व्यवस्थापित करा.</p>
+                    <h1 className="text-lg font-bold">{settingsDict.title}</h1>
+                    <p className="mt-2 text-xs max-w-xl">{settingsDict.description}</p>
                 </div>
             </div>
             <main className="p-4">
@@ -145,7 +147,7 @@ export default function SettingsPage() {
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>पूर्ण नाव</FormLabel>
+                                            <FormLabel>{settingsDict.fullNameLabel}</FormLabel>
                                             <FormControl>
                                                 <Input {...field} disabled={isSubmitting} />
                                             </FormControl>
@@ -158,21 +160,21 @@ export default function SettingsPage() {
                                     name="mobileNumber"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>मोबाईल नंबर</FormLabel>
+                                            <FormLabel>{settingsDict.mobileLabel}</FormLabel>
                                             <FormControl>
-                                                <Input type="tel" {...field} disabled={isSubmitting} placeholder="तुमचा मोबाईल नंबर टाका" />
+                                                <Input type="tel" {...field} disabled={isSubmitting} placeholder={settingsDict.mobilePlaceholder} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
                                  <FormItem>
-                                    <FormLabel>ईमेल</FormLabel>
+                                    <FormLabel>{settingsDict.emailLabel}</FormLabel>
                                     <Input value={user.email || ''} disabled readOnly />
                                 </FormItem>
                                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    बदल जतन करा
+                                    {settingsDict.saveChangesButton}
                                 </Button>
                             </form>
                         </Form>
@@ -181,23 +183,24 @@ export default function SettingsPage() {
                 
                  <Card className="mb-6">
                     <CardHeader>
-                        <CardTitle className="text-lg">सुरक्षितता</CardTitle>
+                        <CardTitle className="text-lg">{settingsDict.securityTitle}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div>
-                            <p className="text-sm font-medium">पासवर्ड</p>
-                            <p className="text-sm text-muted-foreground">तुमचा पासवर्ड बदलण्यासाठी आम्ही तुम्हाला एक ईमेल पाठवू.</p>
+                            <p className="text-sm font-medium">{settingsDict.passwordLabel}</p>
+                            <p className="text-sm text-muted-foreground">{settingsDict.passwordDescription}</p>
                         </div>
                         <Button variant="outline" className="w-full" onClick={handlePasswordReset}>
-                           पासवर्ड बदलण्यासाठी ईमेल पाठवा
+                           {settingsDict.sendResetEmailButton}
                         </Button>
                     </CardContent>
                 </Card>
 
                  <Button variant="outline" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleLogout}>
-                    लॉगआउट
+                    {settingsDict.logoutButton}
                 </Button>
             </main>
         </div>
     )
 }
+    

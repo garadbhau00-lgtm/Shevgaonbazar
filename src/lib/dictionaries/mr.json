@@ -71,5 +71,287 @@
         "गावातील गरज": "गावातील गरज",
         "व्यावसायिक सेवा": "व्यावसायिक सेवा",
         "आर्थिक": "आर्थिक"
+    },
+    "postAd": {
+        "title": "नवीन जाहिरात टाका",
+        "description": "तुमच्या उत्पादनाची माहिती भरा."
+    },
+    "adForm": {
+        "category": {
+            "label": "श्रेणी",
+            "placeholder": "एक श्रेणी निवडा"
+        },
+        "subcategory": {
+            "label": "उप-श्रेणी",
+            "placeholder": "एक उप-श्रेणी निवडा"
+        },
+        "title": {
+            "label": "जाहिरातीचे शीर्षक (वैकल्पिक)",
+            "placeholder": "उदा. विक्रीसाठी चांगली काळी म्हैस"
+        },
+        "description": {
+            "label": "वर्णन (वैकल्पिक)",
+            "placeholder": "तुमच्या उत्पादनाबद्दल अधिक सांगा"
+        },
+        "price": {
+            "label": "किंमत (₹)",
+            "placeholder": "उदा. १५०००"
+        },
+        "location": {
+            "label": "गाव",
+            "placeholder": "एक गाव निवडा"
+        },
+        "mobile": {
+            "label": "मोबाईल नंबर",
+            "placeholder": "तुमचा मोबाईल नंबर"
+        },
+        "photo": {
+            "label": "फोटो",
+            "uploadText": "फोटो अपलोड करा",
+            "limitText": "तुम्ही ${maxFiles} फोटो अपलोड करू शकता."
+        },
+        "updateAdButton": "जाहिरात अद्यतनित करा",
+        "postAdButton": "₹${amount} भरून जाहिरात पोस्ट करा",
+        "validation": {
+            "categoryRequired": "कृपया एक श्रेणी निवडा.",
+            "titleMin": "जाहिरातीचे शीर्षक किमान ३ अक्षरी असावे.",
+            "pricePositive": "किंमत ० पेक्षा जास्त असावी.",
+            "locationRequired": "कृपया एक गाव निवडा.",
+            "mobileInvalid": "कृपया वैध १०-अंकी मोबाईल नंबर टाका."
+        },
+        "toast": {
+            "unauthorizedTitle": "प्रवेश प्रतिबंधित",
+            "unauthorizedDescription": "जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.",
+            "errorTitle": "त्रुटी",
+            "loginRequired": "जाहिरात पोस्ट करण्यासाठी तुम्ही लॉग इन केलेले असणे आवश्यक आहे.",
+            "photoRequiredTitle": "फोटो आवश्यक",
+            "photoRequiredDescription": "कृपया तुमच्या जाहिरातीसाठी किमान एक फोटो अपलोड करा.",
+            "errorPreparingAd": "तुमची जाहिरात तयार करताना समस्या आली.",
+            "successTitle": "यशस्वी!",
+            "updateSuccess": "तुमची जाहिरात यशस्वीरित्या अद्यतनित झाली आहे आणि पुनरावलोकनासाठी सबमिट केली आहे.",
+            "submitSuccess": "तुमची जाहिरात यशस्वीरित्या सबमिट झाली आहे. मंजुरीनंतर ती थेट दिसेल.",
+            "submitError": "जाहिरात सबमिट करण्यात अयशस्वी."
+        },
+        "payment": {
+            "choiceTitle": "पेमेंट पद्धत निवडा",
+            "choiceDescription": "जाहिरात पोस्ट करण्यासाठी तुम्हाला ₹${amount} भरावे लागतील. कृपया तुमची पसंतीची UPI ॲप निवडा.",
+            "phonepeButton": "PhonePe ने पेमेंट करा",
+            "gpayButton": "Google Pay ने पेमेंट करा",
+            "cancelButton": "रद्द करा",
+            "confirmTitle": "पेमेंटची पुष्टी करा",
+            "confirmDescription": "तुम्ही पेमेंट पूर्ण केले आहे का? पेमेंट यशस्वी झाल्यावर, तुमची जाहिरात पुनरावलोकनासाठी सबमिट केली जाईल.",
+            "attentionTitle": "लक्ष द्या",
+            "attentionDescription": "पेमेंट अयशस्वी झाल्यास, कृपया 'रद्द करा' बटण दाबा.",
+            "confirmButton": "होय, पेमेंट पूर्ण झाले"
+        }
+    },
+    "myAds": {
+        "title": "माझ्या जाहिराती",
+        "description": "तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.",
+        "noPhoto": "फोटो नाही",
+        "status": {
+            "approved": "स्वीकृत",
+            "pending": "प्रलंबित",
+            "rejected": "नाकारले"
+        },
+        "rejectionReasonTitle": "नाकारण्याचे कारण",
+        "noAdsYet": "तुम्ही अद्याप एकही जाहिरात पोस्ट केलेली नाही.",
+        "postFirstAdButton": "पहिली जाहिरात पोस्ट करा",
+        "deleteDialogTitle": "तुम्ही जाहिरात हटवण्याची खात्री आहे का?",
+        "deleteDialogDescription": "ही क्रिया पूर्ववत केली जाऊ शकत नाही. यामुळे तुमची जाहिरात आमच्या सर्व्हरवरून कायमची हटवली जाईल.",
+        "cancelButton": "रद्द करा",
+        "deleteButton": "हटवा",
+        "accessDeniedTitle": "प्रवेश प्रतिबंधित",
+        "accessDeniedDescription": "तुमच्या जाहिराती पाहण्यासाठी कृपया लॉगिन करा.",
+        "errorTitle": "त्रुटी",
+        "errorIndex": "तुमच्या जाहिराती आणण्यात अयशस्वी. कृपया फायरस्टोअर इंडेक्स तपासा.",
+        "errorFetch": "तुमच्या जाहिराती आणण्यात अयशस्वी.",
+        "deleteSuccessTitle": "यशस्वी!",
+        "deleteSuccessDescription": "तुमची जाहिरात यशस्वीरित्या हटवली आहे.",
+        "errorDelete": "जाहिरात हटवण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा."
+    },
+    "editAd": {
+        "title": "जाहिरात संपादित करा",
+        "description": "तुमच्या जाहिरातीमधील तपशील बदला.",
+        "loadingAd": "जाहिरात लोड होत आहे...",
+        "unauthorizedTitle": "अनधिकृत",
+        "unauthorizedDescription": "जाहिरात संपादित करण्यासाठी कृपया लॉग इन करा.",
+        "forbiddenTitle": "निषिद्ध",
+        "forbiddenDescription": "तुम्हाला ही जाहिरात संपादित करण्याची परवानगी नाही.",
+        "notFoundTitle": "सापडली नाही",
+        "notFoundDescription": "जाहिरात आढळली नाही.",
+        "errorTitle": "त्रुटी",
+        "errorDescription": "जाहिरातीचे तपशील आणण्यात अयशस्वी."
+    },
+    "auth": {
+        "accountDisabledTitle": "खाते अक्षम केले आहे",
+        "accountDisabledDescription": "तुमचे खाते प्रशासकाने अक्षम केले आहे.",
+        "profileErrorTitle": "प्रोफाइल त्रुटी",
+        "profileErrorDescription": "वापरकर्ता प्रोफाइल आणण्यात अयशस्वी.",
+        "logoutSuccess": "तुम्ही यशस्वीरित्या लॉग आउट झाला आहात.",
+        "logoutFailedTitle": "लॉगआउट अयशस्वी",
+        "logoutFailedDescription": "कृपया पुन्हा प्रयत्न करा.",
+        "accountCreatedTitle": "खाते तयार झाले!",
+        "accountCreatedDescription": "शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${role}",
+        "loginSuccessTitle": "लॉगिन यशस्वी!",
+        "welcomeBack": "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+        "googleSignInFailedTitle": "Google साइन-इन अयशस्वी",
+        "googleSignInFailedDescription": "एक अनपेक्षित त्रुटी आली. कृपया पुन्हा प्रयत्न करा.",
+        "popupBlockedTitle": "पॉप-अप ब्लॉक केला",
+        "popupBlockedDescription": "तुमच्या ब्राउझरने Google साइन-in पॉप-अप ब्लॉक केला आहे. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.",
+        "unauthorizedDomainTitle": "डोमेन अधिकृत नाही",
+        "unauthorizedDomainDescription": "हे डोमेन Google साइन-इनसाठी अधिकृत नाही. कृपया तुमच्या फायरबेस कन्सोल > Authentication > Settings > Authorized domains मध्ये तुमच्या ॲपचे डोमेन (उदा. project.vercel.app) जोडा.",
+        "permissionDeniedTitle": "परवानगी नाकारली",
+        "permissionDeniedDescription": "डेटाबेसमध्ये प्रोफाइल तयार करण्यासाठी परवानगी नाही. कृपया तुमचे फायरस्टोअर नियम तपासा."
+    },
+    "accessManagement": {
+        "title": "प्रवेश व्यवस्थापन",
+        "description": "वापरकर्ता खाती सक्षम किंवा अक्षम करा.",
+        "users": "वापरकर्ते",
+        "enabled": "सक्षम",
+        "disabled": "अक्षम",
+        "noUsersFound": "कोणतेही वापरकर्ते आढळले नाहीत.",
+        "errorTitle": "त्रुटी",
+        "errorFetchUsers": "वापरकर्त्यांची सूची आणण्यात अयशस्वी. कृपया तुमच्या फायरस्टोअर नियमांची तपासणी करा.",
+        "accessDeniedTitle": "प्रवेश प्रतिबंधित",
+        "accessDeniedDescription": "तुमच्याकडे ही संसाधने पाहण्याची परवानगी नाही.",
+        "successTitle": "यशस्वी",
+        "errorUpdateStatus": "वापरकर्त्याची स्थिती अद्यतनित करण्यात अयशस्वी."
+    },
+    "adDetail": {
+        "loginRequiredTitle": "लॉगिन आवश्यक",
+        "loginRequiredDescription": "जाहिरातीचे तपशील पाहण्यासाठी कृपया लॉगिन करा.",
+        "adNotAvailableTitle": "जाहिरात उपलब्ध नाही",
+        "adNotAvailableDescription": "ही जाहिरात सध्या पाहण्यासाठी उपलब्ध नाही.",
+        "notFoundTitle": "सापडली नाही",
+        "notFoundDescription": "जाहिरात आढळली नाही.",
+        "errorTitle": "त्रुटी",
+        "errorDescription": "जाहिरातीचे तपशील आणण्यात अयशस्वी.",
+        "noPhoto": "फोटो नाही",
+        "postedOn": "पोस्ट केले",
+        "callButton": "कॉल करा"
+    },
+    "adManagement": {
+        "title": "जाहिरात व्यवस्थापन",
+        "description": "प्रलंबित जाहिरातींचे पुनरावलोकन करा, स्वीकृत करा किंवा नाकारा.",
+        "status": {
+            "approved": "स्वीकृत",
+            "pending": "प्रलंबित",
+            "rejected": "नाकारले"
+        },
+        "rejectButton": "नाकारा",
+        "approveButton": "स्वीकृत करा",
+        "noPendingAdsTitle": "कोणत्याही प्रलंबित जाहिराती नाहीत.",
+        "noPendingAdsDescription": "जेव्हा वापरकर्ते जाहिराती सबमिट करतील, तेव्हा त्या येथे दिसतील.",
+        "rejectDialogTitle": "जाहिरात नाकारण्याची खात्री आहे का?",
+        "rejectDialogDescription": "ही क्रिया पूर्ववत केली जाऊ शकत नाही. कृपया वापरकर्त्याला मदत करण्यासाठी नाकारण्याचे कारण द्या.",
+        "rejectionReasonLabel": "नाकारण्याचे कारण",
+        "rejectionReasonPlaceholder": "येथे कारण टाइप करा...",
+        "cancelButton": "रद्द करा",
+        "confirmRejectButton": "नाकारण्याची पुष्टी करा",
+        "accessDeniedTitle": "प्रवेश प्रतिबंधित",
+        "accessDeniedDescription": "तुमच्याकडे ही संसाधने पाहण्याची परवानगी नाही.",
+        "errorTitle": "त्रुटी",
+        "errorFetch": "जाहिराती आणण्यात अयशस्वी.",
+        "successTitle": "यशस्वी",
+        "successApprove": "जाहिरात यशस्वीरित्या स्वीकृत झाली आहे.",
+        "errorUpdate": "जाहिरातीची स्थिती अद्यतनित करण्यात अयशस्वी.",
+        "reasonRequired": "कृपया नाकारण्याचे कारण नमूद करा.",
+        "successReject": "जाहिरात यशस्वीरित्या नाकारली गेली आहे.",
+        "errorReject": "जाहिरात नाकारण्यात अयशस्वी."
+    },
+    "helpCenter": {
+        "title": "मदत केंद्र",
+        "description": "तुम्हाला असलेले प्रश्न आणि त्यांची उत्तरे येथे शोधा.",
+        "faqs": [
+            {
+                "question": "जाहिरात कशी पोस्ट करावी?",
+                "answer": "नवीन जाहिरात पोस्ट करण्यासाठी, होम स्क्रीनवरील 'जाहिरात टाका' बटणावर टॅप करा. त्यानंतर, तुमची श्रेणी निवडा, आवश्यक माहिती भरा, फोटो अपलोड करा आणि 'पोस्ट करा' बटणावर क्लिक करा. तुमची जाहिरात समीक्षेसाठी पाठवली जाईल."
+            },
+            {
+                "question": "माझी जाहिरात का नाकारली गेली?",
+                "answer": "तुमची जाहिरात अनेक कारणांमुळे नाकारली जाऊ शकते, जसे की अस्पष्ट फोटो, चुकीची माहिती किंवा आमच्या मार्गदर्शक तत्त्वांचे उल्लंघन. 'माझ्या जाहिराती' विभागात तुम्हाला नाकारण्याचे विशिष्ट कारण दिसेल."
+            },
+            {
+                "question": "मी माझा पासवर्ड कसा बदलू शकतो?",
+                "answer": "सध्या, प्रोफाइलमधून थेट पासवर्ड बदलण्याची सुविधा उपलब्ध नाही. पासवर्ड रीसेट करण्यासाठी, कृपया लॉगआउट करा आणि लॉगिन पेजवरील 'पासवर्ड विसरलात?' लिंक वापरा."
+            },
+            {
+                "question": "एखाद्या वस्तूसाठी मी विक्रेत्याशी संपर्क कसा साधू?",
+                "answer": "जाहिरातीच्या तपशील पेजवर, तुम्हाला विक्रेत्याशी संपर्क साधण्यासाठी 'कॉल करा' बटण दिसेल. या बटणावर टॅप करून तुम्ही थेट विक्रेत्याला कॉल करू शकता."
+            }
+        ],
+        "moreHelpTitle": "अधिक मदतीची गरज आहे?",
+        "moreHelpDescription": "तुम्हाला येथे उत्तर न सापडल्यास, कृपया आमच्याशी संपर्क साधा.",
+        "termsOfService": "सेवा अटी",
+        "privacyPolicy": "गोपनीयता धोरण"
+    },
+    "inbox": {
+        "title": "इनबॉक्स",
+        "description": "तुमचे संभाषण येथे पहा.",
+        "with": "सोबत",
+        "you": "तुम्ही",
+        "noMessages": "अद्याप कोणतेही संदेश नाहीत.",
+        "unknownUser": "अज्ञात",
+        "emptyTitle": "तुमचा इनबॉक्स रिकामा आहे.",
+        "emptyDescription": "एखाद्या जाहिरातीवर 'चॅट करा' बटण दाबून संभाषण सुरू करा.",
+        "browseAdsButton": "जाहिराती ब्राउझ करा",
+        "accessDeniedTitle": "प्रवेश प्रतिबंधित",
+        "accessDeniedDescription": "तुमचा इनबॉक्स पाहण्यासाठी कृपया लॉगिन करा.",
+        "errorTitle": "त्रुटी",
+        "errorIndex": "तुमचे चॅट्स आणण्यात अयशस्वी. कृपया फायरस्टोअर इंडेक्स तपासा.",
+        "errorFetch": "तुमचे चॅट्स आणण्यात अयशस्वी."
+    },
+    "chat": {
+        "accessDeniedTitle": "प्रवेश प्रतिबंधित",
+        "accessDeniedDescription": "तुम्ही या संभाषणाचा भाग नाही.",
+        "notFoundTitle": "संभाषण आढळले नाही",
+        "notFoundDescription": "हे संभाषण अस्तित्वात नाही.",
+        "errorTitle": "त्रुटी",
+        "errorLoad": "संभाषण लोड करण्यात अयशस्वी.",
+        "errorSend": "संदेश पाठवण्यात अयशस्वी.",
+        "unknownUser": "अज्ञात",
+        "messagePlaceholder": "मेसेज टाइप करा..."
+    },
+    "search": {
+        "title": "जाहिराती शोधा",
+        "description": "तुम्हाला जे हवे आहे ते शोधा, जलद आणि सहज.",
+        "placeholder": "जाहिराती शोधा...",
+        "initialStateTitle": "तुमच्या गरजेनुसार काहीही शोधा",
+        "initialStateDescription": "उदा. 'ट्रॅक्टर', 'कांदा', किंवा 'शेवगाव'",
+        "loading": "जाहिराती लोड होत आहेत...",
+        "noResultsTitle": "कोणतेही परिणाम आढळले नाहीत.",
+        "noResultsDescription": "वेगळा शोध शब्द वापरून पहा.",
+        "errorTitle": "त्रुटी",
+        "errorDescription": "जाहिराती आणण्यात अयशस्वी."
+    },
+    "settings": {
+        "title": "सेटिंग्ज",
+        "description": "तुमची खाते माहिती व्यवस्थापित करा.",
+        "fullNameLabel": "पूर्ण नाव",
+        "mobileLabel": "मोबाईल नंबर",
+        "mobilePlaceholder": "तुमचा मोबाईल नंबर टाका",
+        "emailLabel": "ईमेल",
+        "saveChangesButton": "बदल जतन करा",
+        "securityTitle": "सुरक्षितता",
+        "passwordLabel": "पासवर्ड",
+        "passwordDescription": "तुमचा पासवर्ड बदलण्यासाठी आम्ही तुम्हाला एक ईमेल पाठवू.",
+        "sendResetEmailButton": "पासवर्ड बदलण्यासाठी ईमेल पाठवा",
+        "logoutButton": "लॉगआउट",
+        "validation": {
+            "nameMin": "नाव किमान २ अक्षरी असावे.",
+            "mobileInvalid": "कृपया वैध १०-अंकी मोबाईल नंबर टाका."
+        },
+        "toast": {
+            "updateSuccessTitle": "यशस्वी",
+            "updateSuccessDescription": "तुमचे प्रोफाइल यशस्वीरित्या अद्यतनित झाले आहे.",
+            "errorTitle": "त्रुटी",
+            "updateErrorDescription": "प्रोफाइल अद्यतनित करण्यात अयशस्वी.",
+            "noEmailError": "तुमचा ईमेल पत्ता सापडला नाही.",
+            "resetEmailSentTitle": "पासवर्ड रीसेट लिंक पाठवली",
+            "resetEmailSentDescription": "तुमचा पासवर्ड रीसेट करण्यासाठी तुमच्या ईमेलवर एक लिंक पाठवली आहे.",
+            "resetEmailError": "पासवर्ड रीसेट ईमेल पाठवण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा."
+        }
     }
 }
+    

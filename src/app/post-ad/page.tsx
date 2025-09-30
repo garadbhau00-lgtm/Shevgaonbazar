@@ -1,9 +1,12 @@
+'use client';
 
 import AdForm from './_components/ad-form';
 import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function PostAdPage() {
+  const { dictionary } = useLanguage();
   return (
     <div>
       <div className="relative h-28 w-full">
@@ -17,8 +20,8 @@ export default function PostAdPage() {
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-            <h1 className="text-lg font-bold">नवीन जाहिरात टाका</h1>
-            <p className="mt-2 text-xs max-w-xl">तुमच्या उत्पादनाची माहिती भरा.</p>
+            <h1 className="text-lg font-bold">{dictionary.postAd.title}</h1>
+            <p className="mt-2 text-xs max-w-xl">{dictionary.postAd.description}</p>
         </div>
       </div>
       <main className="p-4">
@@ -27,3 +30,4 @@ export default function PostAdPage() {
     </div>
   );
 }
+    

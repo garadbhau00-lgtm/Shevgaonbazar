@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -17,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import AppHeader from '@/components/layout/app-header';
+import { useLanguage } from '@/contexts/language-context';
 
 const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'destructive' => {
     switch (status) {
@@ -29,16 +29,13 @@ const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'dest
     }
 };
 
-const statusTranslations: Record<Ad['status'], string> = {
-    approved: 'स्वीकृत',
-    pending: 'प्रलंबित',
-    rejected: 'नाकारले'
-};
-
 export default function AdManagementPage() {
     const { userProfile, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
+    const { dictionary } = useLanguage();
+
+    const statusTranslations = dictionary.adManagement.status;
 
     const [ads, setAds] = useState<Ad[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
@@ -49,7 +46,7 @@ export default function AdManagementPage() {
     useEffect(() => {
         const checkAdminAndFetchAds = () => {
             if (userProfile?.role !== 'Admin') {
-                toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'तुमच्याकडे ही संसाधने पाहण्याची परवानगी नाही.' });
+                toast({ variant: 'destructive', title: dictionary.adManagement.accessDeniedTitle, description: dictionary.adManagement.accessDeniedDescription });
                 router.push('/more');
                 return;
             }
@@ -67,7 +64,7 @@ export default function AdManagementPage() {
                 setPageLoading(false);
             }, (error) => {
                 console.error("Error fetching ads:", error);
-                toast({ variant: 'destructive', title: 'त्रुटी', description: 'जाहिराती आणण्यात अयशस्वी.' });
+                toast({ variant: 'destructive', title: dictionary.adManagement.errorTitle, description: dictionary.adManagement.errorFetch });
                 setPageLoading(false);
             });
 
@@ -78,16 +75,16 @@ export default function AdManagementPage() {
             const unsubscribe = checkAdminAndFetchAds();
             return () => unsubscribe && unsubscribe();
         }
-    }, [authLoading, userProfile, router, toast]);
+    }, [authLoading, userProfile, router, toast, dictionary]);
 
     const handleUpdateStatus = async (ad: Ad, status: 'approved') => {
         try {
             const adDoc = doc(db, 'ads', ad.id);
             await updateDoc(adDoc, { status });
-            toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या स्वीकृत झाली आहे.` });
+            toast({ title: dictionary.adManagement.successTitle, description: dictionary.adManagement.successApprove });
         } catch (error) {
             console.error("Error updating ad status:", error);
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'जाहिरातीची स्थिती अद्यतनित करण्यात अयशस्वी.' });
+            toast({ variant: 'destructive', title: dictionary.adManagement.errorTitle, description: dictionary.adManagement.errorUpdate });
         }
     };
 
@@ -102,7 +99,7 @@ export default function AdManagementPage() {
 
     const handleRejectSubmit = async () => {
         if (!adToReject || !rejectionReason.trim()) {
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'कृपया नाकारण्याचे कारण नमूद करा.' });
+            toast({ variant: 'destructive', title: dictionary.adManagement.errorTitle, description: dictionary.adManagement.reasonRequired });
             return;
         }
 
@@ -111,11 +108,11 @@ export default function AdManagementPage() {
             const adDoc = doc(db, 'ads', adToReject.id);
             const reason = rejectionReason.trim();
             await updateDoc(adDoc, { status: 'rejected', rejectionReason: reason });
-            toast({ title: 'यशस्वी', description: `जाहिरात यशस्वीरित्या नाकारली गेली आहे.` });
+            toast({ title: dictionary.adManagement.successTitle, description: dictionary.adManagement.successReject });
             handleCloseRejectDialog();
         } catch (error) {
             console.error("Error rejecting ad:", error);
-            toast({ variant: 'destructive', title: 'त्रुटी', description: 'जाहिरात नाकारण्यात अयशस्वी.' });
+            toast({ variant: 'destructive', title: dictionary.adManagement.errorTitle, description: dictionary.adManagement.errorReject });
         } finally {
             setIsSubmitting(false);
         }
@@ -148,8 +145,8 @@ export default function AdManagementPage() {
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">जाहिरात व्यवस्थापन</h1>
-                    <p className="mt-2 text-xs max-w-xl">प्रलंबित जाहिरातींचे पुनरावलोकन करा, स्वीकृत करा किंवा नाकारा.</p>
+                    <h1 className="text-lg font-bold">{dictionary.adManagement.title}</h1>
+                    <p className="mt-2 text-xs max-w-xl">{dictionary.adManagement.description}</p>
                 </div>
             </div>
             <main className="p-4">
@@ -185,47 +182,47 @@ export default function AdManagementPage() {
                                     size="sm"
                                     onClick={() => handleOpenRejectDialog(ad)}
                                 >
-                                    <X className="mr-1 h-4 w-4" /> नाकारा
+                                    <X className="mr-1 h-4 w-4" /> {dictionary.adManagement.rejectButton}
                                 </Button>
                                 <Button
                                     variant="default"
                                     size="sm"
                                     onClick={() => handleUpdateStatus(ad, 'approved')}
                                 >
-                                    <Check className="mr-1 h-4 w-4" /> स्वीकृत करा
+                                    <Check className="mr-1 h-4 w-4" /> {dictionary.adManagement.approveButton}
                                 </Button>
                             </CardFooter>
                         </Card>
                     )) : (
                         <div className="text-center text-muted-foreground mt-8 rounded-lg border-2 border-dashed py-12">
-                            <p className="text-lg font-semibold">कोणत्याही प्रलंबित जाहिराती नाहीत.</p>
-                            <p className="text-sm">जेव्हा वापरकर्ते जाहिराती सबमिट करतील, तेव्हा त्या येथे दिसतील.</p>
+                            <p className="text-lg font-semibold">{dictionary.adManagement.noPendingAdsTitle}</p>
+                            <p className="text-sm">{dictionary.adManagement.noPendingAdsDescription}</p>
                         </div>
                     )}
                 </div>
                 <AlertDialog open={!!adToReject} onOpenChange={(open) => !open && handleCloseRejectDialog()}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>जाहिरात नाकारण्याची खात्री आहे का?</AlertDialogTitle>
+                            <AlertDialogTitle>{dictionary.adManagement.rejectDialogTitle}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                ही क्रिया पूर्ववत केली जाऊ शकत नाही. कृपया वापरकर्त्याला मदत करण्यासाठी नाकारण्याचे कारण द्या.
+                                {dictionary.adManagement.rejectDialogDescription}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="grid w-full gap-1.5">
-                            <Label htmlFor="rejection-reason">नाकारण्याचे कारण</Label>
+                            <Label htmlFor="rejection-reason">{dictionary.adManagement.rejectionReasonLabel}</Label>
                             <Textarea 
                                 id="rejection-reason"
-                                placeholder="येथे कारण टाइप करा..."
+                                placeholder={dictionary.adManagement.rejectionReasonPlaceholder}
                                 value={rejectionReason}
                                 onChange={(e) => setRejectionReason(e.target.value)}
                                 disabled={isSubmitting}
                             />
                         </div>
                         <AlertDialogFooter>
-                            <AlertDialogCancel onClick={handleCloseRejectDialog} disabled={isSubmitting}>रद्द करा</AlertDialogCancel>
+                            <AlertDialogCancel onClick={handleCloseRejectDialog} disabled={isSubmitting}>{dictionary.adManagement.cancelButton}</AlertDialogCancel>
                             <AlertDialogAction onClick={handleRejectSubmit} disabled={isSubmitting || !rejectionReason.trim()}>
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                नाकारण्याची पुष्टी करा
+                                {dictionary.adManagement.confirmRejectButton}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -234,5 +231,4 @@ export default function AdManagementPage() {
         </>
     );
 }
-
     

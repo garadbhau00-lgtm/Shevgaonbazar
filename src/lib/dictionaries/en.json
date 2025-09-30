@@ -71,5 +71,287 @@
         "गावातील गरज": "Village Needs",
         "व्यावसायिक सेवा": "Professional Services",
         "आर्थिक": "Financial"
+    },
+    "postAd": {
+        "title": "Post a New Ad",
+        "description": "Fill in the details about your product."
+    },
+    "adForm": {
+        "category": {
+            "label": "Category",
+            "placeholder": "Select a category"
+        },
+        "subcategory": {
+            "label": "Sub-category",
+            "placeholder": "Select a sub-category"
+        },
+        "title": {
+            "label": "Ad Title (Optional)",
+            "placeholder": "e.g., Good black buffalo for sale"
+        },
+        "description": {
+            "label": "Description (Optional)",
+            "placeholder": "Tell us more about your product"
+        },
+        "price": {
+            "label": "Price (₹)",
+            "placeholder": "e.g., 15000"
+        },
+        "location": {
+            "label": "Village",
+            "placeholder": "Select a village"
+        },
+        "mobile": {
+            "label": "Mobile Number",
+            "placeholder": "Your mobile number"
+        },
+        "photo": {
+            "label": "Photo",
+            "uploadText": "Upload Photo",
+            "limitText": "You can upload ${maxFiles} photo."
+        },
+        "updateAdButton": "Update Ad",
+        "postAdButton": "Post Ad for ₹${amount}",
+        "validation": {
+            "categoryRequired": "Please select a category.",
+            "titleMin": "Ad title must be at least 3 characters.",
+            "pricePositive": "Price must be greater than 0.",
+            "locationRequired": "Please select a village.",
+            "mobileInvalid": "Please enter a valid 10-digit mobile number."
+        },
+        "toast": {
+            "unauthorizedTitle": "Access Denied",
+            "unauthorizedDescription": "Please log in to post an ad.",
+            "errorTitle": "Error",
+            "loginRequired": "You must be logged in to post an ad.",
+            "photoRequiredTitle": "Photo Required",
+            "photoRequiredDescription": "Please upload at least one photo for your ad.",
+            "errorPreparingAd": "There was a problem preparing your ad.",
+            "successTitle": "Success!",
+            "updateSuccess": "Your ad has been successfully updated and submitted for review.",
+            "submitSuccess": "Your ad has been successfully submitted. It will be live after approval.",
+            "submitError": "Failed to submit ad."
+        },
+        "payment": {
+            "choiceTitle": "Select Payment Method",
+            "choiceDescription": "You need to pay ₹${amount} to post the ad. Please choose your preferred UPI app.",
+            "phonepeButton": "Pay with PhonePe",
+            "gpayButton": "Pay with Google Pay",
+            "cancelButton": "Cancel",
+            "confirmTitle": "Confirm Payment",
+            "confirmDescription": "Have you completed the payment? Once the payment is successful, your ad will be submitted for review.",
+            "attentionTitle": "Attention",
+            "attentionDescription": "If the payment fails, please press the 'Cancel' button.",
+            "confirmButton": "Yes, payment is complete"
+        }
+    },
+    "myAds": {
+        "title": "My Ads",
+        "description": "See all the ads you have posted here.",
+        "noPhoto": "No Photo",
+        "status": {
+            "approved": "Approved",
+            "pending": "Pending",
+            "rejected": "Rejected"
+        },
+        "rejectionReasonTitle": "Reason for Rejection",
+        "noAdsYet": "You haven't posted any ads yet.",
+        "postFirstAdButton": "Post your first ad",
+        "deleteDialogTitle": "Are you sure you want to delete the ad?",
+        "deleteDialogDescription": "This action cannot be undone. This will permanently delete your ad from our servers.",
+        "cancelButton": "Cancel",
+        "deleteButton": "Delete",
+        "accessDeniedTitle": "Access Denied",
+        "accessDeniedDescription": "Please log in to view your ads.",
+        "errorTitle": "Error",
+        "errorIndex": "Failed to fetch your ads. Please check the Firestore index.",
+        "errorFetch": "Failed to fetch your ads.",
+        "deleteSuccessTitle": "Success!",
+        "deleteSuccessDescription": "Your ad has been successfully deleted.",
+        "errorDelete": "Failed to delete ad. Please try again."
+    },
+    "editAd": {
+        "title": "Edit Ad",
+        "description": "Change the details of your ad.",
+        "loadingAd": "Loading ad...",
+        "unauthorizedTitle": "Unauthorized",
+        "unauthorizedDescription": "Please log in to edit an ad.",
+        "forbiddenTitle": "Forbidden",
+        "forbiddenDescription": "You do not have permission to edit this ad.",
+        "notFoundTitle": "Not Found",
+        "notFoundDescription": "Ad not found.",
+        "errorTitle": "Error",
+        "errorDescription": "Failed to fetch ad details."
+    },
+    "auth": {
+        "accountDisabledTitle": "Account Disabled",
+        "accountDisabledDescription": "Your account has been disabled by an administrator.",
+        "profileErrorTitle": "Profile Error",
+        "profileErrorDescription": "Failed to fetch user profile.",
+        "logoutSuccess": "You have been successfully logged out.",
+        "logoutFailedTitle": "Logout Failed",
+        "logoutFailedDescription": "Please try again.",
+        "accountCreatedTitle": "Account Created!",
+        "accountCreatedDescription": "Welcome to Shevgaon Bazar. Your role: ${role}",
+        "loginSuccessTitle": "Login Successful!",
+        "welcomeBack": "Welcome back to Shevgaon Bazar.",
+        "googleSignInFailedTitle": "Google Sign-In Failed",
+        "googleSignInFailedDescription": "An unexpected error occurred. Please try again.",
+        "popupBlockedTitle": "Popup Blocked",
+        "popupBlockedDescription": "Your browser blocked the Google Sign-in popup. Please check your browser settings.",
+        "unauthorizedDomainTitle": "Unauthorized Domain",
+        "unauthorizedDomainDescription": "This domain is not authorized for Google Sign-In. Please add your app's domain (e.g., project.vercel.app) to the Firebase Console > Authentication > Settings > Authorized domains.",
+        "permissionDeniedTitle": "Permission Denied",
+        "permissionDeniedDescription": "Permission to create a profile in the database is denied. Please check your Firestore rules."
+    },
+    "accessManagement": {
+        "title": "Access Management",
+        "description": "Enable or disable user accounts.",
+        "users": "Users",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "noUsersFound": "No users found.",
+        "errorTitle": "Error",
+        "errorFetchUsers": "Failed to fetch user list. Please check your Firestore rules.",
+        "accessDeniedTitle": "Access Denied",
+        "accessDeniedDescription": "You do not have permission to view this resource.",
+        "successTitle": "Success",
+        "errorUpdateStatus": "Failed to update user status."
+    },
+    "adDetail": {
+        "loginRequiredTitle": "Login Required",
+        "loginRequiredDescription": "Please log in to view ad details.",
+        "adNotAvailableTitle": "Ad Not Available",
+        "adNotAvailableDescription": "This ad is not currently available for viewing.",
+        "notFoundTitle": "Not Found",
+        "notFoundDescription": "Ad not found.",
+        "errorTitle": "Error",
+        "errorDescription": "Failed to fetch ad details.",
+        "noPhoto": "No photo",
+        "postedOn": "Posted on",
+        "callButton": "Call"
+    },
+    "adManagement": {
+        "title": "Ad Management",
+        "description": "Review, approve, or reject pending ads.",
+        "status": {
+            "approved": "Approved",
+            "pending": "Pending",
+            "rejected": "Rejected"
+        },
+        "rejectButton": "Reject",
+        "approveButton": "Approve",
+        "noPendingAdsTitle": "No pending ads.",
+        "noPendingAdsDescription": "When users submit ads, they will appear here.",
+        "rejectDialogTitle": "Are you sure you want to reject the ad?",
+        "rejectDialogDescription": "This action cannot be undone. Please provide a reason for rejection to help the user.",
+        "rejectionReasonLabel": "Reason for rejection",
+        "rejectionReasonPlaceholder": "Type the reason here...",
+        "cancelButton": "Cancel",
+        "confirmRejectButton": "Confirm Rejection",
+        "accessDeniedTitle": "Access Denied",
+        "accessDeniedDescription": "You do not have permission to view this resource.",
+        "errorTitle": "Error",
+        "errorFetch": "Failed to fetch ads.",
+        "successTitle": "Success",
+        "successApprove": "Ad has been successfully approved.",
+        "errorUpdate": "Failed to update ad status.",
+        "reasonRequired": "Please specify a reason for rejection.",
+        "successReject": "Ad has been successfully rejected.",
+        "errorReject": "Failed to reject ad."
+    },
+    "helpCenter": {
+        "title": "Help Center",
+        "description": "Find answers to your questions here.",
+        "faqs": [
+            {
+                "question": "How to post an ad?",
+                "answer": "To post a new ad, tap the 'Post Ad' button on the home screen. Then, select your category, fill in the required information, upload photos, and click the 'Post' button. Your ad will be sent for review."
+            },
+            {
+                "question": "Why was my ad rejected?",
+                "answer": "Your ad may be rejected for several reasons, such as unclear photos, incorrect information, or violation of our guidelines. You will see the specific reason for rejection in the 'My Ads' section."
+            },
+            {
+                "question": "How can I change my password?",
+                "answer": "Currently, the feature to change the password directly from the profile is not available. To reset your password, please log out and use the 'Forgot Password?' link on the login page."
+            },
+            {
+                "question": "How do I contact a seller for an item?",
+                "answer": "On the ad detail page, you will see a 'Call' button to contact the seller. Tapping this button will allow you to call the seller directly."
+            }
+        ],
+        "moreHelpTitle": "Need more help?",
+        "moreHelpDescription": "If you can't find the answer here, please contact us.",
+        "termsOfService": "Terms of Service",
+        "privacyPolicy": "Privacy Policy"
+    },
+    "inbox": {
+        "title": "Inbox",
+        "description": "View your conversations here.",
+        "with": "With",
+        "you": "You",
+        "noMessages": "No messages yet.",
+        "unknownUser": "Unknown",
+        "emptyTitle": "Your inbox is empty.",
+        "emptyDescription": "Start a conversation by clicking the 'Chat' button on an ad.",
+        "browseAdsButton": "Browse Ads",
+        "accessDeniedTitle": "Access Denied",
+        "accessDeniedDescription": "Please log in to view your inbox.",
+        "errorTitle": "Error",
+        "errorIndex": "Failed to fetch your chats. Please check the Firestore index.",
+        "errorFetch": "Failed to fetch your chats."
+    },
+    "chat": {
+        "accessDeniedTitle": "Access Denied",
+        "accessDeniedDescription": "You are not part of this conversation.",
+        "notFoundTitle": "Conversation Not Found",
+        "notFoundDescription": "This conversation does not exist.",
+        "errorTitle": "Error",
+        "errorLoad": "Failed to load conversation.",
+        "errorSend": "Failed to send message.",
+        "unknownUser": "Unknown",
+        "messagePlaceholder": "Type a message..."
+    },
+    "search": {
+        "title": "Search Ads",
+        "description": "Find what you need, quickly and easily.",
+        "placeholder": "Search for ads...",
+        "initialStateTitle": "Search for anything you need",
+        "initialStateDescription": "e.g., 'tractor', 'onion', or 'Shevgaon'",
+        "loading": "Loading ads...",
+        "noResultsTitle": "No results found.",
+        "noResultsDescription": "Try using a different search term.",
+        "errorTitle": "Error",
+        "errorDescription": "Failed to fetch ads."
+    },
+    "settings": {
+        "title": "Settings",
+        "description": "Manage your account information.",
+        "fullNameLabel": "Full Name",
+        "mobileLabel": "Mobile Number",
+        "mobilePlaceholder": "Enter your mobile number",
+        "emailLabel": "Email",
+        "saveChangesButton": "Save Changes",
+        "securityTitle": "Security",
+        "passwordLabel": "Password",
+        "passwordDescription": "We will send you an email to change your password.",
+        "sendResetEmailButton": "Send password reset email",
+        "logoutButton": "Logout",
+        "validation": {
+            "nameMin": "Name must be at least 2 characters.",
+            "mobileInvalid": "Please enter a valid 10-digit mobile number."
+        },
+        "toast": {
+            "updateSuccessTitle": "Success",
+            "updateSuccessDescription": "Your profile has been updated successfully.",
+            "errorTitle": "Error",
+            "updateErrorDescription": "Failed to update profile.",
+            "noEmailError": "Your email address was not found.",
+            "resetEmailSentTitle": "Password reset link sent",
+            "resetEmailSentDescription": "A link to reset your password has been sent to your email.",
+            "resetEmailError": "Failed to send password reset email. Please try again."
+        }
     }
 }
+    

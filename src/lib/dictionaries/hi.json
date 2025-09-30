@@ -71,5 +71,287 @@
         "गावातील गरज": "गाँव की ज़रूरतें",
         "व्यावसायिक सेवा": "पेशेवर सेवाएँ",
         "आर्थिक": "वित्तीय"
+    },
+    "postAd": {
+        "title": "नया विज्ञापन पोस्ट करें",
+        "description": "अपने उत्पाद के बारे में विवरण भरें।"
+    },
+    "adForm": {
+        "category": {
+            "label": "श्रेणी",
+            "placeholder": "एक श्रेणी चुनें"
+        },
+        "subcategory": {
+            "label": "उप-श्रेणी",
+            "placeholder": "एक उप-श्रेणी चुनें"
+        },
+        "title": {
+            "label": "विज्ञापन शीर्षक (वैकल्पिक)",
+            "placeholder": "जैसे अच्छी काली भैंस बिक्री के लिए"
+        },
+        "description": {
+            "label": "विवरण (वैकल्पिक)",
+            "placeholder": "अपने उत्पाद के बारे में और बताएं"
+        },
+        "price": {
+            "label": "कीमत (₹)",
+            "placeholder": "जैसे १५०००"
+        },
+        "location": {
+            "label": "गांव",
+            "placeholder": "एक गांव चुनें"
+        },
+        "mobile": {
+            "label": "मोबाइल नंबर",
+            "placeholder": "आपका मोबाइल नंबर"
+        },
+        "photo": {
+            "label": "फोटो",
+            "uploadText": "फोटो अपलोड करें",
+            "limitText": "आप ${maxFiles} फोटो अपलोड कर सकते हैं।"
+        },
+        "updateAdButton": "विज्ञापन अपडेट करें",
+        "postAdButton": "₹${amount} में विज्ञापन पोस्ट करें",
+        "validation": {
+            "categoryRequired": "कृपया एक श्रेणी चुनें।",
+            "titleMin": "विज्ञापन का शीर्षक कम से कम 3 अक्षर का होना चाहिए।",
+            "pricePositive": "कीमत 0 से अधिक होनी चाहिए।",
+            "locationRequired": "कृपया एक गांव चुनें।",
+            "mobileInvalid": "कृपया एक मान्य 10-अंकीय मोबाइल नंबर दर्ज करें।"
+        },
+        "toast": {
+            "unauthorizedTitle": "प्रवेश वर्जित",
+            "unauthorizedDescription": "विज्ञापन पोस्ट करने के लिए कृपया लॉगिन करें।",
+            "errorTitle": "त्रुटि",
+            "loginRequired": "विज्ञापन पोस्ट करने के लिए आपको लॉग इन होना चाहिए।",
+            "photoRequiredTitle": "फोटो आवश्यक",
+            "photoRequiredDescription": "कृपया अपने विज्ञापन के लिए कम से कम एक फोटो अपलोड करें।",
+            "errorPreparingAd": "आपके विज्ञापन को तैयार करने में कोई समस्या हुई।",
+            "successTitle": "सफलता!",
+            "updateSuccess": "आपका विज्ञापन सफलतापूर्वक अपडेट हो गया है और समीक्षा के लिए सबमिट कर दिया गया है।",
+            "submitSuccess": "आपका विज्ञापन सफलतापूर्वक सबमिट हो गया है। अनुमोदन के बाद यह लाइव हो जाएगा।",
+            "submitError": "विज्ञापन सबमिट करने में विफल।"
+        },
+        "payment": {
+            "choiceTitle": "भुगतान विधि चुनें",
+            "choiceDescription": "विज्ञापन पोस्ट करने के लिए आपको ₹${amount} का भुगतान करना होगा। कृपया अपना पसंदीदा UPI ऐप चुनें।",
+            "phonepeButton": "PhonePe से भुगतान करें",
+            "gpayButton": "Google Pay से भुगतान करें",
+            "cancelButton": "रद्द करें",
+            "confirmTitle": "भुगतान की पुष्टि करें",
+            "confirmDescription": "क्या आपने भुगतान पूरा कर लिया है? भुगतान सफल होने पर, आपका विज्ञापन समीक्षा के लिए प्रस्तुत किया जाएगा।",
+            "attentionTitle": "ध्यान दें",
+            "attentionDescription": "यदि भुगतान विफल हो जाता है, तो कृपया 'रद्द करें' बटन दबाएं।",
+            "confirmButton": "हां, भुगतान हो गया"
+        }
+    },
+    "myAds": {
+        "title": "मेरे विज्ञापन",
+        "description": "आपके द्वारा पोस्ट किए गए सभी विज्ञापन यहां देखें।",
+        "noPhoto": "कोई फ़ोटो नहीं",
+        "status": {
+            "approved": "स्वीकृत",
+            "pending": "लंबित",
+            "rejected": "अस्वीकृत"
+        },
+        "rejectionReasonTitle": "अस्वीकृति का कारण",
+        "noAdsYet": "आपने अभी तक कोई विज्ञापन पोस्ट नहीं किया है।",
+        "postFirstAdButton": "अपना पहला विज्ञापन पोस्ट करें",
+        "deleteDialogTitle": "क्या आप वाकई विज्ञापन हटाना चाहते हैं?",
+        "deleteDialogDescription": "यह क्रिया पूर्ववत नहीं की जा सकती। यह आपके विज्ञापन को हमारे सर्वर से स्थायी रूप से हटा देगा।",
+        "cancelButton": "रद्द करें",
+        "deleteButton": "हटाएं",
+        "accessDeniedTitle": "प्रवेश वर्जित",
+        "accessDeniedDescription": "अपने विज्ञापन देखने के लिए कृपया लॉगिन करें।",
+        "errorTitle": "त्रुटि",
+        "errorIndex": "आपके विज्ञापन लाने में विफल। कृपया फायरस्टोर इंडेक्स की जांच करें।",
+        "errorFetch": "आपके विज्ञापन लाने में विफल।",
+        "deleteSuccessTitle": "सफलता!",
+        "deleteSuccessDescription": "आपका विज्ञापन सफलतापूर्वक हटा दिया गया है।",
+        "errorDelete": "विज्ञापन हटाने में विफल। कृपया पुन: प्रयास करें।"
+    },
+    "editAd": {
+        "title": "विज्ञापन संपादित करें",
+        "description": "अपने विज्ञापन का विवरण बदलें।",
+        "loadingAd": "विज्ञापन लोड हो रहा है...",
+        "unauthorizedTitle": "अनधिकृत",
+        "unauthorizedDescription": "विज्ञापन संपादित करने के लिए कृपया लॉग इन करें।",
+        "forbiddenTitle": "निषिद्ध",
+        "forbiddenDescription": "आपको इस विज्ञापन को संपादित करने की अनुमति नहीं है।",
+        "notFoundTitle": "नहीं मिला",
+        "notFoundDescription": "विज्ञापन नहीं मिला।",
+        "errorTitle": "त्रुटि",
+        "errorDescription": "विज्ञापन विवरण लाने में विफल।"
+    },
+    "auth": {
+        "accountDisabledTitle": "खाता अक्षम",
+        "accountDisabledDescription": "आपका खाता एक प्रशासक द्वारा अक्षम कर दिया गया है।",
+        "profileErrorTitle": "प्रोफ़ाइल त्रुटि",
+        "profileErrorDescription": "उपयोगकर्ता प्रोफ़ाइल लाने में विफल।",
+        "logoutSuccess": "आप सफलतापूर्वक लॉग आउट हो गए हैं।",
+        "logoutFailedTitle": "लॉगआउट विफल",
+        "logoutFailedDescription": "कृपया पुन: प्रयास करें।",
+        "accountCreatedTitle": "खाता बन गया!",
+        "accountCreatedDescription": "शेवगांव बाजार में आपका स्वागत है। आपकी भूमिका: ${role}",
+        "loginSuccessTitle": "लॉगिन सफल!",
+        "welcomeBack": "शेवगांव बाजार में वापस स्वागत है।",
+        "googleSignInFailedTitle": "Google साइन-इन विफल",
+        "googleSignInFailedDescription": "एक अप्रत्याशित त्रुटि हुई। कृपया पुन: प्रयास करें।",
+        "popupBlockedTitle": "पॉप-अप अवरुद्ध",
+        "popupBlockedDescription": "आपके ब्राउज़र ने Google साइन-इन पॉप-अप को अवरुद्ध कर दिया है। कृपया अपनी ब्राउज़र सेटिंग्स जांचें।",
+        "unauthorizedDomainTitle": "अनधिकृत डोमेन",
+        "unauthorizedDomainDescription": "यह डोमेन Google साइन-इन के लिए अधिकृत नहीं है। कृपया अपने ऐप का डोमेन (जैसे, project.vercel.app) फायरबेस कंसोल > प्रमाणीकरण > सेटिंग्स > अधिकृत डोमेन में जोड़ें।",
+        "permissionDeniedTitle": "अनुमति अस्वीकृत",
+        "permissionDeniedDescription": "डेटाबेस में प्रोफ़ाइल बनाने की अनुमति अस्वीकृत है। कृपया अपने फायरस्टोर नियमों की जांच करें।"
+    },
+    "accessManagement": {
+        "title": "पहुंच प्रबंधन",
+        "description": "उपयोगकर्ता खातों को सक्षम या अक्षम करें।",
+        "users": "उपयोगकर्ता",
+        "enabled": "सक्षम",
+        "disabled": "अक्षम",
+        "noUsersFound": "कोई उपयोगकर्ता नहीं मिला।",
+        "errorTitle": "त्रुटि",
+        "errorFetchUsers": "उपयोगकर्ता सूची लाने में विफल। कृपया अपने फायरस्टोर नियमों की जांच करें।",
+        "accessDeniedTitle": "प्रवेश वर्जित",
+        "accessDeniedDescription": "आपको इस संसाधन को देखने की अनुमति नहीं है।",
+        "successTitle": "सफलता",
+        "errorUpdateStatus": "उपयोगकर्ता स्थिति को अपडेट करने में विफल।"
+    },
+    "adDetail": {
+        "loginRequiredTitle": "लॉगिन आवश्यक",
+        "loginRequiredDescription": "विज्ञापन विवरण देखने के लिए कृपया लॉगिन करें।",
+        "adNotAvailableTitle": "विज्ञापन उपलब्ध नहीं है",
+        "adNotAvailableDescription": "यह विज्ञापन वर्तमान में देखने के लिए उपलब्ध नहीं है।",
+        "notFoundTitle": "नहीं मिला",
+        "notFoundDescription": "विज्ञापन नहीं मिला।",
+        "errorTitle": "त्रुटि",
+        "errorDescription": "विज्ञापन विवरण लाने में विफल।",
+        "noPhoto": "कोई तस्वीर नहीं",
+        "postedOn": "पोस्ट किया गया",
+        "callButton": "कॉल करें"
+    },
+    "adManagement": {
+        "title": "विज्ञापन प्रबंधन",
+        "description": "लंबित विज्ञापनों की समीक्षा करें, स्वीकृत करें या अस्वीकार करें।",
+        "status": {
+            "approved": "स्वीकृत",
+            "pending": "लंबित",
+            "rejected": "अस्वीकृत"
+        },
+        "rejectButton": "अस्वीकार",
+        "approveButton": "स्वीकृत",
+        "noPendingAdsTitle": "कोई लंबित विज्ञापन नहीं।",
+        "noPendingAdsDescription": "जब उपयोगकर्ता विज्ञापन सबमिट करेंगे, तो वे यहां दिखाई देंगे।",
+        "rejectDialogTitle": "क्या आप वाकई विज्ञापन को अस्वीकार करना चाहते हैं?",
+        "rejectDialogDescription": "यह क्रिया पूर्ववत नहीं की जा सकती। कृपया उपयोगकर्ता की मदद करने के लिए अस्वीकृति का कारण प्रदान करें।",
+        "rejectionReasonLabel": "अस्वीकृति का कारण",
+        "rejectionReasonPlaceholder": "यहां कारण टाइप करें...",
+        "cancelButton": "रद्द करें",
+        "confirmRejectButton": "अस्वीकृति की पुष्टि करें",
+        "accessDeniedTitle": "प्रवेश वर्जित",
+        "accessDeniedDescription": "आपको इस संसाधन को देखने की अनुमति नहीं है।",
+        "errorTitle": "त्रुटि",
+        "errorFetch": "विज्ञापन लाने में विफल।",
+        "successTitle": "सफलता",
+        "successApprove": "विज्ञापन सफलतापूर्वक स्वीकृत हो गया है।",
+        "errorUpdate": "विज्ञापन स्थिति को अपडेट करने में विफल।",
+        "reasonRequired": "कृपया अस्वीकृति का कारण निर्दिष्ट करें।",
+        "successReject": "विज्ञापन सफलतापूर्वक अस्वीकार कर दिया गया है।",
+        "errorReject": "विज्ञापन को अस्वीकार करने में विफल।"
+    },
+    "helpCenter": {
+        "title": "सहायता केंद्र",
+        "description": "अपने प्रश्नों के उत्तर यहां पाएं।",
+        "faqs": [
+            {
+                "question": "विज्ञापन कैसे पोस्ट करें?",
+                "answer": "नया विज्ञापन पोस्ट करने के लिए, होम स्क्रीन पर 'विज्ञापन पोस्ट करें' बटन पर टैप करें। फिर, अपनी श्रेणी चुनें, आवश्यक जानकारी भरें, फ़ोटो अपलोड करें, और 'पोस्ट करें' बटन पर क्लिक करें। आपका विज्ञापन समीक्षा के लिए भेजा जाएगा।"
+            },
+            {
+                "question": "मेरा विज्ञापन क्यों अस्वीकार कर दिया गया?",
+                "answer": "आपका विज्ञापन कई कारणों से अस्वीकार किया जा सकता है, जैसे कि अस्पष्ट तस्वीरें, गलत जानकारी, या हमारे दिशानिर्देशों का उल्लंघन। आपको 'मेरे विज्ञापन' अनुभाग में अस्वीकृति का विशिष्ट कारण दिखाई देगा।"
+            },
+            {
+                "question": "मैं अपना पासवर्ड कैसे बदल सकता हूँ?",
+                "answer": "वर्तमान में, प्रोफ़ाइल से सीधे पासवर्ड बदलने की सुविधा उपलब्ध नहीं है। अपना पासवर्ड रीसेट करने के लिए, कृपया लॉगआउट करें और लॉगिन पेज पर 'पासवर्ड भूल गए?' लिंक का उपयोग करें।"
+            },
+            {
+                "question": "मैं किसी वस्तु के लिए विक्रेता से कैसे संपर्क करूं?",
+                "answer": "विज्ञापन विवरण पृष्ठ पर, आपको विक्रेता से संपर्क करने के लिए एक 'कॉल करें' बटन दिखाई देगा। इस बटन पर टैप करने से आप सीधे विक्रेता को कॉल कर सकते हैं।"
+            }
+        ],
+        "moreHelpTitle": "और मदद चाहिए?",
+        "moreHelpDescription": "यदि आपको यहां उत्तर नहीं मिल रहा है, तो कृपया हमसे संपर्क करें।",
+        "termsOfService": "सेवा की शर्तें",
+        "privacyPolicy": "गोपनीयता नीति"
+    },
+    "inbox": {
+        "title": "इनबॉक्स",
+        "description": "अपनी बातचीत यहां देखें।",
+        "with": "के साथ",
+        "you": "आप",
+        "noMessages": "अभी तक कोई संदेश नहीं।",
+        "unknownUser": "अज्ञात",
+        "emptyTitle": "आपका इनबॉक्स खाली है।",
+        "emptyDescription": "किसी विज्ञापन पर 'चैट' बटन पर क्लिक करके बातचीत शुरू करें।",
+        "browseAdsButton": "विज्ञापन ब्राउज़ करें",
+        "accessDeniedTitle": "प्रवेश वर्जित",
+        "accessDeniedDescription": "अपना इनबॉक्स देखने के लिए कृपया लॉगिन करें।",
+        "errorTitle": "त्रुटि",
+        "errorIndex": "आपकी चैट लाने में विफल। कृपया फायरस्टोर इंडेक्स की जांच करें।",
+        "errorFetch": "आपकी चैट लाने में विफल।"
+    },
+    "chat": {
+        "accessDeniedTitle": "प्रवेश वर्जित",
+        "accessDeniedDescription": "आप इस बातचीत का हिस्सा नहीं हैं।",
+        "notFoundTitle": "बातचीत नहीं मिली",
+        "notFoundDescription": "यह बातचीत मौजूद नहीं है।",
+        "errorTitle": "त्रुटि",
+        "errorLoad": "बातचीत लोड करने में विफल।",
+        "errorSend": "संदेश भेजने में विफल।",
+        "unknownUser": "अज्ञात",
+        "messagePlaceholder": "एक संदेश टाइप करें..."
+    },
+    "search": {
+        "title": "विज्ञापन खोजें",
+        "description": "आपको जो चाहिए, उसे जल्दी और आसानी से खोजें।",
+        "placeholder": "विज्ञापनों के लिए खोजें...",
+        "initialStateTitle": "अपनी जरूरत की किसी भी चीज़ के लिए खोजें",
+        "initialStateDescription": "जैसे, 'ट्रैक्टर', 'प्याज', या 'शेवगांव'",
+        "loading": "विज्ञापन लोड हो रहे हैं...",
+        "noResultsTitle": "कोई परिणाम नहीं मिला।",
+        "noResultsDescription": "एक अलग खोज शब्द का उपयोग करने का प्रयास करें।",
+        "errorTitle": "त्रुटि",
+        "errorDescription": "विज्ञापन लाने में विफल।"
+    },
+    "settings": {
+        "title": "सेटिंग्स",
+        "description": "अपनी खाता जानकारी प्रबंधित करें।",
+        "fullNameLabel": "पूरा नाम",
+        "mobileLabel": "मोबाइल नंबर",
+        "mobilePlaceholder": "अपना मोबाइल नंबर दर्ज करें",
+        "emailLabel": "ईमेल",
+        "saveChangesButton": "परिवर्तन सहेजें",
+        "securityTitle": "सुरक्षा",
+        "passwordLabel": "पासवर्ड",
+        "passwordDescription": "हम आपको अपना पासवर्ड बदलने के लिए एक ईमेल भेजेंगे।",
+        "sendResetEmailButton": "पासवर्ड रीसेट ईमेल भेजें",
+        "logoutButton": "लॉगआउट",
+        "validation": {
+            "nameMin": "नाम कम से कम 2 अक्षर का होना चाहिए।",
+            "mobileInvalid": "कृपया एक मान्य 10-अंकीय मोबाइल नंबर दर्ज करें।"
+        },
+        "toast": {
+            "updateSuccessTitle": "सफलता",
+            "updateSuccessDescription": "आपकी प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई है।",
+            "errorTitle": "त्रुटि",
+            "updateErrorDescription": "प्रोफ़ाइल अपडेट करने में विफल।",
+            "noEmailError": "आपका ईमेल पता नहीं मिला।",
+            "resetEmailSentTitle": "पासवर्ड रीसेट लिंक भेजा गया",
+            "resetEmailSentDescription": "आपके पासवर्ड को रीसेट करने के लिए आपके ईमेल पर एक लिंक भेजा गया है।",
+            "resetEmailError": "पासवर्ड रीसेट ईमेल भेजने में विफल। कृपया पुन: प्रयास करें।"
+        }
     }
 }
+    

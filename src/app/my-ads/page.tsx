@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -25,7 +24,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import AppHeader from '@/components/layout/app-header';
-
+import { useLanguage } from '@/contexts/language-context';
 
 const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'destructive' => {
   switch (status) {
@@ -38,20 +37,17 @@ const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'dest
   }
 };
 
-const statusTranslations: Record<Ad['status'], string> = {
-    approved: 'स्वीकृत',
-    pending: 'प्रलंबित',
-    rejected: 'नाकारले'
-}
-
 export default function MyAdsPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
+    const { dictionary } = useLanguage();
     const [myAds, setMyAds] = useState<Ad[]>([]);
     const [adsLoading, setAdsLoading] = useState(true);
     const [adToDelete, setAdToDelete] = useState<Ad | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const statusTranslations = dictionary.myAds.status;
 
     useEffect(() => {
         if (authLoading) return;
@@ -59,8 +55,8 @@ export default function MyAdsPage() {
         if (!user) {
             toast({
                 variant: 'destructive',
-                title: 'प्रवेश प्रतिबंधित',
-                description: 'तुमच्या जाहिराती पाहण्यासाठी कृपया लॉगिन करा.',
+                title: dictionary.myAds.accessDeniedTitle,
+                description: dictionary.myAds.accessDeniedDescription,
             });
             router.push('/login');
             return;
@@ -80,15 +76,15 @@ export default function MyAdsPage() {
         }, (error) => {
             console.error("Error fetching user ads: ", error);
             if (error.message.includes("requires an index")) {
-                 toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमच्या जाहिराती आणण्यात अयशस्वी. कृपया फायरस्टोअर इंडेक्स तपासा.' });
+                 toast({ variant: 'destructive', title: dictionary.myAds.errorTitle, description: dictionary.myAds.errorIndex });
             } else {
-                toast({ variant: 'destructive', title: 'त्रुटी', description: 'तुमच्या जाहिराती आणण्यात अयशस्वी.' });
+                toast({ variant: 'destructive', title: dictionary.myAds.errorTitle, description: dictionary.myAds.errorFetch });
             }
             setAdsLoading(false);
         });
 
         return () => unsubscribe();
-    }, [user, authLoading, router, toast]);
+    }, [user, authLoading, router, toast, dictionary]);
 
     const handleConfirmDelete = async () => {
         if (!adToDelete) return;
@@ -98,16 +94,16 @@ export default function MyAdsPage() {
             const adDocRef = doc(db, 'ads', adToDelete.id);
             await deleteDoc(adDocRef);
             toast({
-                title: 'यशस्वी!',
-                description: 'तुमची जाहिरात यशस्वीरित्या हटवली आहे.',
+                title: dictionary.myAds.deleteSuccessTitle,
+                description: dictionary.myAds.deleteSuccessDescription,
             });
             setAdToDelete(null);
         } catch (error) {
             console.error("Error deleting ad: ", error);
             toast({
                 variant: 'destructive',
-                title: 'त्रुटी',
-                description: 'जाहिरात हटवण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
+                title: dictionary.myAds.errorTitle,
+                description: dictionary.myAds.errorDelete,
             });
         } finally {
             setIsDeleting(false);
@@ -139,8 +135,8 @@ export default function MyAdsPage() {
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">माझ्या जाहिराती</h1>
-                    <p className="mt-2 text-xs max-w-xl">तुम्ही पोस्ट केलेल्या सर्व जाहिराती येथे पहा.</p>
+                    <h1 className="text-lg font-bold">{dictionary.myAds.title}</h1>
+                    <p className="mt-2 text-xs max-w-xl">{dictionary.myAds.description}</p>
                 </div>
             </div>
             <main className="p-4 pb-20">
@@ -160,13 +156,13 @@ export default function MyAdsPage() {
                                                 />
                                             ): (
                                                 <div className="h-full w-full bg-secondary flex items-center justify-center">
-                                                    <p className="text-xs text-muted-foreground">फोटो नाही</p>
+                                                    <p className="text-xs text-muted-foreground">{dictionary.myAds.noPhoto}</p>
                                                 </div>
                                             )}
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex-grow p-3">
-                                        <h3 className="font-semibold">{ad.title}</h3>
+                                        <h3 className="font-semibold">{ad.title || (dictionary.categories[ad.category] || ad.category)}</h3>
                                         <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
 
                                         <Badge variant={getStatusVariant(ad.status)} className="mt-1">
@@ -185,7 +181,7 @@ export default function MyAdsPage() {
                                 {ad.status === 'rejected' && ad.rejectionReason && (
                                     <Alert variant="destructive" className="m-4 mt-0">
                                         <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>नाकारण्याचे कारण</AlertTitle>
+                                        <AlertTitle>{dictionary.myAds.rejectionReasonTitle}</AlertTitle>
                                         <AlertDescription>
                                             {ad.rejectionReason}
                                         </AlertDescription>
@@ -197,10 +193,10 @@ export default function MyAdsPage() {
                 ) : (
                     <div className="flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed text-center">
                         <p className="text-lg font-semibold text-muted-foreground">
-                            तुम्ही अद्याप एकही जाहिरात पोस्ट केलेली नाही.
+                            {dictionary.myAds.noAdsYet}
                         </p>
                         <Button className="mt-4" onClick={() => router.push('/post-ad')}>
-                            पहिली जाहिरात पोस्ट करा
+                            {dictionary.myAds.postFirstAdButton}
                         </Button>
                     </div>
                 )}
@@ -208,20 +204,20 @@ export default function MyAdsPage() {
                 <AlertDialog open={!!adToDelete} onOpenChange={(open) => !open && setAdToDelete(null)}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>तुम्ही जाहिरात हटवण्याची खात्री आहे का?</AlertDialogTitle>
+                            <AlertDialogTitle>{dictionary.myAds.deleteDialogTitle}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                ही क्रिया पूर्ववत केली जाऊ शकत नाही. यामुळे तुमची जाहिरात आमच्या सर्व्हरवरून कायमची हटवली जाईल.
+                                {dictionary.myAds.deleteDialogDescription}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel disabled={isDeleting}>रद्द करा</AlertDialogCancel>
+                            <AlertDialogCancel disabled={isDeleting}>{dictionary.myAds.cancelButton}</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleConfirmDelete}
                                 disabled={isDeleting}
                                 className="bg-destructive hover:bg-destructive/90"
                             >
                                 {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                हटवा
+                                {dictionary.myAds.deleteButton}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -230,3 +226,4 @@ export default function MyAdsPage() {
         </div>
     );
 }
+    

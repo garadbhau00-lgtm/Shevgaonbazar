@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -15,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import AppHeader from '@/components/layout/app-header';
 import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
+import { useLanguage } from '@/contexts/language-context';
 
 
 export default function AdDetailPage() {
@@ -22,6 +22,7 @@ export default function AdDetailPage() {
     const router = useRouter();
     const { toast } = useToast();
     const { user, loading: authLoading } = useAuth();
+    const { dictionary } = useLanguage();
     const [ad, setAd] = useState<Ad | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -29,7 +30,7 @@ export default function AdDetailPage() {
         if (authLoading) return;
 
         if (!user) {
-            toast({ variant: 'destructive', title: 'लॉगिन आवश्यक', description: 'जाहिरातीचे तपशील पाहण्यासाठी कृपया लॉगिन करा.' });
+            toast({ variant: 'destructive', title: dictionary.adDetail.loginRequiredTitle, description: dictionary.adDetail.loginRequiredDescription });
             router.push('/login');
             return;
         }
@@ -43,25 +44,25 @@ export default function AdDetailPage() {
                 if (docSnap.exists()) {
                     const adData = { id: docSnap.id, ...docSnap.data() } as Ad;
                      if (adData.status !== 'approved' && adData.userId !== user.uid) {
-                        toast({ variant: 'destructive', title: 'Ad Not Available', description: 'This ad is not currently available for viewing.' });
+                        toast({ variant: 'destructive', title: dictionary.adDetail.adNotAvailableTitle, description: dictionary.adDetail.adNotAvailableDescription });
                         router.push('/');
                     } else {
                         setAd(adData);
                     }
                 } else {
-                    toast({ variant: 'destructive', title: 'Not Found', description: 'Ad not found.' });
+                    toast({ variant: 'destructive', title: dictionary.adDetail.notFoundTitle, description: dictionary.adDetail.notFoundDescription });
                     router.push('/');
                 }
             } catch (error) {
                 console.error("Error fetching ad:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch ad details.' });
+                toast({ variant: 'destructive', title: dictionary.adDetail.errorTitle, description: dictionary.adDetail.errorDescription });
             } finally {
                 setLoading(false);
             }
         };
 
         fetchAd();
-    }, [adId, router, toast, user, authLoading]);
+    }, [adId, router, toast, user, authLoading, dictionary]);
 
     if (loading || authLoading) {
         return (
@@ -75,7 +76,6 @@ export default function AdDetailPage() {
     }
     
     if (!ad) {
-        // This will be shown briefly during redirect or if the ad is not found
         return null;
     }
     
@@ -96,7 +96,7 @@ export default function AdDetailPage() {
                         )) : (
                              <CarouselItem>
                                 <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-secondary flex items-center justify-center">
-                                   <p className="text-muted-foreground">फोटो नाही</p>
+                                   <p className="text-muted-foreground">{dictionary.adDetail.noPhoto}</p>
                                 </div>
                             </CarouselItem>
                         )}
@@ -111,7 +111,7 @@ export default function AdDetailPage() {
             </div>
             
             <div className="p-4 space-y-4">
-                 <h1 className="text-2xl font-bold">{ad.title || ad.category}</h1>
+                 <h1 className="text-2xl font-bold">{ad.title || (dictionary.categories[ad.category] || ad.category)}</h1>
                  {ad.subcategory && <p className="text-lg text-muted-foreground -mt-3">{ad.subcategory}</p>}
 
                 <div className="flex items-center text-2xl font-bold text-primary">
@@ -136,7 +136,7 @@ export default function AdDetailPage() {
                 
                  <div className="flex items-center text-muted-foreground">
                     <CalendarDays className="h-5 w-5 mr-2" />
-                    <span>पोस्ट केले: {formattedDate}</span>
+                    <span>{dictionary.adDetail.postedOn}: {formattedDate}</span>
                 </div>
             </div>
 
@@ -144,10 +144,11 @@ export default function AdDetailPage() {
                 <Link href={`tel:${ad.mobileNumber}`} className="w-full">
                     <Button className="w-full bg-green-600 hover:bg-green-700" size="lg">
                         <Phone className="mr-2 h-5 w-5" />
-                        कॉल करा
+                        {dictionary.adDetail.callButton}
                     </Button>
                 </Link>
             </div>
         </main>
     );
 }
+    

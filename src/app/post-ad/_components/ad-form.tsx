@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
@@ -24,37 +23,13 @@ import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useLanguage } from '@/contexts/language-context';
 
 // --- PAYMENT CONFIGURATION ---
-const UPI_ID = '9545886257@ybl';
+const UPI_ID = 'your-upi-id@oksbi';
 const PAYEE_NAME = 'Shevgaon Bazar';
-const PAYMENT_AMOUNT = '10.00';
+const PAYMENT_AMOUNT = '15.00';
 // ---------------------------
-
-const adSchema = z.object({
-  category: z.enum(
-    [
-      'पशुधन',
-      'शेती उत्पादने',
-      'शेतीसाठी साधनं',
-      'शेती व गाव सेवा',
-      'गावातील गरज',
-      'व्यावसायिक सेवा',
-      'आर्थिक',
-    ],
-    {
-      required_error: 'कृपया एक श्रेणी निवडा.',
-    }
-  ),
-  subcategory: z.string().optional(),
-  title: z.string().min(3, { message: 'जाहिरातीचे शीर्षक किमान ३ अक्षरी असावे.' }).optional(),
-  description: z.string().optional(),
-  price: z.coerce.number().positive({ message: 'किंमत ० पेक्षा जास्त असावी.' }),
-  location: z.string({ required_error: 'कृपया एक गाव निवडा.' }),
-  mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }),
-});
-
-type AdFormValues = z.infer<typeof adSchema>;
 
 type AdFormProps = {
     existingAd?: Ad;
@@ -66,6 +41,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
   const { user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { dictionary } = useLanguage();
   
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -77,6 +53,33 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!existingAd;
+  
+  const adFormDictionary = dictionary.adForm;
+
+  const adSchema = z.object({
+    category: z.enum(
+      [
+        'पशुधन',
+        'शेती उत्पादने',
+        'शेतीसाठी साधनं',
+        'शेती व गाव सेवा',
+        'गावातील गरज',
+        'व्यावसायिक सेवा',
+        'आर्थिक',
+      ],
+      {
+        required_error: adFormDictionary.validation.categoryRequired,
+      }
+    ),
+    subcategory: z.string().optional(),
+    title: z.string().min(3, { message: adFormDictionary.validation.titleMin }).optional(),
+    description: z.string().optional(),
+    price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }),
+    location: z.string({ required_error: adFormDictionary.validation.locationRequired }),
+    mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: adFormDictionary.validation.mobileInvalid }),
+  });
+  
+  type AdFormValues = z.infer<typeof adSchema>;
 
   const form = useForm<AdFormValues>({
     resolver: zodResolver(adSchema),
@@ -99,10 +102,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-        toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.' });
+        toast({ variant: 'destructive', title: adFormDictionary.toast.unauthorizedTitle, description: adFormDictionary.toast.unauthorizedDescription });
         router.push('/login');
     }
-  }, [user, authLoading, router, toast]);
+  }, [user, authLoading, router, toast, adFormDictionary]);
 
   useEffect(() => {
     if (isEditMode && existingAd) {
@@ -164,11 +167,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const handleFormSubmit = async (data: AdFormValues) => {
     if (!user || !userProfile) {
-        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to post an ad.' });
+        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.loginRequired });
         return;
     }
     if (!isEditMode && photoPreviews.length === 0) {
-      toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया तुमच्या जाहिरातीसाठी किमान एक फोटो अपलोड करा.' });
+      toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
       return;
     }
 
@@ -188,7 +191,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
         const submissionData: AdSubmission = {
             ...data,
-            photos: [photoUrl], // Use the processed data URI
+            photos: [photoUrl],
             userId: user.uid,
             userName: userProfile.name || user.email!,
             status: 'pending',
@@ -199,16 +202,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
         adDataToSubmit.current = submissionData;
 
         if (isEditMode) {
-          // If editing, just process the submission directly without payment
           await processAdSubmission();
         } else {
-          // If new ad, show payment options
           setShowPaymentChoice(true);
         }
 
     } catch (error) {
         console.error("Error preparing ad data:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'There was a problem preparing your ad.' });
+        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.errorPreparingAd });
         setIsSubmitting(false);
     }
   };
@@ -222,12 +223,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
       const photoData = adDataToSubmit.current.photos[0];
 
       if (photoData.startsWith('data:image')) {
-        // It's a new base64 image, upload to Storage
         const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}`);
         const uploadResult = await uploadString(storageRef, photoData, 'data_url');
         finalPhotoUrls = [await getDownloadURL(uploadResult.ref)];
       } else {
-        // It's an existing URL, keep it
         finalPhotoUrls = [photoData];
       }
 
@@ -236,16 +235,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
       if (isEditMode && existingAd) {
           const adDocRef = doc(db, 'ads', existingAd.id);
           await updateDoc(adDocRef, { ...finalData, status: 'pending' });
-          toast({ title: 'यशस्वी!', description: 'तुमची जाहिरात यशस्वीरित्या अद्यतनित झाली आहे आणि पुनरावलोकनासाठी सबमिट केली आहे.' });
+          toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
           router.push('/my-ads');
       } else {
           await addDoc(collection(db, 'ads'), finalData);
-          toast({ title: 'यशस्वी!', description: 'तुमची जाहिरात यशस्वीरित्या सबमिट झाली आहे. मंजुरीनंतर ती थेट दिसेल.' });
+          toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
           router.push('/my-ads');
       }
     } catch (error) {
         console.error('Error submitting ad:', error);
-        toast({ variant: 'destructive', title: 'त्रुटी', description: 'जाहिरात सबमिट करण्यात अयशस्वी.' });
+        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.submitError });
     } finally {
         setIsSubmitting(false);
         adDataToSubmit.current = null;
@@ -261,17 +260,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
       let gatewayUrl;
       if (gateway === 'phonepe') {
           gatewayUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(note)}&tr=${transactionId}`;
-      } else { // gpay
+      } else {
           gatewayUrl = upiUrl;
       }
       
       window.location.href = gatewayUrl;
 
-      // Close the choice dialog and show the confirmation dialog
       setShowPaymentChoice(false);
       setTimeout(() => {
         setShowPaymentConfirm(true);
-      }, 1000); // Give browser time to switch apps
+      }, 1000); 
   };
 
 
@@ -288,16 +286,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
             name="category"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>श्रेणी</FormLabel>
+                <FormLabel>{adFormDictionary.category.label}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="एक श्रेणी निवडा" />
+                      <SelectValue placeholder={adFormDictionary.category.placeholder} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {categories.map(cat => (
-                      <SelectItem key={cat.name} value={cat.name}>{cat.name}</SelectItem>
+                      <SelectItem key={cat.name} value={cat.name}>{dictionary.categories[cat.name] || cat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -306,17 +304,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
             )}
           />
 
-          {subcategories && subcategories.length > 0 ? (
+          {subcategories && subcategories.length > 0 && (
             <FormField
               control={form.control}
               name="subcategory"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>उप-श्रेणी</FormLabel>
+                  <FormLabel>{adFormDictionary.subcategory.label}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="एक उप-श्रेणी निवडा" />
+                        <SelectValue placeholder={adFormDictionary.subcategory.placeholder} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -329,16 +327,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 </FormItem>
               )}
             />
-          ) : null}
+          )}
 
           <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                   <FormItem>
-                      <FormLabel>जाहिरातीचे शीर्षक (वैकल्पिक)</FormLabel>
+                      <FormLabel>{adFormDictionary.title.label}</FormLabel>
                       <FormControl>
-                          <Input placeholder="उदा. विक्रीसाठी चांगली काळी म्हैस" {...field} disabled={isLoading} />
+                          <Input placeholder={adFormDictionary.title.placeholder} {...field} disabled={isLoading} />
                       </FormControl>
                       <FormMessage />
                   </FormItem>
@@ -350,9 +348,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
               name="description"
               render={({ field }) => (
                   <FormItem>
-                      <FormLabel>वर्णन (वैकल्पिक)</FormLabel>
+                      <FormLabel>{adFormDictionary.description.label}</FormLabel>
                       <FormControl>
-                           <Input placeholder="तुमच्या उत्पादनाबद्दल अधिक सांगा" {...field} disabled={isLoading} />
+                           <Input placeholder={adFormDictionary.description.placeholder} {...field} disabled={isLoading} />
                       </FormControl>
                       <FormMessage />
                   </FormItem>
@@ -364,9 +362,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>किंमत (₹)</FormLabel>
+                <FormLabel>{adFormDictionary.price.label}</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="उदा. १५०००" {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} disabled={isLoading}/>
+                  <Input type="number" placeholder={adFormDictionary.price.placeholder} {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} disabled={isLoading}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -377,11 +375,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>गाव</FormLabel>
+                <FormLabel>{adFormDictionary.location.label}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="एक गाव निवडा" />
+                      <SelectValue placeholder={adFormDictionary.location.placeholder} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -399,16 +397,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
             name="mobileNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>मोबाईल नंबर</FormLabel>
+                <FormLabel>{adFormDictionary.mobile.label}</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder="तुमचा मोबाईल नंबर" {...field} disabled={isLoading}/>
+                  <Input type="tel" placeholder={adFormDictionary.mobile.placeholder} {...field} disabled={isLoading}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <FormItem>
-              <FormLabel>फोटो</FormLabel>
+              <FormLabel>{adFormDictionary.photo.label}</FormLabel>
               <div className="flex flex-wrap gap-4">
                   {photoPreviews.map((preview, index) => (
                       <div key={index} className="relative w-32 aspect-square">
@@ -436,7 +434,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                               onClick={() => !isLoading && fileInputRef.current?.click()}
                           >
                               <Upload className="h-8 w-8 text-muted-foreground" />
-                              <p className="mt-2 text-sm text-muted-foreground text-center">फोटो अपलोड करा</p>
+                              <p className="mt-2 text-sm text-muted-foreground text-center">{adFormDictionary.photo.uploadText}</p>
                               <Input 
                                   ref={fileInputRef}
                                   type="file"
@@ -450,60 +448,58 @@ export default function AdForm({ existingAd }: AdFormProps) {
                       </FormControl>
                   )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">तुम्ही {MAX_FILES} फोटो अपलोड करू शकता.</p>
+              <p className="text-xs text-muted-foreground mt-1">{adFormDictionary.photo.limitText(MAX_FILES)}</p>
               <FormMessage />
           </FormItem>
 
           <Button type="submit" className="w-full !mt-8" size="lg" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isEditMode ? 'जाहिरात अद्यतनित करा' : `₹${PAYMENT_AMOUNT} भरून जाहिरात पोस्ट करा`}
+              {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton(PAYMENT_AMOUNT)}
           </Button>
         </form>
       </Form>
 
-      {/* Payment Choice Dialog */}
-       <AlertDialog open={showPaymentChoice} onOpenChange={setShowPaymentChoice}>
+      <AlertDialog open={showPaymentChoice} onOpenChange={setShowPaymentChoice}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>पेमेंट पद्धत निवडा</AlertDialogTitle>
+                    <AlertDialogTitle>{adFormDictionary.payment.choiceTitle}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        जाहिरात पोस्ट करण्यासाठी तुम्हाला ₹{PAYMENT_AMOUNT} भरावे लागतील. कृपया तुमची पसंतीची UPI ॲप निवडा.
+                        {adFormDictionary.payment.choiceDescription(PAYMENT_AMOUNT)}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="flex flex-col gap-4 py-4">
-                    <Button onClick={() => handlePaymentRedirect('phonepe')} size="lg">PhonePe ने पेमेंट करा</Button>
-                    <Button onClick={() => handlePaymentRedirect('gpay')} size="lg" variant="outline">Google Pay ने पेमेंट करा</Button>
+                    <Button onClick={() => handlePaymentRedirect('phonepe')} size="lg">{adFormDictionary.payment.phonepeButton}</Button>
+                    <Button onClick={() => handlePaymentRedirect('gpay')} size="lg" variant="outline">{adFormDictionary.payment.gpayButton}</Button>
                 </div>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setIsSubmitting(false)}>रद्द करा</AlertDialogCancel>
+                    <AlertDialogCancel onClick={() => setIsSubmitting(false)}>{adFormDictionary.payment.cancelButton}</AlertDialogCancel>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
 
-        {/* Payment Confirmation Dialog */}
         <AlertDialog open={showPaymentConfirm} onOpenChange={setShowPaymentConfirm}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>पेमेंटची पुष्टी करा</AlertDialogTitle>
+                    <AlertDialogTitle>{adFormDictionary.payment.confirmTitle}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        तुम्ही पेमेंट पूर्ण केले आहे का? पेमेंट यशस्वी झाल्यावर, तुमची जाहिरात पुनरावलोकनासाठी सबमिट केली जाईल.
+                        {adFormDictionary.payment.confirmDescription}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>लक्ष द्या</AlertTitle>
+                  <AlertTitle>{adFormDictionary.payment.attentionTitle}</AlertTitle>
                   <AlertDescription>
-                    पेमेंट अयशस्वी झाल्यास, कृपया 'रद्द करा' बटण दाबा.
+                    {adFormDictionary.payment.attentionDescription}
                   </AlertDescription>
                 </Alert>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => {
                       setIsSubmitting(false);
                       setShowPaymentConfirm(false);
-                    }}>रद्द करा</AlertDialogCancel>
+                    }}>{adFormDictionary.payment.cancelButton}</AlertDialogCancel>
                     <AlertDialogAction onClick={processAdSubmission} disabled={isSubmitting}>
                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        होय, पेमेंट पूर्ण झाले
+                        {adFormDictionary.payment.confirmButton}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -511,5 +507,4 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
     
