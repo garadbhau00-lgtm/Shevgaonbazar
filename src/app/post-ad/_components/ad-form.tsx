@@ -314,7 +314,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     </FormControl>
                     <SelectContent>
                       {subcategories.map(subcat => (
-                        <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+                        <SelectItem key={subcat.key} value={subcat.name}>
+                            {dictionary.subcategories[subcat.key] || subcat.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
