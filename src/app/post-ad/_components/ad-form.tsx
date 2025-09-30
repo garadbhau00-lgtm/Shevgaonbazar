@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
@@ -448,13 +449,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
                       </FormControl>
                   )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{adFormDictionary.photo.limitText(MAX_FILES)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{adFormDictionary.photo.limitText.replace('${maxFiles}', MAX_FILES)}</p>
               <FormMessage />
           </FormItem>
 
           <Button type="submit" className="w-full !mt-8" size="lg" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton(PAYMENT_AMOUNT)}
+              {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton.replace('${amount}', PAYMENT_AMOUNT)}
           </Button>
         </form>
       </Form>
@@ -464,7 +465,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 <AlertDialogHeader>
                     <AlertDialogTitle>{adFormDictionary.payment.choiceTitle}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        {adFormDictionary.payment.choiceDescription(PAYMENT_AMOUNT)}
+                        {adFormDictionary.payment.choiceDescription.replace('${amount}', PAYMENT_AMOUNT)}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="flex flex-col gap-4 py-4">
@@ -507,4 +508,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
+
     
