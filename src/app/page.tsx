@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Loader2, List, Search as SearchIcon } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Loader2, List, ChevronDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
 import AdCard from '@/components/ad-card';
@@ -11,9 +11,9 @@ import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestor
 import { db } from '@/lib/firebase';
 import { categories } from '@/lib/categories';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { useLanguage } from '@/contexts/language-context';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   const { dictionary } = useLanguage();
@@ -40,7 +40,7 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
       {ads.map((ad) => (
         <AdCard key={ad.id} ad={ad} />
       ))}
@@ -48,14 +48,26 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   );
 }
 
+type SortOption = 'newest' | 'oldest' | 'price-asc' | 'price-desc';
+
 export default function Home() {
   const { toast } = useToast();
   const { dictionary } = useLanguage();
   const [ads, setAds] = useState<Ad[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('सर्व');
+  const [sortOption, setSortOption] = useState<SortOption>('newest');
+
+  const sortOptions: { value: SortOption, label: string }[] = [
+    { value: 'newest', label: 'नवीनतम' },
+    { value: 'oldest', label: 'सर्वात जुने' },
+    { value: 'price-asc', label: 'किंमत: कमी ते जास्त' },
+    { value: 'price-desc', label: 'किंमत: जास्त ते कमी' },
+  ];
 
   useEffect(() => {
+    // The base query is always sorted by creation date descending. 
+    // Further sorting is done client-side.
     const q = query(
         collection(db, 'ads'), 
         where('status', '==', 'approved'),
@@ -88,9 +100,26 @@ export default function Home() {
     return () => unsubscribe();
   }, [toast]);
   
-  const filteredAds = selectedCategory === 'सर्व'
-    ? ads
-    : ads.filter(ad => ad.category === selectedCategory);
+  const sortedAndFilteredAds = useMemo(() => {
+    let filtered = selectedCategory === 'सर्व'
+      ? ads
+      : ads.filter(ad => ad.category === selectedCategory);
+
+    switch (sortOption) {
+      case 'newest':
+        // The default query from Firestore is already newest first.
+        // But if ads are sorted by price, we need to re-sort.
+        return filtered.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+      case 'oldest':
+        return filtered.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
+      case 'price-asc':
+        return filtered.sort((a, b) => a.price - b.price);
+      case 'price-desc':
+        return filtered.sort((a, b) => b.price - a.price);
+      default:
+        return filtered;
+    }
+  }, [ads, selectedCategory, sortOption]);
 
   return (
     <div className="flex flex-col h-full">
@@ -135,7 +164,26 @@ export default function Home() {
       </header>
       <main className="flex-1 overflow-y-auto">
         <div className="p-4">
-          <AdList ads={filteredAds} loading={adsLoading} />
+          <div className="flex justify-end mb-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <span>{sortOptions.find(o => o.value === sortOption)?.label}</span>
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuRadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+                  {sortOptions.map(option => (
+                    <DropdownMenuRadioItem key={option.value} value={option.value}>
+                      {option.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <AdList ads={sortedAndFilteredAds} loading={adsLoading} />
         </div>
       </main>
     </div>
