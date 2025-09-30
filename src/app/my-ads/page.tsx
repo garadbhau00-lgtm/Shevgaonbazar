@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -150,7 +151,7 @@ export default function MyAdsPage() {
                                             {ad.photos && ad.photos.length > 0 ? (
                                                 <Image
                                                     src={ad.photos[0]}
-                                                    alt={ad.title || ''}
+                                                    alt={ad.category || ''}
                                                     fill
                                                     className="object-cover"
                                                 />
@@ -162,7 +163,7 @@ export default function MyAdsPage() {
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex-grow p-3">
-                                        <h3 className="font-semibold">{ad.title || (dictionary.categories[ad.category] || ad.category)}</h3>
+                                        <h3 className="font-semibold">{dictionary.categories[ad.category] || ad.category}</h3>
                                         <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
 
                                         <Badge variant={getStatusVariant(ad.status)} className="mt-1">
@@ -226,4 +227,3 @@ export default function MyAdsPage() {
         </div>
     );
 }
-    

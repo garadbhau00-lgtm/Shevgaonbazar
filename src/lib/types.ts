@@ -2,8 +2,6 @@
 
 export type Ad = {
   id: string;
-  title?: string;
-  description?: string;
   category:
     | 'पशुधन'
     | 'शेती उत्पादने'
@@ -72,5 +70,3 @@ export type Conversation = {
     [uid: string]: boolean;
   }
 };
-
-    

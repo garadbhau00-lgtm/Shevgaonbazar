@@ -79,7 +79,7 @@ export default function AdCard({ ad }: AdCardProps) {
             {adPhotoUrl ? (
               <Image
                 src={adPhotoUrl}
-                alt={ad.title || ad.category}
+                alt={ad.category}
                 fill
                 className="object-cover"
                 data-ai-hint={'agriculture item'}

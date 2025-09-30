@@ -28,7 +28,7 @@ type AdFormProps = {
     existingAd?: Ad;
 };
 
-const MAX_FILES = 1;
+const MAX_FILES = 5;
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
@@ -110,19 +110,26 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [isEditMode, existingAd, userProfile, form]);
   
   useEffect(() => {
-    if (newFiles.length > 0) {
-      const objectUrls = newFiles.map(file => URL.createObjectURL(file));
-      setPhotoPreviews(objectUrls);
-      return () => objectUrls.forEach(url => URL.revokeObjectURL(url));
-    } else if (isEditMode && existingAd?.photos) {
-        setPhotoPreviews(existingAd.photos);
-    } else {
-        setPhotoPreviews([]);
-    }
+    const generatePreviews = async () => {
+        if (newFiles.length > 0) {
+            const objectUrls = newFiles.map(file => URL.createObjectURL(file));
+            setPhotoPreviews(prev => [...(isEditMode ? (existingAd?.photos || []) : []), ...objectUrls].slice(0, MAX_FILES));
+            return () => objectUrls.forEach(url => URL.revokeObjectURL(url));
+        } else if (isEditMode && existingAd?.photos) {
+            setPhotoPreviews(existingAd.photos);
+        } else {
+            setPhotoPreviews([]);
+        }
+    };
+    generatePreviews();
   }, [newFiles, isEditMode, existingAd]);
 
+
   useEffect(() => {
-    form.setValue('subcategory', undefined);
+    const newSubcategories = categories.find(c => c.name === selectedCategory)?.subcategories || [];
+    if (!newSubcategories.some(sc => sc.key === form.getValues('subcategory'))) {
+        form.setValue('subcategory', undefined);
+    }
   }, [selectedCategory, form]);
 
   if (authLoading) {
@@ -135,59 +142,80 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files).slice(0, MAX_FILES);
-      setNewFiles(files);
+      const filesToAdd = Array.from(e.target.files);
+      const totalFiles = newFiles.length + filesToAdd.length + (isEditMode ? (existingAd?.photos?.length || 0) : 0);
+      
+      if (totalFiles > MAX_FILES) {
+          toast({
+              variant: 'destructive',
+              title: 'Maximum files reached',
+              description: `You can only upload a total of ${MAX_FILES} photos.`
+          });
+          filesToAdd.splice(MAX_FILES - newFiles.length - (isEditMode ? (existingAd?.photos?.length || 0) : 0));
+      }
+      setNewFiles(prev => [...prev, ...filesToAdd]);
     }
   };
 
-  const removePhoto = () => {
-    setNewFiles([]);
-    setPhotoPreviews([]);
-    if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+  const removePhoto = (index: number, isExisting: boolean) => {
+    if (isExisting) {
+        setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
+        // We'll handle the actual deletion from storage on submit if needed
+        // For now, we assume we might be replacing it.
+        // We will need a way to track deleted photos if we want to remove them from storage on update.
+        // For simplicity, we can just update the array in firestore.
+        const updatedPhotos = photoPreviews.filter((_, i) => i !== index);
+        if (existingAd) {
+            existingAd.photos = updatedPhotos;
+        }
+
+    } else {
+        const fileIndex = index - (existingAd?.photos?.length || 0);
+        setNewFiles(prev => prev.filter((_, i) => i !== fileIndex));
     }
   };
   
   const onSubmit = async (data: AdFormValues) => {
     if (!user || !userProfile) {
-      toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.loginRequired });
-      return;
+        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.loginRequired });
+        return;
     }
-    if (photoPreviews.length === 0) {
-      toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
-      return;
+    const totalPhotos = photoPreviews.length;
+    if (totalPhotos === 0) {
+        toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
+        return;
     }
-
+    
     setIsSubmitting(true);
     try {
-        let photoUrl = '';
+        let uploadedPhotoUrls: string[] = [];
         
-        // If there's a new file, upload it
         if (newFiles.length > 0) {
-            const file = newFiles[0];
-            const compressedFile = await imageCompression(file, {
-                maxSizeMB: 1,
-                maxWidthOrHeight: 1024,
-                useWebWorker: true,
+            const uploadPromises = newFiles.map(async (file) => {
+                const compressedFile = await imageCompression(file, {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1024,
+                    useWebWorker: true,
+                });
+                const photoDataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
+                const storageRef = ref(storage, `ad_photos/${user.uid}/${Date.now()}-${file.name}`);
+                const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
+                return getDownloadURL(uploadResult.ref);
             });
-            const photoDataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
-
-            const storageRef = ref(storage, `ad_photos/${user.uid}/${Date.now()}`);
-            const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
-            photoUrl = await getDownloadURL(uploadResult.ref);
-        } else if (isEditMode && existingAd?.photos?.[0]) {
-             // If in edit mode and no new file, use the existing photo
-            photoUrl = existingAd.photos[0];
+            uploadedPhotoUrls = await Promise.all(uploadPromises);
         }
 
-        // If after all that, we still don't have a photo, something is wrong.
-        if (!photoUrl) {
+        const existingPhotos = isEditMode ? (existingAd?.photos || []) : [];
+        const finalPhotoUrls = [...existingPhotos.filter(p => photoPreviews.includes(p)), ...uploadedPhotoUrls];
+
+
+        if (finalPhotoUrls.length === 0) {
             throw new Error(adFormDictionary.toast.photoRequiredDescription);
         }
 
         const submissionData = {
             ...data,
-            photos: [photoUrl],
+            photos: finalPhotoUrls,
             userId: user.uid,
             userName: userProfile.name || user.email!,
             status: 'pending' as const,
@@ -322,7 +350,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
           <FormItem>
               <FormLabel>{adFormDictionary.photo.label}</FormLabel>
               <div className="flex flex-wrap gap-4">
-                  {photoPreviews.map((preview, index) => (
+                  {photoPreviews.map((preview, index) => {
+                     const isExisting = isEditMode && existingAd?.photos?.includes(preview);
+                     return (
                       <div key={index} className="relative w-32 aspect-square">
                           <Image src={preview} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
                           <Button
@@ -330,13 +360,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
                               variant="destructive"
                               size="icon"
                               className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-                              onClick={() => removePhoto()}
+                              onClick={() => removePhoto(index, !!isExisting)}
                               disabled={isLoading}
                           >
                               <XIcon className="h-4 w-4" />
                           </Button>
                       </div>
-                  ))}
+                     )
+                  })}
 
                   {photoPreviews.length < MAX_FILES && (
                       <FormControl>
@@ -356,7 +387,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                                   accept="image/*" 
                                   onChange={handleFileChange} 
                                   disabled={isLoading}
-                                  multiple={false}
+                                  multiple
                               />
                           </div>
                       </FormControl>
@@ -375,5 +406,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
-    

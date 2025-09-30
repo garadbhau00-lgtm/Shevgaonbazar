@@ -156,18 +156,17 @@ export default function AdManagementPage() {
                         <Card key={ad.id} className="overflow-hidden">
                             <div className="relative h-40 w-full">
                                 {ad.photos && ad.photos.length > 0 && (
-                                    <Image src={ad.photos[0]} alt={ad.title || ''} fill className="object-cover" />
+                                    <Image src={ad.photos[0]} alt={ad.category || ''} fill className="object-cover" />
                                 )}
                                 <Badge variant={getStatusVariant(ad.status)} className="absolute top-2 right-2">
                                     {statusTranslations[ad.status]}
                                 </Badge>
                             </div>
                             <CardHeader>
-                                <CardTitle>{ad.title || (dictionary.categories[ad.category] || ad.category)}</CardTitle>
+                                <CardTitle>{dictionary.categories[ad.category] || ad.category}</CardTitle>
                                 <CardDescription>{ad.location}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {ad.description && <p className="text-sm text-muted-foreground">{ad.description}</p>}
                                 <div className="mt-2 flex items-center font-semibold text-primary">
                                     <BadgeIndianRupee className="h-5 w-5 mr-1" />
                                     <span>{ad.price.toLocaleString('en-IN')}</span>
@@ -232,4 +231,3 @@ export default function AdManagementPage() {
         </>
     );
 }
-    

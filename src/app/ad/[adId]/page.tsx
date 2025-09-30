@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -90,7 +91,7 @@ export default function AdDetailPage() {
                         {ad.photos && ad.photos.length > 0 ? ad.photos.map((photo, index) => (
                             <CarouselItem key={index}>
                                 <div className="relative aspect-video w-full rounded-lg overflow-hidden">
-                                    <Image src={photo} alt={`${ad.title} - photo ${index+1}`} fill className="object-cover" />
+                                    <Image src={photo} alt={`${ad.category} - photo ${index+1}`} fill className="object-cover" />
                                 </div>
                             </CarouselItem>
                         )) : (
@@ -111,7 +112,7 @@ export default function AdDetailPage() {
             </div>
             
             <div className="p-4 space-y-4">
-                 <h1 className="text-2xl font-bold">{ad.title || (dictionary.categories[ad.category] || ad.category)}</h1>
+                 <h1 className="text-2xl font-bold">{dictionary.categories[ad.category] || ad.category}</h1>
                  {ad.subcategory && <p className="text-lg text-muted-foreground -mt-3">{ad.subcategory}</p>}
 
                 <div className="flex items-center text-2xl font-bold text-primary">
@@ -151,4 +152,3 @@ export default function AdDetailPage() {
         </main>
     );
 }
-    
