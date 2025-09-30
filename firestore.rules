@@ -1,60 +1,69 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAuthOwner(resource) {
-      return request.auth.uid == resource.data.userId;
+    // Helper function to check if a user is an Admin
+    function isAdmin(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'Admin';
     }
 
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
-    }
-
-    function isUser(uid) {
-      return exists(/databases/$(database)/documents/users/$(uid));
-    }
-    
+    // Rules for the 'users' collection
     match /users/{userId} {
-      // Anyone can create their own user profile document.
-      allow create: if request.auth.uid == userId;
-      // Users can view their own profile. Admins can view any profile.
-      allow get: if request.auth.uid == userId || isAdmin();
-      // Users can update their own name and mobile. Admins can update anything.
-      allow update: if (request.auth.uid == userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'mobileNumber', 'updatedAt'])) || isAdmin();
-      // Only admins can delete users.
-      allow delete: if isAdmin();
-      // Admins can list all users.
-      allow list: if isAdmin();
+      // Admins can read, write, and delete any user profile
+      allow read, write, delete: if request.auth != null && isAdmin(request.auth.uid);
+      // A user can read their own profile
+      allow get: if request.auth != null && request.auth.uid == userId;
+      // A user can update their own name and mobile number, but not their role or disabled status
+      allow update: if request.auth != null && request.auth.uid == userId &&
+                       request.resource.data.keys().hasOnly(['name', 'mobileNumber', 'updatedAt']);
     }
-    
+
+    // Rules for the 'ads' collection
     match /ads/{adId} {
-      // Any authenticated user can create an ad.
+      // Anyone can read approved ads
+      allow get: if resource.data.status == 'approved';
+      // Authenticated users can read their own ads regardless of status
+      allow get: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Admins can read any ad
+      allow get: if request.auth != null && isAdmin(request.auth.uid);
+
+      // Authenticated users can create ads
       allow create: if request.auth != null;
-      // Anyone can read an approved ad. Users can read their own ads regardless of status.
-      allow get: if resource.data.status == 'approved' || isAuthOwner(resource);
-      // Anyone can query approved ads.
-      allow list: if request.query.get('status') == 'approved';
+      
+      // Users can update their own ads, but cannot approve them
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId &&
+                       !('status' in request.resource.data.diff(resource.data).affectedKeys());
 
-      // Users can update their own ads, but cannot approve them.
-      // Admins can update any ad, including changing status.
-      allow update: if (isAuthOwner(resource) && !('status' in request.resource.data.diff(resource.data).affectedKeys())) || isAdmin();
-
-      // Users can delete their own ads. Admins can delete any ad.
-      allow delete: if isAuthOwner(resource) || isAdmin();
+      // Admins can update any ad, including changing the status
+      allow update: if request.auth != null && isAdmin(request.auth.uid);
+      
+      // Users can delete their own ads
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Admins can delete any ad
+      allow delete: if request.auth != null && isAdmin(request.auth.uid);
     }
     
+    // Rules for conversations
     match /conversations/{conversationId} {
-      allow read, write: if request.auth.uid in resource.data.participants;
-      
+      allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
+
       match /messages/{messageId} {
-        allow create, read, write: if request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        allow read, write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
       }
     }
 
+    // Rules for the 'help_messages' collection
     match /help_messages/{messageId} {
+      // Any authenticated user can create a message
       allow create: if request.auth != null;
-      allow read, write, delete: if isAdmin();
+      
+      // Only Admins can read the list of messages
+      allow list: if request.auth != null && isAdmin(request.auth.uid);
+      
+      // Admins can get, update, and delete individual messages
+      allow get, update, delete: if request.auth != null && isAdmin(request.auth.uid);
     }
   }
 }
