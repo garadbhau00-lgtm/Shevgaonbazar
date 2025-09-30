@@ -112,7 +112,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     const generatePreviews = async () => {
         if (newFiles.length > 0) {
             const objectUrls = newFiles.map(file => URL.createObjectURL(file));
-            setPhotoPreviews(objectUrls); // Replace previews with new ones
+            setPhotoPreviews(objectUrls);
             return () => objectUrls.forEach(url => URL.revokeObjectURL(url));
         } else if (isEditMode && existingAd?.photos) {
             setPhotoPreviews(existingAd.photos);
@@ -142,11 +142,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      setNewFiles([file]); // Replace existing new files with the new one
-      // Clear existing photo previews if we are in edit mode
-      if (isEditMode && existingAd) {
-        setPhotoPreviews([]);
-      }
+      setNewFiles([file]); 
     }
   };
 
@@ -165,7 +161,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             throw new Error(adFormDictionary.toast.loginRequired);
         }
 
-        let finalPhotoDataUris: string[] = isEditMode && !newFiles.length ? (existingAd?.photos || []) : [];
+        let finalPhotoDataUris: string[] = photoPreviews;
 
         if (newFiles.length > 0) {
              const file = newFiles[0];
