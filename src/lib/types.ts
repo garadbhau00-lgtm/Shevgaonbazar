@@ -25,6 +25,9 @@ export type Ad = {
   rejectionReason?: string;
 };
 
+// This type represents the data that is ready for Firestore submission.
+export type AdSubmission = Omit<Ad, 'id'>;
+
 export type UserProfile = {
     uid: string;
     email: string;
@@ -69,3 +72,5 @@ export type Conversation = {
     [uid: string]: boolean;
   }
 };
+
+    

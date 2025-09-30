@@ -9,19 +9,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Upload, X as XIcon } from 'lucide-react';
+import { Loader2, Upload, X as XIcon, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import type { Ad } from '@/lib/types';
+import type { Ad, AdSubmission } from '@/lib/types';
 import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+
+// --- PAYMENT CONFIGURATION ---
+const UPI_ID = '9545886257@ybl';
+const PAYEE_NAME = 'Shevgaon Bazar';
+const PAYMENT_AMOUNT = '10.00';
+// ---------------------------
 
 const adSchema = z.object({
   category: z.enum(
@@ -39,6 +47,8 @@ const adSchema = z.object({
     }
   ),
   subcategory: z.string().optional(),
+  title: z.string().min(3, { message: 'जाहिरातीचे शीर्षक किमान ३ अक्षरी असावे.' }).optional(),
+  description: z.string().optional(),
   price: z.coerce.number().positive({ message: 'किंमत ० पेक्षा जास्त असावी.' }),
   location: z.string({ required_error: 'कृपया एक गाव निवडा.' }),
   mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: 'कृपया वैध १०-अंकी मोबाईल नंबर टाका.' }),
@@ -51,7 +61,6 @@ type AdFormProps = {
 };
 
 const MAX_FILES = 1;
-const PAYMENT_AMOUNT = '15.00'; // Example amount
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
@@ -60,11 +69,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [showPaymentChoice, setShowPaymentChoice] = useState(false);
+  const [showPaymentConfirm, setShowPaymentConfirm] = useState(false);
+  const adDataToSubmit = useRef<AdSubmission | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const isEditMode = !!existingAd;
 
   const form = useForm<AdFormValues>({
@@ -75,6 +86,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
       mobileNumber: '',
       category: undefined,
       subcategory: undefined,
+      title: '',
+      description: '',
     },
   });
 
@@ -85,7 +98,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   useEffect(() => {
     if (authLoading) return;
-
     if (!user) {
         toast({ variant: 'destructive', title: 'प्रवेश प्रतिबंधित', description: 'जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.' });
         router.push('/login');
@@ -97,6 +109,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
       form.reset({
         category: existingAd.category,
         subcategory: existingAd.subcategory,
+        title: existingAd.title,
+        description: existingAd.description,
         price: existingAd.price,
         location: existingAd.location,
         mobileNumber: existingAd.mobileNumber,
@@ -113,10 +127,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     if (newFiles.length > 0) {
       const objectUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviews(objectUrls);
-      
-      return () => {
-        objectUrls.forEach(url => URL.revokeObjectURL(url));
-      };
+      return () => objectUrls.forEach(url => URL.revokeObjectURL(url));
     } else if (isEditMode && existingAd?.photos) {
         setPhotoPreviews(existingAd.photos);
     } else {
@@ -127,7 +138,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   useEffect(() => {
     form.setValue('subcategory', undefined);
   }, [selectedCategory, form]);
-
 
   if (authLoading) {
       return (
@@ -151,22 +161,119 @@ export default function AdForm({ existingAd }: AdFormProps) {
         fileInputRef.current.value = "";
     }
   };
+
+  const handleFormSubmit = async (data: AdFormValues) => {
+    if (!user || !userProfile) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to post an ad.' });
+        return;
+    }
+    if (!isEditMode && photoPreviews.length === 0) {
+      toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया तुमच्या जाहिरातीसाठी किमान एक फोटो अपलोड करा.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    let photoUrl = (isEditMode && existingAd?.photos?.[0]) || '';
+    
+    try {
+        if (newFiles.length > 0) {
+            const file = newFiles[0];
+            const compressedFile = await imageCompression(file, {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1024,
+                useWebWorker: true,
+            });
+            photoUrl = await imageCompression.getDataUrlFromFile(compressedFile);
+        }
+
+        const submissionData: AdSubmission = {
+            ...data,
+            photos: [photoUrl], // Use the processed data URI
+            userId: user.uid,
+            userName: userProfile.name || user.email!,
+            status: 'pending',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+
+        adDataToSubmit.current = submissionData;
+
+        if (isEditMode) {
+          // If editing, just process the submission directly without payment
+          await processAdSubmission();
+        } else {
+          // If new ad, show payment options
+          setShowPaymentChoice(true);
+        }
+
+    } catch (error) {
+        console.error("Error preparing ad data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'There was a problem preparing your ad.' });
+        setIsSubmitting(false);
+    }
+  };
   
- const handleFormSubmit = async (data: AdFormValues) => {
-    // This is where you would trigger the payment gateway flow.
-    // For now, it will just show a placeholder alert.
+  const processAdSubmission = async () => {
+    if (!adDataToSubmit.current) return;
+    setIsSubmitting(true);
     
-    // 1. You would first call your backend to create a Razorpay order.
-    // 2. Your backend returns an order_id.
-    // 3. You use Razorpay's checkout library with the order_id to open the payment modal.
-    // 4. After payment, a webhook confirms the payment on your backend, and the ad is created.
-    
-    toast({
-        title: 'Payment Gateway Integration Needed',
-        description: `This would now proceed to payment for ₹${PAYMENT_AMOUNT}.`,
-    });
- };
- 
+    try {
+      let finalPhotoUrls: string[] = [];
+      const photoData = adDataToSubmit.current.photos[0];
+
+      if (photoData.startsWith('data:image')) {
+        // It's a new base64 image, upload to Storage
+        const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}`);
+        const uploadResult = await uploadString(storageRef, photoData, 'data_url');
+        finalPhotoUrls = [await getDownloadURL(uploadResult.ref)];
+      } else {
+        // It's an existing URL, keep it
+        finalPhotoUrls = [photoData];
+      }
+
+      const finalData = { ...adDataToSubmit.current, photos: finalPhotoUrls };
+
+      if (isEditMode && existingAd) {
+          const adDocRef = doc(db, 'ads', existingAd.id);
+          await updateDoc(adDocRef, { ...finalData, status: 'pending' });
+          toast({ title: 'यशस्वी!', description: 'तुमची जाहिरात यशस्वीरित्या अद्यतनित झाली आहे आणि पुनरावलोकनासाठी सबमिट केली आहे.' });
+          router.push('/my-ads');
+      } else {
+          await addDoc(collection(db, 'ads'), finalData);
+          toast({ title: 'यशस्वी!', description: 'तुमची जाहिरात यशस्वीरित्या सबमिट झाली आहे. मंजुरीनंतर ती थेट दिसेल.' });
+          router.push('/my-ads');
+      }
+    } catch (error) {
+        console.error('Error submitting ad:', error);
+        toast({ variant: 'destructive', title: 'त्रुटी', description: 'जाहिरात सबमिट करण्यात अयशस्वी.' });
+    } finally {
+        setIsSubmitting(false);
+        adDataToSubmit.current = null;
+        setShowPaymentConfirm(false);
+    }
+  };
+
+  const handlePaymentRedirect = (gateway: 'phonepe' | 'gpay') => {
+      const transactionId = `T${Date.now()}`;
+      const note = `Ad posting fee for Shevgaon Bazar.`;
+      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(note)}&tr=${transactionId}`;
+
+      let gatewayUrl;
+      if (gateway === 'phonepe') {
+          gatewayUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(note)}&tr=${transactionId}`;
+      } else { // gpay
+          gatewayUrl = upiUrl;
+      }
+      
+      window.location.href = gatewayUrl;
+
+      // Close the choice dialog and show the confirmation dialog
+      setShowPaymentChoice(false);
+      setTimeout(() => {
+        setShowPaymentConfirm(true);
+      }, 1000); // Give browser time to switch apps
+  };
+
 
   const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
   const isLoading = isSubmitting;
@@ -199,7 +306,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             )}
           />
 
-          {subcategories && subcategories.length > 0 && (
+          {subcategories && subcategories.length > 0 ? (
             <FormField
               control={form.control}
               name="subcategory"
@@ -222,7 +329,35 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 </FormItem>
               )}
             />
-          )}
+          ) : null}
+
+          <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                  <FormItem>
+                      <FormLabel>जाहिरातीचे शीर्षक (वैकल्पिक)</FormLabel>
+                      <FormControl>
+                          <Input placeholder="उदा. विक्रीसाठी चांगली काळी म्हैस" {...field} disabled={isLoading} />
+                      </FormControl>
+                      <FormMessage />
+                  </FormItem>
+              )}
+          />
+
+          <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                  <FormItem>
+                      <FormLabel>वर्णन (वैकल्पिक)</FormLabel>
+                      <FormControl>
+                           <Input placeholder="तुमच्या उत्पादनाबद्दल अधिक सांगा" {...field} disabled={isLoading} />
+                      </FormControl>
+                      <FormMessage />
+                  </FormItem>
+              )}
+          />
 
           <FormField
             control={form.control}
@@ -321,10 +456,60 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
           <Button type="submit" className="w-full !mt-8" size="lg" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isEditMode ? 'जाहिरात अद्यतनित करा' : `₹${PAYMENT_AMOUNT} भरण्यासाठी पुढे जा`}
+              {isEditMode ? 'जाहिरात अद्यतनित करा' : `₹${PAYMENT_AMOUNT} भरून जाहिरात पोस्ट करा`}
           </Button>
         </form>
       </Form>
+
+      {/* Payment Choice Dialog */}
+       <AlertDialog open={showPaymentChoice} onOpenChange={setShowPaymentChoice}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>पेमेंट पद्धत निवडा</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        जाहिरात पोस्ट करण्यासाठी तुम्हाला ₹{PAYMENT_AMOUNT} भरावे लागतील. कृपया तुमची पसंतीची UPI ॲप निवडा.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="flex flex-col gap-4 py-4">
+                    <Button onClick={() => handlePaymentRedirect('phonepe')} size="lg">PhonePe ने पेमेंट करा</Button>
+                    <Button onClick={() => handlePaymentRedirect('gpay')} size="lg" variant="outline">Google Pay ने पेमेंट करा</Button>
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setIsSubmitting(false)}>रद्द करा</AlertDialogCancel>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Payment Confirmation Dialog */}
+        <AlertDialog open={showPaymentConfirm} onOpenChange={setShowPaymentConfirm}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>पेमेंटची पुष्टी करा</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        तुम्ही पेमेंट पूर्ण केले आहे का? पेमेंट यशस्वी झाल्यावर, तुमची जाहिरात पुनरावलोकनासाठी सबमिट केली जाईल.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>लक्ष द्या</AlertTitle>
+                  <AlertDescription>
+                    पेमेंट अयशस्वी झाल्यास, कृपया 'रद्द करा' बटण दाबा.
+                  </AlertDescription>
+                </Alert>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => {
+                      setIsSubmitting(false);
+                      setShowPaymentConfirm(false);
+                    }}>रद्द करा</AlertDialogCancel>
+                    <AlertDialogAction onClick={processAdSubmission} disabled={isSubmitting}>
+                       {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        होय, पेमेंट पूर्ण झाले
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </>
   );
 }
+
+    
