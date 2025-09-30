@@ -65,6 +65,7 @@ export default function Home() {
   const [adsLoading, setAdsLoading] = useState(true);
   
   const [selectedCategory, setSelectedCategory] = useState<string>('सर्व');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [selectedVillage, setSelectedVillage] = useState<string>('all');
   const [maxPrice, setMaxPrice] = useState<number>(MAX_PRICE_LIMIT);
@@ -116,6 +117,10 @@ export default function Home() {
     if (selectedCategory !== 'सर्व') {
       filtered = filtered.filter(ad => ad.category === selectedCategory);
     }
+    
+    if (selectedSubcategory !== 'all') {
+      filtered = filtered.filter(ad => ad.subcategory === selectedSubcategory);
+    }
 
     if(selectedVillage !== 'all') {
       filtered = filtered.filter(ad => ad.location === selectedVillage);
@@ -135,18 +140,31 @@ export default function Home() {
       default:
         return filtered;
     }
-  }, [ads, selectedCategory, sortOption, selectedVillage, maxPrice]);
+  }, [ads, selectedCategory, selectedSubcategory, sortOption, selectedVillage, maxPrice]);
+
+  useEffect(() => {
+    // Reset subcategory when main category changes
+    setSelectedSubcategory('all');
+  }, [selectedCategory]);
+  
+  const subcategoriesForSelectedCategory = useMemo(() => {
+    if (selectedCategory === 'सर्व') return [];
+    return categories.find(cat => cat.name === selectedCategory)?.subcategories || [];
+  }, [selectedCategory]);
 
   const resetFilters = () => {
     setSortOption('newest');
     setSelectedVillage('all');
     setMaxPrice(MAX_PRICE_LIMIT);
+    setSelectedSubcategory('all');
   }
   
   const activeFilterCount =
     (sortOption !== 'newest' ? 1 : 0) +
     (selectedVillage !== 'all' ? 1 : 0) +
-    (maxPrice < MAX_PRICE_LIMIT ? 1 : 0);
+    (maxPrice < MAX_PRICE_LIMIT ? 1 : 0) +
+    (selectedSubcategory !== 'all' ? 1 : 0);
+
 
   return (
     <div className="flex flex-col h-full">
@@ -221,6 +239,25 @@ export default function Home() {
                               </RadioGroup>
                           </div>
                           
+                          {subcategoriesForSelectedCategory.length > 0 && (
+                            <div>
+                                <Label htmlFor="subcategory-filter" className="text-base font-semibold">Sub-category</Label>
+                                <DropdownSelect value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+                                    <SelectTrigger id="subcategory-filter" className="mt-2">
+                                        <SelectValue placeholder="Select a sub-category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Sub-categories</SelectItem>
+                                        {subcategoriesForSelectedCategory.map(subcat => (
+                                            <SelectItem key={subcat.key} value={subcat.name}>
+                                                {dictionary.subcategories[subcat.key] || subcat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </DropdownSelect>
+                           </div>
+                          )}
+
                            <div>
                                 <Label htmlFor="village-filter" className="text-base font-semibold">Village</Label>
                                 <DropdownSelect value={selectedVillage} onValueChange={setSelectedVillage}>
@@ -268,4 +305,3 @@ export default function Home() {
     </div>
   );
 }
-
