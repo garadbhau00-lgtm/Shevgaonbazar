@@ -1,0 +1,75 @@
+{
+    "home": {
+        "loadingAds": "Loading ads...",
+        "noAdsFound": "No ads found.",
+        "noAdsInCategory": "There are currently no ads in this category.",
+        "welcomeTitle": "Welcome to Shevgaon Bazar",
+        "welcomeDescription": "The heart of your local farming community. Buy and sell produce, livestock, and equipment in your taluka.",
+        "all": "All",
+        "adCard": {
+            "noPhoto": "No Photo"
+        }
+    },
+    "bottomNav": {
+        "home": "Home",
+        "search": "Search",
+        "postAd": "Post Ad",
+        "myAds": "My Ads",
+        "more": "More"
+    },
+    "more": {
+        "title": "More Options",
+        "description": "Manage your account, settings, and more.",
+        "user": "User",
+        "joinShevgaonBazar": "Join Shevgaon Bazar",
+        "connectWithCommunity": "Connect with your local farming community.",
+        "settings": "Settings",
+        "helpCenter": "Help Center",
+        "accessManagement": "Access Management",
+        "adManagement": "Ad Management",
+        "logout": "Logout",
+        "language": "Language"
+    },
+    "login": {
+        "title": "Login to Shevgaon Bazar",
+        "description": "Enter your credentials to access your account",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Your email address",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "Your password",
+        "forgotPassword": "Forgot password?",
+        "loginButton": "Login",
+        "or": "or",
+        "loginWithGoogle": "Login with Google",
+        "noAccount": "Don't have an account?",
+        "signupLink": "Sign up"
+    },
+    "signup": {
+        "title": "Create a New Account",
+        "description": "Enter your information to get started",
+        "nameLabel": "Full Name",
+        "namePlaceholder": "Your full name",
+        "mobileLabel": "Mobile Number",
+        "mobilePlaceholder": "Your mobile number",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Your email address",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "Your password",
+        "confirmPasswordLabel": "Confirm Password",
+        "confirmPasswordPlaceholder": "Confirm your password",
+        "signupButton": "Create Account",
+        "or": "or",
+        "signupWithGoogle": "Sign up with Google",
+        "haveAccount": "Already have an account?",
+        "loginLink": "Login"
+    },
+    "categories": {
+        "पशुधन": "Livestock",
+        "शेती उत्पादने": "Farm Produce",
+        "शेतीसाठी साधनं": "Farm Equipment",
+        "शेती व गाव सेवा": "Farm & Village Services",
+        "गावातील गरज": "Village Needs",
+        "व्यावसायिक सेवा": "Professional Services",
+        "आर्थिक": "Financial"
+    }
+}

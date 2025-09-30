@@ -8,19 +8,21 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-const baseNavItems = [
-  { href: '/', label: 'होम', icon: Home },
-  { href: '/search', label: 'शोधा', icon: Search },
-  { href: '/post-ad', label: 'जाहिरात टाका', icon: Plus, requiresAuth: true },
-  { href: '/my-ads', label: 'माझ्या जाहिराती', icon: Star, requiresAuth: true },
-  { href: '/more', label: 'अधिक', icon: MoreHorizontal },
-];
+import { useLanguage } from '@/contexts/language-context';
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { user, userProfile, loading } = useAuth();
+  const { dictionary } = useLanguage();
   const [isClient, setIsClient] = useState(false);
+
+  const baseNavItems = [
+    { href: '/', label: dictionary.bottomNav.home, icon: Home },
+    { href: '/search', label: dictionary.bottomNav.search, icon: Search },
+    { href: '/post-ad', label: dictionary.bottomNav.postAd, icon: Plus, requiresAuth: true },
+    { href: '/my-ads', label: dictionary.bottomNav.myAds, icon: Star, requiresAuth: true },
+    { href: '/more', label: dictionary.bottomNav.more, icon: MoreHorizontal },
+  ];
 
   useEffect(() => {
     setIsClient(true);

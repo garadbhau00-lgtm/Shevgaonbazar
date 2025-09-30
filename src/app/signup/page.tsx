@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect } from 'react';
+import { useLanguage } from '@/contexts/language-context';
 
 const signupSchema = z.object({
     name: z.string().min(2, { message: 'नाव आवश्यक आहे.' }),
@@ -46,6 +47,7 @@ export default function SignupPage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user, loading, handleGoogleSignIn } = useAuth();
+    const { dictionary } = useLanguage();
     
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
@@ -128,9 +130,9 @@ export default function SignupPage() {
                             <Leaf className="h-8 w-8 text-primary" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl">नवीन खाते तयार करा</CardTitle>
+                    <CardTitle className="text-2xl">{dictionary.signup.title}</CardTitle>
                     <CardDescription>
-                        प्रारंभ करण्यासाठी तुमची माहिती प्रविष्ट करा
+                        {dictionary.signup.description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -141,9 +143,9 @@ export default function SignupPage() {
                                 name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>पूर्ण नाव</FormLabel>
+                                        <FormLabel>{dictionary.signup.nameLabel}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="तुमचे पूर्ण नाव" {...field} />
+                                            <Input placeholder={dictionary.signup.namePlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -154,9 +156,9 @@ export default function SignupPage() {
                                 name="mobileNumber"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>मोबाईल नंबर</FormLabel>
+                                        <FormLabel>{dictionary.signup.mobileLabel}</FormLabel>
                                         <FormControl>
-                                            <Input type="tel" placeholder="तुमचा मोबाईल नंबर" {...field} />
+                                            <Input type="tel" placeholder={dictionary.signup.mobilePlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -167,9 +169,9 @@ export default function SignupPage() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>ईमेल</FormLabel>
+                                        <FormLabel>{dictionary.signup.emailLabel}</FormLabel>
                                         <FormControl>
-                                            <Input type="email" placeholder="तुमचा ईमेल पत्ता" {...field} />
+                                            <Input type="email" placeholder={dictionary.signup.emailPlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -180,9 +182,9 @@ export default function SignupPage() {
                                 name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>पासवर्ड</FormLabel>
+                                        <FormLabel>{dictionary.signup.passwordLabel}</FormLabel>
                                         <FormControl>
-                                            <Input type="password" placeholder="तुमचा पासवर्ड" {...field} />
+                                            <Input type="password" placeholder={dictionary.signup.passwordPlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -193,9 +195,9 @@ export default function SignupPage() {
                                 name="confirmPassword"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>पासवर्डची पुष्टी करा</FormLabel>
+                                        <FormLabel>{dictionary.signup.confirmPasswordLabel}</FormLabel>
                                         <FormControl>
-                                            <Input type="password" placeholder="पासवर्डची पुष्टी करा" {...field} />
+                                            <Input type="password" placeholder={dictionary.signup.confirmPasswordPlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -203,7 +205,7 @@ export default function SignupPage() {
                             />
                             <Button type="submit" className="w-full" disabled={isSubmitting}>
                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                               खाते तयार करा
+                               {dictionary.signup.signupButton}
                             </Button>
                         </form>
                     </Form>
@@ -214,20 +216,20 @@ export default function SignupPage() {
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                             <span className="bg-background px-2 text-muted-foreground">
-                                किंवा
+                                {dictionary.signup.or}
                             </span>
                         </div>
                     </div>
 
                     <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
                         <GoogleIcon />
-                        Google ने साइन अप करा
+                        {dictionary.signup.signupWithGoogle}
                     </Button>
 
                     <div className="mt-6 text-center text-sm">
-                        आधीपासूनच खाते आहे?{' '}
+                        {dictionary.signup.haveAccount}{' '}
                         <Link href="/login" className="font-medium text-primary hover:underline">
-                            लॉगिन करा
+                            {dictionary.signup.loginLink}
                         </Link>
                     </div>
                 </CardContent>

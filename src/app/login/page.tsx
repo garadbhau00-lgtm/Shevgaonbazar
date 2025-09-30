@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect } from 'react';
+import { useLanguage } from '@/contexts/language-context';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'कृपया वैध ईमेल पत्ता प्रविष्ट करा.' }),
@@ -40,6 +41,7 @@ export default function LoginPage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user, loading, handleGoogleSignIn } = useAuth();
+    const { dictionary } = useLanguage();
     
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -96,9 +98,9 @@ export default function LoginPage() {
                             <Leaf className="h-8 w-8 text-primary" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl">शेवगाव बाजारमध्ये लॉगिन करा</CardTitle>
+                    <CardTitle className="text-2xl">{dictionary.login.title}</CardTitle>
                     <CardDescription>
-                        तुमच्या खात्यात प्रवेश करण्यासाठी तुमची क्रेडेन्शियल्स प्रविष्ट करा
+                        {dictionary.login.description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -109,9 +111,9 @@ export default function LoginPage() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>ईमेल</FormLabel>
+                                        <FormLabel>{dictionary.login.emailLabel}</FormLabel>
                                         <FormControl>
-                                            <Input type="email" placeholder="तुमचा ईमेल पत्ता" {...field} />
+                                            <Input type="email" placeholder={dictionary.login.emailPlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -123,13 +125,13 @@ export default function LoginPage() {
                                 render={({ field }) => (
                                     <FormItem>
                                         <div className="flex items-center justify-between">
-                                            <FormLabel>पासवर्ड</FormLabel>
+                                            <FormLabel>{dictionary.login.passwordLabel}</FormLabel>
                                             <Link href="#" className="text-sm font-medium text-primary hover:underline">
-                                                पासवर्ड विसरलात?
+                                                {dictionary.login.forgotPassword}
                                             </Link>
                                         </div>
                                         <FormControl>
-                                            <Input type="password" placeholder="तुमचा पासवर्ड" {...field} />
+                                            <Input type="password" placeholder={dictionary.login.passwordPlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -137,7 +139,7 @@ export default function LoginPage() {
                             />
                             <Button type="submit" className="w-full" disabled={isSubmitting}>
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                लॉगिन करा
+                                {dictionary.login.loginButton}
                             </Button>
                         </form>
                     </Form>
@@ -147,19 +149,19 @@ export default function LoginPage() {
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                             <span className="bg-background px-2 text-muted-foreground">
-                                किंवा
+                                {dictionary.login.or}
                             </span>
                         </div>
                     </div>
 
                     <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
                         <GoogleIcon />
-                        Google ने लॉगिन करा
+                        {dictionary.login.loginWithGoogle}
                     </Button>
                     <div className="mt-6 text-center text-sm">
-                        खाते नाही?{' '}
+                        {dictionary.login.noAccount}{' '}
                         <Link href="/signup" className="font-medium text-primary hover:underline">
-                            साइन अप करा
+                            {dictionary.login.signupLink}
                         </Link>
                     </div>
                 </CardContent>

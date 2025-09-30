@@ -14,13 +14,15 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import AppHeader from '@/components/layout/app-header';
+import { useLanguage } from '@/contexts/language-context';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
+  const { dictionary } = useLanguage();
   if (loading) {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-2 text-muted-foreground">जाहिराती लोड होत आहेत...</p>
+        <p className="mt-2 text-muted-foreground">{dictionary.home.loadingAds}</p>
       </div>
     );
   }
@@ -29,10 +31,10 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-center">
         <p className="text-lg font-semibold text-muted-foreground">
-          कोणत्याही जाहिराती आढळल्या नाहीत.
+          {dictionary.home.noAdsFound}
         </p>
         <p className="text-sm text-muted-foreground">
-          या वर्गात सध्या कोणत्याही जाहिराती नाहीत.
+          {dictionary.home.noAdsInCategory}
         </p>
       </div>
     );
@@ -49,6 +51,7 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
 
 export default function Home() {
   const { toast } = useToast();
+  const { dictionary } = useLanguage();
   const [ads, setAds] = useState<Ad[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('सर्व');
@@ -105,8 +108,8 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-black/50" />
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-              <h1 className="text-lg font-bold">शेवगाव बाजार मध्ये आपले स्वागत आहे</h1>
-              <p className="mt-2 text-xs max-w-xl">तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.</p>
+              <h1 className="text-lg font-bold">{dictionary.home.welcomeTitle}</h1>
+              <p className="mt-2 text-xs max-w-xl">{dictionary.home.welcomeDescription}</p>
           </div>
         </div>
          <div className="bg-background/95 backdrop-blur-sm border-b">
@@ -115,7 +118,7 @@ export default function Home() {
                 <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
                     <TabsTrigger value="सर्व" className="h-auto flex flex-col items-center justify-center gap-1 p-2 text-xs rounded-lg border data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
                       <List className="h-4 w-4" />
-                      <span>सर्व</span>
+                      <span>{dictionary.home.all}</span>
                     </TabsTrigger>
                     {categories.map((category) => (
                       <TabsTrigger
@@ -124,7 +127,7 @@ export default function Home() {
                         className="h-auto flex flex-col items-center justify-center gap-1 p-2 text-xs rounded-lg border data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
                       >
                         <category.icon className="h-4 w-4" />
-                        <span>{category.name}</span>
+                        <span>{dictionary.categories[category.name] || category.name}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>

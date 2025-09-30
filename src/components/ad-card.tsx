@@ -22,11 +22,13 @@ import {
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function AdCard({ ad }: AdCardProps) {
   const adPhotoUrl = ad.photos?.[0];
   const { userProfile } = useAuth();
   const { toast } = useToast();
+  const { dictionary } = useLanguage();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -84,14 +86,14 @@ export default function AdCard({ ad }: AdCardProps) {
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-secondary text-xs text-muted-foreground">
-                फोटो नाही
+                {dictionary.home.adCard.noPhoto}
               </div>
             )}
           </div>
           <CardContent className="p-1.5 flex-grow flex flex-col">
             <div className="flex justify-between items-start flex-grow">
               <div className="flex-grow overflow-hidden mr-2">
-                <h3 className="font-medium text-[11px] text-muted-foreground truncate">{ad.category}</h3>
+                <h3 className="font-medium text-[11px] text-muted-foreground truncate">{dictionary.categories[ad.category] || ad.category}</h3>
                 {ad.subcategory && <p className="font-semibold text-xs truncate">{ad.subcategory}</p>}
                 <p className="text-[10px] text-muted-foreground truncate">{ad.location}</p>
               </div>

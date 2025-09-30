@@ -1,0 +1,75 @@
+{
+    "home": {
+        "loadingAds": "विज्ञापन लोड हो रहे हैं...",
+        "noAdsFound": "कोई विज्ञापन नहीं मिला।",
+        "noAdsInCategory": "इस श्रेणी में वर्तमान में कोई विज्ञापन नहीं हैं।",
+        "welcomeTitle": "शेवगांव बाजार में आपका स्वागत है",
+        "welcomeDescription": "आपके स्थानीय किसान समुदाय का दिल। अपने तालुका में उपज, पशुधन और उपकरण खरीदें और बेचें।",
+        "all": "सभी",
+        "adCard": {
+            "noPhoto": "कोई फ़ोटो नहीं"
+        }
+    },
+    "bottomNav": {
+        "home": "होम",
+        "search": "खोजें",
+        "postAd": "विज्ञापन पोस्ट करें",
+        "myAds": "मेरे विज्ञापन",
+        "more": "अधिक"
+    },
+    "more": {
+        "title": "अधिक विकल्प",
+        "description": "अपना खाता, सेटिंग्स और बहुत कुछ प्रबंधित करें।",
+        "user": "उपयोगकर्ता",
+        "joinShevgaonBazar": "शेवगांव बाजार से जुड़ें",
+        "connectWithCommunity": "अपने स्थानीय किसान समुदाय से जुड़ें।",
+        "settings": "सेटिंग्स",
+        "helpCenter": "सहायता केंद्र",
+        "accessManagement": "एक्सेस प्रबंधन",
+        "adManagement": "विज्ञापन प्रबंधन",
+        "logout": "लॉगआउट",
+        "language": "भाषा"
+    },
+    "login": {
+        "title": "शेवगांव बाजार में लॉगिन करें",
+        "description": "अपने खाते तक पहुंचने के लिए अपनी क्रेडेंशियल दर्ज करें",
+        "emailLabel": "ईमेल",
+        "emailPlaceholder": "आपका ईमेल पता",
+        "passwordLabel": "पासवर्ड",
+        "passwordPlaceholder": "आपका पासवर्ड",
+        "forgotPassword": "पासवर्ड भूल गए?",
+        "loginButton": "लॉगिन करें",
+        "or": "या",
+        "loginWithGoogle": "Google से लॉगिन करें",
+        "noAccount": "खाता नहीं है?",
+        "signupLink": "साइन अप करें"
+    },
+    "signup": {
+        "title": "नया खाता बनाएं",
+        "description": "शुरू करने के लिए अपनी जानकारी दर्ज करें",
+        "nameLabel": "पूरा नाम",
+        "namePlaceholder": "आपका पूरा नाम",
+        "mobileLabel": "मोबाइल नंबर",
+        "mobilePlaceholder": "आपका मोबाइल नंबर",
+        "emailLabel": "ईमेल",
+        "emailPlaceholder": "आपका ईमेल पता",
+        "passwordLabel": "पासवर्ड",
+        "passwordPlaceholder": "आपका पासवर्ड",
+        "confirmPasswordLabel": "पासवर्ड की पुष्टि करें",
+        "confirmPasswordPlaceholder": "पासवर्ड की पुष्टि करें",
+        "signupButton": "खाता बनाएं",
+        "or": "या",
+        "signupWithGoogle": "Google से साइन अप करें",
+        "haveAccount": "पहले से ही एक खाता है?",
+        "loginLink": "लॉगिन करें"
+    },
+    "categories": {
+        "पशुधन": "पशुधन",
+        "शेती उत्पादने": "कृषि उत्पाद",
+        "शेतीसाठी साधनं": "कृषि उपकरण",
+        "शेती व गाव सेवा": "कृषि और ग्राम सेवाएँ",
+        "गावातील गरज": "गाँव की ज़रूरतें",
+        "व्यावसायिक सेवा": "पेशेवर सेवाएँ",
+        "आर्थिक": "वित्तीय"
+    }
+}
