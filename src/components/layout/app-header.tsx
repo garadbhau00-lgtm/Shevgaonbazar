@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -64,7 +63,7 @@ export default function AppHeader() {
     }
     return (
         <Button asChild size="sm" className="h-auto px-3 py-1 text-xs">
-            <Link href="/login">लॉगिन करा</Link>
+            <Link href="/login">लॉगिन</Link>
         </Button>
     );
   }
