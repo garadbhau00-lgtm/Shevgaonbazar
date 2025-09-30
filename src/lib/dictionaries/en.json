@@ -138,7 +138,7 @@
             "limitText": "You can upload ${maxFiles} photo."
         },
         "updateAdButton": "Update Ad",
-        "postAdButton": "Post Ad for ₹${amount}",
+        "postAdButton": "Post Ad",
         "validation": {
             "categoryRequired": "Please select a category.",
             "pricePositive": "Price must be greater than 0.",
@@ -157,18 +157,6 @@
             "updateSuccess": "Your ad has been successfully updated and submitted for review.",
             "submitSuccess": "Your ad has been successfully submitted. It will be live after approval.",
             "submitError": "Failed to submit ad."
-        },
-        "payment": {
-            "choiceTitle": "Select Payment Method",
-            "choiceDescription": "You need to pay ₹${amount} to post the ad. Please choose your preferred UPI app.",
-            "phonepeButton": "Pay with PhonePe",
-            "gpayButton": "Pay with Google Pay",
-            "cancelButton": "Cancel",
-            "confirmTitle": "Confirm Payment",
-            "confirmDescription": "Have you completed the payment? Once the payment is successful, your ad will be submitted for review.",
-            "attentionTitle": "Attention",
-            "attentionDescription": "If the payment fails, please press the 'Cancel' button.",
-            "confirmButton": "Yes, payment is complete"
         }
     },
     "myAds": {

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Upload, X as XIcon, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, X as XIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -18,19 +18,11 @@ import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import type { Ad, AdSubmission } from '@/lib/types';
+import type { Ad } from '@/lib/types';
 import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/language-context';
-
-// --- PAYMENT CONFIGURATION ---
-const UPI_ID = '9545886257@ybl'; // <-- IMPORTANT: This is set to your phone number with @ybl.
-const PAYEE_NAME = 'Shevgaon Bazar';
-const PAYMENT_AMOUNT = '15.00';
-// ---------------------------
 
 type AdFormProps = {
     existingAd?: Ad;
@@ -48,10 +40,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [showPaymentChoice, setShowPaymentChoice] = useState(false);
-  const [showPaymentConfirm, setShowPaymentConfirm] = useState(false);
-  const adDataToSubmit = useRef<AdSubmission | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!existingAd;
   
@@ -174,7 +162,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
     
     try {
         let photoUrl = '';
-
         if (newFiles.length > 0) {
             const file = newFiles[0];
             const compressedFile = await imageCompression(file, {
@@ -182,7 +169,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 maxWidthOrHeight: 1024,
                 useWebWorker: true,
             });
-            photoUrl = await imageCompression.getDataUrlFromFile(compressedFile);
+            const photoDataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
+            
+            const storageRef = ref(storage, `ad_photos/${user.uid}/${Date.now()}`);
+            const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
+            photoUrl = await getDownloadURL(uploadResult.ref);
+
         } else if (isEditMode && existingAd?.photos?.[0]) {
             photoUrl = existingAd.photos[0];
         }
@@ -193,92 +185,34 @@ export default function AdForm({ existingAd }: AdFormProps) {
             return;
         }
 
-        const submissionData: AdSubmission = {
+        const submissionData = {
             ...data,
             photos: photoUrl ? [photoUrl] : [],
             userId: user.uid,
             userName: userProfile.name || user.email!,
-            status: 'pending',
-            createdAt: serverTimestamp(),
+            status: 'pending' as const,
+            createdAt: isEditMode ? existingAd.createdAt : serverTimestamp(),
             updatedAt: serverTimestamp(),
         };
 
-        adDataToSubmit.current = submissionData;
-
-        if (isEditMode) {
-          await processAdSubmission();
+        if (isEditMode && existingAd) {
+            const adDocRef = doc(db, 'ads', existingAd.id);
+            await updateDoc(adDocRef, submissionData);
+            toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
+            router.push('/my-ads');
         } else {
-          setShowPaymentChoice(true);
+            await addDoc(collection(db, 'ads'), submissionData);
+            toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
+            router.push('/my-ads');
         }
 
     } catch (error) {
-        console.error("Error preparing ad data:", error);
-        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.errorPreparingAd });
-        setIsSubmitting(false);
-    }
-  };
-  
-  const processAdSubmission = async () => {
-    if (!adDataToSubmit.current) return;
-    setIsSubmitting(true);
-    
-    try {
-      let finalPhotoUrls: string[] = [];
-
-      if (adDataToSubmit.current.photos.length > 0) {
-          const photoData = adDataToSubmit.current.photos[0];
-
-          if (photoData.startsWith('data:image')) {
-            const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}`);
-            const uploadResult = await uploadString(storageRef, photoData, 'data_url');
-            finalPhotoUrls = [await getDownloadURL(uploadResult.ref)];
-          } else {
-            finalPhotoUrls = [photoData];
-          }
-      }
-
-      const finalData = { ...adDataToSubmit.current, photos: finalPhotoUrls };
-
-      if (isEditMode && existingAd) {
-          const adDocRef = doc(db, 'ads', existingAd.id);
-          await updateDoc(adDocRef, { ...finalData, status: 'pending' });
-          toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
-          router.push('/my-ads');
-      } else {
-          await addDoc(collection(db, 'ads'), finalData);
-          toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
-          router.push('/my-ads');
-      }
-    } catch (error) {
-        console.error('Error submitting ad:', error);
+        console.error("Error submitting ad:", error);
         toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.submitError });
     } finally {
         setIsSubmitting(false);
-        adDataToSubmit.current = null;
-        setShowPaymentConfirm(false);
     }
   };
-
-  const handlePaymentRedirect = (gateway: 'phonepe' | 'gpay') => {
-      const transactionId = `T${Date.now()}`;
-      const note = `Ad posting fee for Shevgaon Bazar.`;
-      const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(note)}&tr=${transactionId}`;
-
-      let gatewayUrl;
-      if (gateway === 'phonepe') {
-          gatewayUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(note)}&tr=${transactionId}`;
-      } else {
-          gatewayUrl = upiUrl;
-      }
-      
-      window.location.href = gatewayUrl;
-
-      setShowPaymentChoice(false);
-      setTimeout(() => {
-        setShowPaymentConfirm(true);
-      }, 1000); 
-  };
-
 
   const subcategories = categories.find(c => c.name === selectedCategory)?.subcategories || [];
   const isLoading = isSubmitting;
@@ -435,57 +369,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
           <Button type="submit" className="w-full !mt-8" size="lg" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton.replace('${amount}', PAYMENT_AMOUNT)}
+              {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton}
           </Button>
         </form>
       </Form>
-
-      <AlertDialog open={showPaymentChoice} onOpenChange={setShowPaymentChoice}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{adFormDictionary.payment.choiceTitle}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        {adFormDictionary.payment.choiceDescription.replace('${amount}', PAYMENT_AMOUNT)}
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="flex flex-col gap-4 py-4">
-                    <Button onClick={() => handlePaymentRedirect('phonepe')} size="lg">{adFormDictionary.payment.phonepeButton}</Button>
-                    <Button onClick={() => handlePaymentRedirect('gpay')} size="lg" variant="outline">{adFormDictionary.payment.gpayButton}</Button>
-                </div>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setIsSubmitting(false)}>{adFormDictionary.payment.cancelButton}</AlertDialogCancel>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-
-        <AlertDialog open={showPaymentConfirm} onOpenChange={setShowPaymentConfirm}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{adFormDictionary.payment.confirmTitle}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        {adFormDictionary.payment.confirmDescription}
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>{adFormDictionary.payment.attentionTitle}</AlertTitle>
-                  <AlertDescription>
-                    {adFormDictionary.payment.attentionDescription}
-                  </AlertDescription>
-                </Alert>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => {
-                      setIsSubmitting(false);
-                      setShowPaymentConfirm(false);
-                    }}>{adFormDictionary.payment.cancelButton}</AlertDialogCancel>
-                    <AlertDialogAction onClick={processAdSubmission} disabled={isSubmitting}>
-                       {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {adFormDictionary.payment.confirmButton}
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
     </>
   );
 }
-
