@@ -76,16 +76,7 @@
           "order": "ASCENDING"
         }
       ]
-    },
-    {
-      "collectionGroup": "help_messages",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
     }
   ]
 }
+

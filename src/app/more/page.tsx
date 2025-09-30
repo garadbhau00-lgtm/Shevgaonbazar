@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, HelpCircle, LogOut, Settings, ShieldCheck, ListChecks, MessageSquare } from "lucide-react";
+import { ChevronRight, HelpCircle, LogOut, Settings, ShieldCheck, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,6 @@ export default function MorePage() {
     const adminMenuItems = [
         { label: dictionary.more.accessManagement, icon: ShieldCheck, href: "/access-management" },
         { label: dictionary.more.adManagement, icon: ListChecks, href: "/ad-management" },
-        { label: "Admin Messages", icon: MessageSquare, href: "/admin-messages" },
     ];
 
     const onLogout = async () => {
