@@ -150,67 +150,65 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   const handleFormSubmit = async (data: AdFormValues) => {
     if (!user || !userProfile) {
-        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.loginRequired });
-        return;
+      toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.loginRequired });
+      return;
     }
-    if (!isEditMode && photoPreviews.length === 0) {
+    if (photoPreviews.length === 0) {
       toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
       return;
     }
-
-    setIsSubmitting(true);
     
+    setIsSubmitting(true);
+
     try {
-        let photoUrl = '';
-        if (newFiles.length > 0) {
-            const file = newFiles[0];
-            const compressedFile = await imageCompression(file, {
-                maxSizeMB: 1,
-                maxWidthOrHeight: 1024,
-                useWebWorker: true,
-            });
-            const photoDataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
-            
-            const storageRef = ref(storage, `ad_photos/${user.uid}/${Date.now()}`);
-            const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
-            photoUrl = await getDownloadURL(uploadResult.ref);
+      let photoUrl = '';
+      if (newFiles.length > 0) {
+        const file = newFiles[0];
+        const compressedFile = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+        });
+        const photoDataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
 
-        } else if (isEditMode && existingAd?.photos?.[0]) {
-            photoUrl = existingAd.photos[0];
-        }
+        const storageRef = ref(storage, `ad_photos/${user.uid}/${Date.now()}`);
+        const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
+        photoUrl = await getDownloadURL(uploadResult.ref);
+      } else if (isEditMode && existingAd?.photos?.[0]) {
+        photoUrl = existingAd.photos[0];
+      }
 
-        if (!isEditMode && !photoUrl) {
-            toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
-            setIsSubmitting(false);
-            return;
-        }
+      if (!photoUrl) {
+          toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
+          setIsSubmitting(false); // Stop submission if no photo
+          return;
+      }
 
-        const submissionData = {
-            ...data,
-            photos: photoUrl ? [photoUrl] : [],
-            userId: user.uid,
-            userName: userProfile.name || user.email!,
-            status: 'pending' as const,
-            createdAt: isEditMode ? existingAd.createdAt : serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        };
+      const submissionData = {
+        ...data,
+        photos: [photoUrl],
+        userId: user.uid,
+        userName: userProfile.name || user.email!,
+        status: 'pending' as const,
+        createdAt: isEditMode && existingAd ? existingAd.createdAt : serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
 
-        if (isEditMode && existingAd) {
-            const adDocRef = doc(db, 'ads', existingAd.id);
-            await updateDoc(adDocRef, submissionData);
-            toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
-            router.push('/my-ads');
-        } else {
-            await addDoc(collection(db, 'ads'), submissionData);
-            toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
-            router.push('/my-ads');
-        }
-
+      if (isEditMode && existingAd) {
+        const adDocRef = doc(db, 'ads', existingAd.id);
+        await updateDoc(adDocRef, submissionData);
+        toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
+        router.push('/my-ads');
+      } else {
+        await addDoc(collection(db, 'ads'), submissionData);
+        toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
+        router.push('/my-ads');
+      }
     } catch (error) {
-        console.error("Error submitting ad:", error);
-        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.submitError });
+      console.error("Error submitting ad:", error);
+      toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.submitError });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
