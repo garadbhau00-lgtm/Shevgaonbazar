@@ -2,40 +2,54 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    function isParticipant(conversationId) {
-      return request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+    // Helper function to check if a user is an Admin
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
+    // Rules for the 'users' collection
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && (request.auth.uid == userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
+      // Admins can read/write any user profile
+      // Authenticated users can only read/write their own profile
+      allow read, write: if request.auth != null && (isAdmin() || request.auth.uid == userId);
+      // Allow user creation during signup
+      allow create: if request.auth != null;
     }
 
+    // Rules for the 'ads' collection
     match /ads/{adId} {
-      allow read: if resource.data.status == 'approved' || (request.auth != null && request.auth.uid == resource.data.userId) || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
+      // Any authenticated user can read approved ads
+      // The user who created the ad can read it regardless of status
+      allow read: if request.auth != null && (resource.data.status == 'approved' || resource.data.userId == request.auth.uid || isAdmin());
+      // Authenticated users can create ads
       allow create: if request.auth != null;
-      allow update: if request.auth != null && (request.auth.uid == resource.data.userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
-      allow delete: if request.auth != null && (request.auth.uid == resource.data.userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
+      // Users can only update their own ads, and only if they are not yet approved
+      // Admins can update any ad at any time
+      allow update: if request.auth != null && ((resource.data.userId == request.auth.uid && resource.data.status != 'approved') || isAdmin());
+      // Users can only delete their own ads
+      // Admins can delete any ad
+      allow delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
+    // Rules for 'conversations' collection and 'messages' subcollection
     match /conversations/{conversationId} {
-      // Users can only list conversations they are part of. This is for the inbox query.
-      allow list: if request.auth != null && request.query.where.field == 'participants' && request.query.where.op == 'array-contains' && request.query.where.value == request.auth.uid;
-      
-      // Users can only read conversations they are a part of.
-      allow read: if isParticipant(conversationId);
-      
-      // Users can create a conversation if they are authenticated.
+        // Only participants of the conversation can read or write to it
+        allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
+
+        match /messages/{messageId} {
+            // Only participants of the parent conversation can read or write messages
+            allow read, write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        }
+    }
+    
+    // Rules for the 'help_messages' collection
+    match /help_messages/{messageId} {
+      // Any authenticated user can create (send) a help message
       allow create: if request.auth != null;
-      
-      // Only participants can update a conversation (e.g., to send a message).
-      allow update: if isParticipant(conversationId);
-      
-      match /messages/{messageId} {
-        allow read, write: if isParticipant(conversationId);
-      }
+      // Only admins can read the help messages
+      allow read: if request.auth != null && isAdmin();
+      // Nobody can update or delete messages from the UI for safety
+      allow update, delete: if false;
     }
   }
 }
