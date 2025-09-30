@@ -138,7 +138,7 @@
             "limitText": "तुम्ही ${maxFiles} फोटो अपलोड करू शकता."
         },
         "updateAdButton": "जाहिरात अद्यतनित करा",
-        "postAdButton": "₹${amount} भरा आणि जाहिरात पोस्ट करा",
+        "postAdButton": "जाहिरात पोस्ट करा",
         "validation": {
             "categoryRequired": "कृपया एक श्रेणी निवडा.",
             "pricePositive": "किंमत ० पेक्षा जास्त असावी.",
@@ -376,4 +376,6 @@
         }
     }
 }
+    
+
     

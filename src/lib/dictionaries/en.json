@@ -138,7 +138,7 @@
             "limitText": "You can upload ${maxFiles} photo."
         },
         "updateAdButton": "Update Ad",
-        "postAdButton": "Pay ₹${amount} and Post Ad",
+        "postAdButton": "Post Ad",
         "validation": {
             "categoryRequired": "Please select a category.",
             "pricePositive": "Price must be greater than 0.",
@@ -376,4 +376,6 @@
         }
     }
 }
+    
+
     

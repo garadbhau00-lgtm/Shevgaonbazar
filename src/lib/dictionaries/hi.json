@@ -138,7 +138,7 @@
             "limitText": "आप ${maxFiles} फोटो अपलोड कर सकते हैं।"
         },
         "updateAdButton": "विज्ञापन अपडेट करें",
-        "postAdButton": "₹${amount} भुगतान करें और विज्ञापन पोस्ट करें",
+        "postAdButton": "विज्ञापन पोस्ट करें",
         "validation": {
             "categoryRequired": "कृपया एक श्रेणी चुनें।",
             "pricePositive": "कीमत 0 से अधिक होनी चाहिए।",
@@ -376,4 +376,6 @@
         }
     }
 }
+    
+
     
