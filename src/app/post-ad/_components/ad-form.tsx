@@ -13,8 +13,7 @@ import { Loader2, Upload, X as XIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -126,8 +125,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
 
   useEffect(() => {
-    const newSubcategories = categories.find(c => c.name === selectedCategory)?.subcategories || [];
-    if (!newSubcategories.some(sc => sc.key === form.getValues('subcategory'))) {
+    const subcategoriesForSelected = categories.find(c => c.name === selectedCategory)?.subcategories || [];
+    if (!subcategoriesForSelected.some(sc => sc.key === form.getValues('subcategory'))) {
         form.setValue('subcategory', undefined);
     }
   }, [selectedCategory, form]);
@@ -144,8 +143,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setNewFiles([file]); // Replace existing new files with the new one
+      // Clear existing photo previews if we are in edit mode
       if (isEditMode && existingAd) {
-        existingAd.photos = []; // Clear existing photos when a new one is selected
+        setPhotoPreviews([]);
       }
     }
   };
@@ -153,9 +153,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const removePhoto = () => {
     setNewFiles([]);
     setPhotoPreviews([]);
-    if (existingAd) {
-      existingAd.photos = [];
-    }
     if(fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -168,35 +165,28 @@ export default function AdForm({ existingAd }: AdFormProps) {
             throw new Error(adFormDictionary.toast.loginRequired);
         }
 
-        const totalPhotos = photoPreviews.length;
-        if (totalPhotos === 0) {
-            toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
-            setIsSubmitting(false);
-            return;
-        }
-
-        let finalPhotoUrls: string[] = isEditMode ? (existingAd?.photos || []) : [];
+        let finalPhotoDataUris: string[] = isEditMode && !newFiles.length ? (existingAd?.photos || []) : [];
 
         if (newFiles.length > 0) {
-            const file = newFiles[0];
+             const file = newFiles[0];
             const compressedFile = await imageCompression(file, {
                 maxSizeMB: 1,
                 maxWidthOrHeight: 1024,
                 useWebWorker: true,
             });
-            const photoDataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
-            const storageRef = ref(storage, `ad_photos/${user.uid}/${Date.now()}-${file.name}`);
-            const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
-            finalPhotoUrls = [await getDownloadURL(uploadResult.ref)];
+            const dataUri = await imageCompression.getDataUrlFromFile(compressedFile);
+            finalPhotoDataUris = [dataUri];
         }
         
-        if (finalPhotoUrls.length === 0) {
-            throw new Error(adFormDictionary.toast.photoRequiredDescription);
+        if (finalPhotoDataUris.length === 0) {
+            toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
+            setIsSubmitting(false);
+            return;
         }
 
         const submissionData: Omit<Ad, 'id'> = {
             ...data,
-            photos: finalPhotoUrls,
+            photos: finalPhotoDataUris,
             userId: user.uid,
             userName: userProfile.name || user.email!,
             status: 'pending',
@@ -381,5 +371,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
-    
