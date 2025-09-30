@@ -184,7 +184,7 @@ export default function Home() {
               <h1 className="text-lg font-bold">{dictionary.home.welcomeTitle}</h1>
               <p className="mt-2 text-xs max-w-xl">{dictionary.home.welcomeDescription}</p>
           </div>
-          <div className="absolute bottom-4 right-4">
+          <div className="absolute bottom-4 right-2">
             <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
                   <SheetTrigger asChild>
                       <Button variant="secondary" className="h-auto py-1 px-2 text-xs bg-background/80 hover:bg-background">
@@ -306,5 +306,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
