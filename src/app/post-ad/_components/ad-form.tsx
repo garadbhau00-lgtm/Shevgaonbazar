@@ -171,9 +171,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
 
     setIsSubmitting(true);
-    let photoUrl = (isEditMode && existingAd?.photos?.[0]) || '';
     
     try {
+        let photoUrl = '';
+
         if (newFiles.length > 0) {
             const file = newFiles[0];
             const compressedFile = await imageCompression(file, {
@@ -182,6 +183,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 useWebWorker: true,
             });
             photoUrl = await imageCompression.getDataUrlFromFile(compressedFile);
+        } else if (isEditMode && existingAd?.photos?.[0]) {
+            photoUrl = existingAd.photos[0];
+        }
+
+        if (!photoUrl) {
+            toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
+            setIsSubmitting(false);
+            return;
         }
 
         const submissionData: AdSubmission = {
@@ -477,4 +486,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
   );
 }
 
-    
