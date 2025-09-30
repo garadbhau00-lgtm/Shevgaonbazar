@@ -171,7 +171,7 @@ export default function MyAdsPage() {
                                         <Button variant="ghost" size="icon" onClick={() => router.push(`/edit-ad/${ad.id}`)} disabled={ad.status === 'approved'}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setAdToDelete(ad)} disabled={ad.status === 'approved'}>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setAdToDelete(ad)}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </CardFooter>
