@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -12,7 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { mr, hi, enUS } from 'date-fns/locale';
+import { mr } from 'date-fns/locale/mr';
+import { hi } from 'date-fns/locale/hi';
+import { enUS } from 'date-fns/locale/en-US';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 
