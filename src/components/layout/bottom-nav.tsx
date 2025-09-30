@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Star, MoreHorizontal, Home, User, Plus, MessageCircle } from 'lucide-react';
+import { Search, Star, MoreHorizontal, Home, User, Plus, MessageCircle, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
@@ -19,6 +20,7 @@ export default function BottomNav() {
     { href: '/', label: dictionary.bottomNav.home, icon: Home },
     { href: '/search', label: dictionary.bottomNav.search, icon: Search },
     { href: '/post-ad', label: dictionary.bottomNav.postAd, icon: Plus, requiresAuth: true },
+    { href: '/my-ads', label: dictionary.bottomNav.myAds, icon: List, requiresAuth: true },
     { href: '/more', label: dictionary.bottomNav.more, icon: MoreHorizontal },
   ];
 
@@ -35,7 +37,7 @@ export default function BottomNav() {
   return (
     <div className="fixed bottom-0 z-10 w-full max-w-lg">
       <div className="relative h-16 bg-card border-t">
-        <nav className="grid h-full grid-cols-4 items-center">
+        <nav className="grid h-full grid-cols-5 items-center">
           {baseNavItems.map((item) => {
             const isActive = pathname === item.href;
             const isAuthProtected = item.requiresAuth && !user;
