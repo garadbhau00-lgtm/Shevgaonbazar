@@ -63,7 +63,7 @@ export default function AppHeader() {
       );
     }
     return (
-        <Button asChild>
+        <Button asChild size="sm">
             <Link href="/login">लॉगिन करा</Link>
         </Button>
     );
