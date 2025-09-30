@@ -28,14 +28,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     if (savedLanguage && ['en', 'hi', 'mr'].includes(savedLanguage)) {
       setLanguage(savedLanguage);
     } else {
-      // If no saved language, detect from browser
-      const browserLang = navigator.language.split('-')[0] as Language;
-      if (['en', 'hi', 'mr'].includes(browserLang)) {
-        setLanguage(browserLang);
-      } else {
-        // Default to Marathi if browser language is not supported
-        setLanguage('mr');
-      }
+      // Default to Marathi if no language is saved
+      setLanguage('mr');
     }
   }, []);
 
