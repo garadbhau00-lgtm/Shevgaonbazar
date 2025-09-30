@@ -72,7 +72,26 @@
         "or": "or",
         "loginWithGoogle": "Login with Google",
         "noAccount": "Don't have an account?",
-        "signupLink": "Sign up"
+        "signupLink": "Sign up",
+        "resetPassword": {
+            "title": "Reset Password",
+            "description": "Enter your email address and we'll send you a link to reset your password.",
+            "emailLabel": "Email",
+            "sendButton": "Send Reset Link",
+            "cancelButton": "Cancel"
+        },
+        "toast": {
+            "loginSuccessTitle": "Login Successful!",
+            "welcome": "Welcome to Shevgaon Bazar.",
+            "loginFailedTitle": "Login Failed",
+            "loginFailedDescription": "Please check your email and password.",
+            "errorTitle": "Error",
+            "emailRequired": "Email address is required.",
+            "resetEmailSentTitle": "Password Reset Email Sent",
+            "resetEmailSentDescription": "A link to reset your password has been sent to your email address.",
+            "resetEmailError": "Failed to send password reset email.",
+            "userNotFound": "No user found with this email address."
+        }
     },
     "signup": {
         "title": "Create a New Account",

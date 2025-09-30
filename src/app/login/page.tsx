@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,8 +16,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/language-context';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'कृपया वैध ईमेल पत्ता प्रविष्ट करा.' }),
@@ -42,6 +44,11 @@ export default function LoginPage() {
     const router = useRouter();
     const { user, loading, handleGoogleSignIn } = useAuth();
     const { dictionary } = useLanguage();
+    const loginDict = dictionary.login;
+
+    const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
+    const [isSendingReset, setIsSendingReset] = useState(false);
     
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -64,16 +71,37 @@ export default function LoginPage() {
         try {
             await signInWithEmailAndPassword(auth, data.email, data.password);
             toast({
-                title: "लॉगिन यशस्वी!",
-                description: "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+                title: loginDict.toast.loginSuccessTitle,
+                description: loginDict.toast.welcome,
             });
-            // The onAuthStateChanged listener in useAuth will handle the redirect.
         } catch (error) {
             toast({
                 variant: "destructive",
-                title: "लॉगिन अयशस्वी",
-                description: "कृपया तुमचा ईमेल आणि पासवर्ड तपासा.",
+                title: loginDict.toast.loginFailedTitle,
+                description: loginDict.toast.loginFailedDescription,
             });
+        }
+    }
+    
+    const handlePasswordReset = async () => {
+        if (!resetEmail) {
+            toast({ variant: 'destructive', title: loginDict.toast.errorTitle, description: loginDict.toast.emailRequired });
+            return;
+        }
+        setIsSendingReset(true);
+        try {
+            await sendPasswordResetEmail(auth, resetEmail);
+            toast({ title: loginDict.toast.resetEmailSentTitle, description: loginDict.toast.resetEmailSentDescription });
+            setIsResetDialogOpen(false);
+            setResetEmail('');
+        } catch (error: any) {
+            let description = loginDict.toast.resetEmailError;
+            if (error.code === 'auth/user-not-found') {
+                description = loginDict.toast.userNotFound;
+            }
+            toast({ variant: 'destructive', title: loginDict.toast.errorTitle, description });
+        } finally {
+            setIsSendingReset(false);
         }
     }
 
@@ -98,9 +126,9 @@ export default function LoginPage() {
                             <Leaf className="h-8 w-8 text-primary" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl">{dictionary.login.title}</CardTitle>
+                    <CardTitle className="text-2xl">{loginDict.title}</CardTitle>
                     <CardDescription>
-                        {dictionary.login.description}
+                        {loginDict.description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -111,9 +139,9 @@ export default function LoginPage() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>{dictionary.login.emailLabel}</FormLabel>
+                                        <FormLabel>{loginDict.emailLabel}</FormLabel>
                                         <FormControl>
-                                            <Input type="email" placeholder={dictionary.login.emailPlaceholder} {...field} />
+                                            <Input type="email" placeholder={loginDict.emailPlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -125,13 +153,43 @@ export default function LoginPage() {
                                 render={({ field }) => (
                                     <FormItem>
                                         <div className="flex items-center justify-between">
-                                            <FormLabel>{dictionary.login.passwordLabel}</FormLabel>
-                                            <Link href="#" className="text-sm font-medium text-primary hover:underline">
-                                                {dictionary.login.forgotPassword}
-                                            </Link>
+                                            <FormLabel>{loginDict.passwordLabel}</FormLabel>
+                                            <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="link" type="button" className="p-0 h-auto text-sm font-medium text-primary hover:underline">
+                                                        {loginDict.forgotPassword}
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>{loginDict.resetPassword.title}</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                           {loginDict.resetPassword.description}
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <div className="grid gap-2">
+                                                        <Label htmlFor="reset-email">{loginDict.resetPassword.emailLabel}</Label>
+                                                        <Input 
+                                                            id="reset-email" 
+                                                            type="email" 
+                                                            placeholder={loginDict.emailPlaceholder}
+                                                            value={resetEmail}
+                                                            onChange={(e) => setResetEmail(e.target.value)}
+                                                            disabled={isSendingReset}
+                                                        />
+                                                    </div>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel disabled={isSendingReset}>{loginDict.resetPassword.cancelButton}</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={handlePasswordReset} disabled={isSendingReset}>
+                                                             {isSendingReset && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                            {loginDict.resetPassword.sendButton}
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         </div>
                                         <FormControl>
-                                            <Input type="password" placeholder={dictionary.login.passwordPlaceholder} {...field} />
+                                            <Input type="password" placeholder={loginDict.passwordPlaceholder} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -139,7 +197,7 @@ export default function LoginPage() {
                             />
                             <Button type="submit" className="w-full" disabled={isSubmitting}>
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {dictionary.login.loginButton}
+                                {loginDict.loginButton}
                             </Button>
                         </form>
                     </Form>
@@ -149,19 +207,19 @@ export default function LoginPage() {
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                             <span className="bg-background px-2 text-muted-foreground">
-                                {dictionary.login.or}
+                                {loginDict.or}
                             </span>
                         </div>
                     </div>
 
                     <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
                         <GoogleIcon />
-                        {dictionary.login.loginWithGoogle}
+                        {loginDict.loginWithGoogle}
                     </Button>
                     <div className="mt-6 text-center text-sm">
-                        {dictionary.login.noAccount}{' '}
+                        {loginDict.noAccount}{' '}
                         <Link href="/signup" className="font-medium text-primary hover:underline">
-                            {dictionary.login.signupLink}
+                            {loginDict.signupLink}
                         </Link>
                     </div>
                 </CardContent>
@@ -169,3 +227,4 @@ export default function LoginPage() {
         </div>
     );
 }
+
