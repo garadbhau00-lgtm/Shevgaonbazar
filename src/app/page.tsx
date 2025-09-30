@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Loader2, List, ChevronDown } from 'lucide-react';
+import { Loader2, List, Filter } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
 import AdCard from '@/components/ad-card';
@@ -12,8 +12,14 @@ import { db } from '@/lib/firebase';
 import { categories } from '@/lib/categories';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select as DropdownSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { villageList } from '@/lib/villages';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   const { dictionary } = useLanguage();
@@ -50,13 +56,19 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
 
 type SortOption = 'newest' | 'oldest' | 'price-asc' | 'price-desc';
 
+const MAX_PRICE_LIMIT = 500000;
+
 export default function Home() {
   const { toast } = useToast();
   const { dictionary } = useLanguage();
   const [ads, setAds] = useState<Ad[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
+  
   const [selectedCategory, setSelectedCategory] = useState<string>('सर्व');
   const [sortOption, setSortOption] = useState<SortOption>('newest');
+  const [selectedVillage, setSelectedVillage] = useState<string>('all');
+  const [maxPrice, setMaxPrice] = useState<number>(MAX_PRICE_LIMIT);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
   const sortOptions: { value: SortOption, label: string }[] = [
     { value: 'newest', label: 'नवीनतम' },
@@ -66,8 +78,6 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    // The base query is always sorted by creation date descending. 
-    // Further sorting is done client-side.
     const q = query(
         collection(db, 'ads'), 
         where('status', '==', 'approved'),
@@ -101,14 +111,20 @@ export default function Home() {
   }, [toast]);
   
   const sortedAndFilteredAds = useMemo(() => {
-    let filtered = selectedCategory === 'सर्व'
-      ? ads
-      : ads.filter(ad => ad.category === selectedCategory);
+    let filtered = ads;
+
+    if (selectedCategory !== 'सर्व') {
+      filtered = filtered.filter(ad => ad.category === selectedCategory);
+    }
+
+    if(selectedVillage !== 'all') {
+      filtered = filtered.filter(ad => ad.location === selectedVillage);
+    }
+    
+    filtered = filtered.filter(ad => ad.price <= maxPrice);
 
     switch (sortOption) {
       case 'newest':
-        // The default query from Firestore is already newest first.
-        // But if ads are sorted by price, we need to re-sort.
         return filtered.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
       case 'oldest':
         return filtered.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
@@ -119,7 +135,18 @@ export default function Home() {
       default:
         return filtered;
     }
-  }, [ads, selectedCategory, sortOption]);
+  }, [ads, selectedCategory, sortOption, selectedVillage, maxPrice]);
+
+  const resetFilters = () => {
+    setSortOption('newest');
+    setSelectedVillage('all');
+    setMaxPrice(MAX_PRICE_LIMIT);
+  }
+  
+  const activeFilterCount =
+    (sortOption !== 'newest' ? 1 : 0) +
+    (selectedVillage !== 'all' ? 1 : 0) +
+    (maxPrice < MAX_PRICE_LIMIT ? 1 : 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -165,23 +192,75 @@ export default function Home() {
       <main className="flex-1 overflow-y-auto">
         <div className="p-4">
           <div className="flex justify-end mb-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <span>{sortOptions.find(o => o.value === sortOption)?.label}</span>
-                  <ChevronDown className="h-4 w-4 ml-2" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuRadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
-                  {sortOptions.map(option => (
-                    <DropdownMenuRadioItem key={option.value} value={option.value}>
-                      {option.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                  <SheetTrigger asChild>
+                      <Button variant="outline" size="sm">
+                          <Filter className="h-4 w-4 mr-2" />
+                          <span>Filter & Sort</span>
+                          {activeFilterCount > 0 && (
+                            <span className="ml-2 h-5 w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+                              {activeFilterCount}
+                            </span>
+                          )}
+                      </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                      <SheetHeader>
+                          <SheetTitle>Filter & Sort Ads</SheetTitle>
+                      </SheetHeader>
+                      <div className="py-4 space-y-6">
+                           <div>
+                              <Label className="text-base font-semibold">Sort by</Label>
+                              <RadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)} className="mt-2 space-y-1">
+                                {sortOptions.map(option => (
+                                  <div key={option.value} className="flex items-center space-x-2">
+                                    <RadioGroupItem value={option.value} id={`sort-${option.value}`} />
+                                    <Label htmlFor={`sort-${option.value}`} className="font-normal">{option.label}</Label>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                          </div>
+                          
+                           <div>
+                                <Label htmlFor="village-filter" className="text-base font-semibold">Village</Label>
+                                <DropdownSelect value={selectedVillage} onValueChange={setSelectedVillage}>
+                                    <SelectTrigger id="village-filter" className="mt-2">
+                                        <SelectValue placeholder="Select a village" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Villages</SelectItem>
+                                        {villageList.map(village => (
+                                            <SelectItem key={village} value={village}>{village}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </DropdownSelect>
+                           </div>
+
+                           <div>
+                                <div className="flex justify-between items-center mb-2">
+                                     <Label className="text-base font-semibold">Max Price</Label>
+                                     <span className="text-sm font-medium text-primary">
+                                        ₹{maxPrice.toLocaleString('en-IN')}
+                                     </span>
+                                </div>
+                                <Slider
+                                    value={[maxPrice]}
+                                    onValueChange={(value) => setMaxPrice(value[0])}
+                                    max={MAX_PRICE_LIMIT}
+                                    step={1000}
+                                />
+                                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                    <span>₹0</span>
+                                    <span>₹{MAX_PRICE_LIMIT.toLocaleString('en-IN')}</span>
+                                </div>
+                           </div>
+                      </div>
+                       <SheetFooter className="mt-6 flex-col-reverse sm:flex-row gap-2">
+                          <Button variant="outline" onClick={resetFilters} className="w-full">Clear Filters</Button>
+                          <Button onClick={() => setIsFilterSheetOpen(false)} className="w-full">Apply</Button>
+                      </SheetFooter>
+                  </SheetContent>
+              </Sheet>
           </div>
           <AdList ads={sortedAndFilteredAds} loading={adsLoading} />
         </div>
@@ -189,3 +268,4 @@ export default function Home() {
     </div>
   );
 }
+
