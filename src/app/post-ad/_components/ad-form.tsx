@@ -268,7 +268,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
 
 
-  const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
+  const subcategories = categories.find(c => c.name === selectedCategory)?.subcategories || [];
   const isLoading = isSubmitting;
   
   return (
