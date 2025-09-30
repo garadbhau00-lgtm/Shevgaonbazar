@@ -43,8 +43,8 @@ export default function HelpCenterPage() {
                     <p className="mt-2 text-sm text-muted-foreground">
                         {dictionary.helpCenter.moreHelpDescription}
                     </p>
-                    <a href="mailto:support@shevgavbazar.com" className="mt-4 inline-block font-semibold text-primary hover:underline">
-                        support@shevgavbazar.com
+                    <a href="mailto:shevgaonbazar084@gmail.com" className="mt-4 inline-block font-semibold text-primary hover:underline">
+                        shevgaonbazar084@gmail.com
                     </a>
                 </div>
 
