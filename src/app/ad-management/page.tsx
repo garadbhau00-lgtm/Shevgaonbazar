@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -162,11 +163,11 @@ export default function AdManagementPage() {
                                 </Badge>
                             </div>
                             <CardHeader>
-                                <CardTitle>{ad.title}</CardTitle>
+                                <CardTitle>{ad.title || (dictionary.categories[ad.category] || ad.category)}</CardTitle>
                                 <CardDescription>{ad.location}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm text-muted-foreground">{ad.description}</p>
+                                {ad.description && <p className="text-sm text-muted-foreground">{ad.description}</p>}
                                 <div className="mt-2 flex items-center font-semibold text-primary">
                                     <BadgeIndianRupee className="h-5 w-5 mr-1" />
                                     <span>{ad.price.toLocaleString('en-IN')}</span>

@@ -1,3 +1,4 @@
+
 {
     "home": {
         "loadingAds": "Loading ads...",
@@ -85,14 +86,6 @@
             "label": "Sub-category",
             "placeholder": "Select a sub-category"
         },
-        "title": {
-            "label": "Ad Title (Optional)",
-            "placeholder": "e.g., Good black buffalo for sale"
-        },
-        "description": {
-            "label": "Description (Optional)",
-            "placeholder": "Tell us more about your product"
-        },
         "price": {
             "label": "Price (₹)",
             "placeholder": "e.g., 15000"
@@ -114,7 +107,6 @@
         "postAdButton": "Post Ad for ₹${amount}",
         "validation": {
             "categoryRequired": "Please select a category.",
-            "titleMin": "Ad title must be at least 3 characters.",
             "pricePositive": "Price must be greater than 0.",
             "locationRequired": "Please select a village.",
             "mobileInvalid": "Please enter a valid 10-digit mobile number."

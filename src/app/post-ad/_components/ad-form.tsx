@@ -73,8 +73,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
       }
     ),
     subcategory: z.string().optional(),
-    title: z.string().min(3, { message: adFormDictionary.validation.titleMin }).optional(),
-    description: z.string().optional(),
     price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }),
     location: z.string({ required_error: adFormDictionary.validation.locationRequired }),
     mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: adFormDictionary.validation.mobileInvalid }),
@@ -90,8 +88,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
       mobileNumber: '',
       category: undefined,
       subcategory: undefined,
-      title: '',
-      description: '',
     },
   });
 
@@ -113,8 +109,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
       form.reset({
         category: existingAd.category,
         subcategory: existingAd.subcategory,
-        title: existingAd.title,
-        description: existingAd.description,
         price: existingAd.price,
         location: existingAd.location,
         mobileNumber: existingAd.mobileNumber,
@@ -331,34 +325,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
           )}
 
           <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                  <FormItem>
-                      <FormLabel>{adFormDictionary.title.label}</FormLabel>
-                      <FormControl>
-                          <Input placeholder={adFormDictionary.title.placeholder} {...field} disabled={isLoading} />
-                      </FormControl>
-                      <FormMessage />
-                  </FormItem>
-              )}
-          />
-
-          <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                  <FormItem>
-                      <FormLabel>{adFormDictionary.description.label}</FormLabel>
-                      <FormControl>
-                           <Input placeholder={adFormDictionary.description.placeholder} {...field} disabled={isLoading} />
-                      </FormControl>
-                      <FormMessage />
-                  </FormItem>
-              )}
-          />
-
-          <FormField
             control={form.control}
             name="price"
             render={({ field }) => (
@@ -449,7 +415,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                       </FormControl>
                   )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{adFormDictionary.photo.limitText.replace('${maxFiles}', MAX_FILES)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{adFormDictionary.photo.limitText.replace('${maxFiles}', MAX_FILES.toString())}</p>
               <FormMessage />
           </FormItem>
 
@@ -508,5 +474,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
-    
