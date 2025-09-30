@@ -151,8 +151,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 title = 'पॉप-अप ब्लॉक केला';
                 description = 'तुमच्या ब्राउझरने Google साइन-in पॉप-अप ब्लॉक केला आहे. कृपया तुमच्या ब्राउझर सेटिंग्ज तपासा.';
             } else if (error.code === 'auth/unauthorized-domain') {
-                title = 'डोमेन अधिकृत नाही (SHA-1 त्रुटी)';
-                description = 'हे ॲप Google साइन-इनसाठी योग्यरित्या कॉन्फिगर केलेले नाही. कृपया तुमच्या फायरबेस प्रोजेक्ट सेटिंग्जमध्ये तुमच्या होस्टिंग डोमेनसाठी SHA-1 फिंगरप्रिंट जोडा.';
+                title = 'डोमेन अधिकृत नाही';
+                description = 'हे डोमेन Google साइन-इनसाठी अधिकृत नाही. कृपया तुमच्या फायरबेस कन्सोल > Authentication > Settings > Authorized domains मध्ये तुमच्या ॲपचे डोमेन (उदा. project.vercel.app) जोडा.';
             }
             
             toast({
