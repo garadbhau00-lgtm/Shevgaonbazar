@@ -98,7 +98,7 @@ export default function AdCard({ ad }: AdCardProps) {
                 <p className="text-[10px] text-muted-foreground truncate">{ad.location}</p>
               </div>
               <div className="flex-shrink-0">
-                <p className="text-sm font-bold text-primary text-right">
+                <p className="text-xs font-bold text-primary text-right">
                   ₹{ad.price.toLocaleString('en-IN')}
                 </p>
               </div>
