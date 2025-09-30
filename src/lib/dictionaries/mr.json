@@ -25,7 +25,7 @@
             "priceDesc": "किंमत: जास्त ते कमी"
         },
         "filterSort": {
-            "button": "फिल्टर आणि क्रमवारी",
+            "button": "फिल्टर",
             "title": "जाहिराती फिल्टर आणि क्रमवारी लावा",
             "sortBy": "यानुसार क्रमवारी लावा",
             "subcategory": "उप-श्रेणी",
@@ -294,7 +294,7 @@
         "confirmRejectButton": "नाकारण्याची पुष्टी करा",
         "accessDeniedTitle": "प्रवेश प्रतिबंधित",
         "accessDeniedDescription": "तुमच्याकडे ही संसाधने पाहण्याची परवानगी नाही.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorFetch": "जाहिराती आणण्यात अयशस्वी.",
         "successTitle": "यशस्वी",
         "successApprove": "जाहिरात यशस्वीरित्या स्वीकृत झाली आहे.",
@@ -341,7 +341,7 @@
         "browseAdsButton": "जाहिराती ब्राउझ करा",
         "accessDeniedTitle": "प्रवेश प्रतिबंधित",
         "accessDeniedDescription": "तुमचा इनबॉक्स पाहण्यासाठी कृपया लॉगिन करा.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorIndex": "तुमचे चॅट्स आणण्यात अयशस्वी. कृपया फायरस्टोअर इंडेक्स तपासा.",
         "errorFetch": "तुमचे चॅट्स आणण्यात अयशस्वी."
     },
@@ -350,7 +350,7 @@
         "accessDeniedDescription": "तुम्ही या संभाषणाचा भाग नाही.",
         "notFoundTitle": "संभाषण आढळले नाही",
         "notFoundDescription": "हे संभाषण अस्तित्वात नाही.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorLoad": "संभाषण लोड करण्यात अयशस्वी.",
         "errorSend": "संदेश पाठवण्यात अयशस्वी.",
         "unknownUser": "अज्ञात",
@@ -365,7 +365,7 @@
         "loading": "जाहिराती लोड होत आहेत...",
         "noResultsTitle": "कोणतेही परिणाम आढळले नाहीत.",
         "noResultsDescription": "वेगळा शोध शब्द वापरून पहा.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorDescription": "जाहिराती आणण्यात अयशस्वी."
     },
     "settings": {
@@ -388,7 +388,7 @@
         "toast": {
             "updateSuccessTitle": "यशस्वी",
             "updateSuccessDescription": "तुमचे प्रोफाइल यशस्वीरित्या अद्यतनित झाले आहे.",
-            "errorTitle": "त्रुटी",
+            "errorTitle": "त्रुटि",
             "updateErrorDescription": "प्रोफाइल अद्यतनित करण्यात अयशस्वी.",
             "noEmailError": "तुमचा ईमेल पत्ता सापडला नाही.",
             "resetEmailSentTitle": "पासवर्ड रीसेट लिंक पाठवली",

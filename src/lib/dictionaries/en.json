@@ -25,7 +25,7 @@
             "priceDesc": "Price: High to Low"
         },
         "filterSort": {
-            "button": "Filter & Sort",
+            "button": "Filter",
             "title": "Filter & Sort Ads",
             "sortBy": "Sort by",
             "subcategory": "Sub-category",

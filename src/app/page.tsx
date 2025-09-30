@@ -187,7 +187,7 @@ export default function Home() {
           <div className="absolute bottom-2 right-2">
             <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
                   <SheetTrigger asChild>
-                      <Button variant="secondary" size="sm" className="h-auto py-1 px-2 text-xs bg-background/80 hover:bg-background">
+                      <Button variant="secondary" className="h-auto py-1 px-2 text-xs bg-background/80 hover:bg-background">
                           <Filter className="h-4 w-4 mr-2" />
                           <span>{dictionary.home.filterSort.button}</span>
                           {activeFilterCount > 0 && (
