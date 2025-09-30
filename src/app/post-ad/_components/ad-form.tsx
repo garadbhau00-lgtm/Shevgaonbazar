@@ -27,7 +27,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/language-context';
 
 // --- PAYMENT CONFIGURATION ---
-const UPI_ID = 'hari.garad@ybl'; // <-- IMPORTANT: REPLACE THIS WITH YOUR REAL UPI ID
+const UPI_ID = '9545886257@ybl'; // <-- IMPORTANT: This is set to your phone number with @ybl.
 const PAYEE_NAME = 'Shevgaon Bazar';
 const PAYMENT_AMOUNT = '15.00';
 // ---------------------------
@@ -187,7 +187,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             photoUrl = existingAd.photos[0];
         }
 
-        if (!photoUrl) {
+        if (!isEditMode && !photoUrl) {
             toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
             setIsSubmitting(false);
             return;
@@ -195,7 +195,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
         const submissionData: AdSubmission = {
             ...data,
-            photos: [photoUrl],
+            photos: photoUrl ? [photoUrl] : [],
             userId: user.uid,
             userName: userProfile.name || user.email!,
             status: 'pending',
@@ -224,14 +224,17 @@ export default function AdForm({ existingAd }: AdFormProps) {
     
     try {
       let finalPhotoUrls: string[] = [];
-      const photoData = adDataToSubmit.current.photos[0];
 
-      if (photoData.startsWith('data:image')) {
-        const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}`);
-        const uploadResult = await uploadString(storageRef, photoData, 'data_url');
-        finalPhotoUrls = [await getDownloadURL(uploadResult.ref)];
-      } else {
-        finalPhotoUrls = [photoData];
+      if (adDataToSubmit.current.photos.length > 0) {
+          const photoData = adDataToSubmit.current.photos[0];
+
+          if (photoData.startsWith('data:image')) {
+            const storageRef = ref(storage, `ad_photos/${user!.uid}/${Date.now()}`);
+            const uploadResult = await uploadString(storageRef, photoData, 'data_url');
+            finalPhotoUrls = [await getDownloadURL(uploadResult.ref)];
+          } else {
+            finalPhotoUrls = [photoData];
+          }
       }
 
       const finalData = { ...adDataToSubmit.current, photos: finalPhotoUrls };
