@@ -184,36 +184,10 @@ export default function Home() {
               <h1 className="text-lg font-bold">{dictionary.home.welcomeTitle}</h1>
               <p className="mt-2 text-xs max-w-xl">{dictionary.home.welcomeDescription}</p>
           </div>
-        </div>
-         <div className="bg-background/95 backdrop-blur-sm border-b">
-           <div className="w-full overflow-x-auto p-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-                <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
-                    <TabsTrigger value="सर्व" className="h-auto flex flex-col items-center justify-center gap-1 p-2 text-xs rounded-lg border data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                      <List className="h-4 w-4" />
-                      <span>{dictionary.home.all}</span>
-                    </TabsTrigger>
-                    {categories.map((category) => (
-                      <TabsTrigger
-                        key={category.name}
-                        value={category.name}
-                        className="h-auto flex flex-col items-center justify-center gap-1 p-2 text-xs rounded-lg border data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
-                      >
-                        <category.icon className="h-4 w-4" />
-                        <span>{dictionary.categories[category.name] || category.name}</span>
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-              </Tabs>
-            </div>
-        </div>
-      </header>
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-4">
-          <div className="flex justify-end mb-4">
-              <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+          <div className="absolute bottom-2 right-2">
+            <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
                   <SheetTrigger asChild>
-                      <Button variant="outline" size="sm">
+                      <Button variant="secondary" size="sm" className="bg-background/80 hover:bg-background">
                           <Filter className="h-4 w-4 mr-2" />
                           <span>{dictionary.home.filterSort.button}</span>
                           {activeFilterCount > 0 && (
@@ -227,7 +201,7 @@ export default function Home() {
                       <SheetHeader>
                           <SheetTitle>{dictionary.home.filterSort.title}</SheetTitle>
                       </SheetHeader>
-                      <div className="py-4 space-y-6">
+                      <div className="py-4 space-y-6 overflow-y-auto h-[calc(100vh-10rem)] pr-4">
                            <div>
                               <Label className="text-base font-semibold">{dictionary.home.filterSort.sortBy}</Label>
                               <RadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)} className="mt-2 space-y-1">
@@ -293,16 +267,44 @@ export default function Home() {
                                 </div>
                            </div>
                       </div>
-                       <SheetFooter className="mt-6 flex-col-reverse sm:flex-row gap-2">
+                       <SheetFooter className="mt-6 flex-col-reverse sm:flex-row gap-2 absolute bottom-0 right-0 left-0 p-6 bg-background border-t">
                           <Button variant="outline" onClick={resetFilters} className="w-full">{dictionary.home.filterSort.clearButton}</Button>
                           <Button onClick={() => setIsFilterSheetOpen(false)} className="w-full">{dictionary.home.filterSort.applyButton}</Button>
                       </SheetFooter>
                   </SheetContent>
               </Sheet>
           </div>
+        </div>
+         <div className="bg-background/95 backdrop-blur-sm border-b">
+           <div className="w-full overflow-x-auto p-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+             <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+                <TabsList className="inline-flex w-max gap-2 bg-transparent p-0">
+                    <TabsTrigger value="सर्व" className="h-auto flex flex-col items-center justify-center gap-1 p-2 text-xs rounded-lg border data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                      <List className="h-4 w-4" />
+                      <span>{dictionary.home.all}</span>
+                    </TabsTrigger>
+                    {categories.map((category) => (
+                      <TabsTrigger
+                        key={category.name}
+                        value={category.name}
+                        className="h-auto flex flex-col items-center justify-center gap-1 p-2 text-xs rounded-lg border data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                      >
+                        <category.icon className="h-4 w-4" />
+                        <span>{dictionary.categories[category.name] || category.name}</span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+              </Tabs>
+            </div>
+        </div>
+      </header>
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-4">
           <AdList ads={sortedAndFilteredAds} loading={adsLoading} />
         </div>
       </main>
     </div>
   );
 }
+
+    
