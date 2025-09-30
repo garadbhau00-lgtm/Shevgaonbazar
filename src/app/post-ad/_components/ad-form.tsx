@@ -51,9 +51,7 @@ type AdFormProps = {
 };
 
 const MAX_FILES = 1;
-const UPI_ID = 'your-upi-id@oksbi';
-const PAYEE_NAME = 'Shevgaon Bazar';
-const PAYMENT_AMOUNT = '15.00';
+const PAYMENT_AMOUNT = '15.00'; // Example amount
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
@@ -64,11 +62,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [newFiles, setNewFiles] = useState<File[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPaymentChoice, setShowPaymentChoice] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const adDataToSubmit = useRef<Omit<Ad, 'id' | 'createdAt' | 'updatedAt'> | null>(null);
 
   const isEditMode = !!existingAd;
 
@@ -158,131 +153,20 @@ export default function AdForm({ existingAd }: AdFormProps) {
   };
   
  const handleFormSubmit = async (data: AdFormValues) => {
-    setIsSubmitting(true);
-    let finalPhotoUrl: string | null = (isEditMode && existingAd?.photos?.[0]) || null;
+    // This is where you would trigger the payment gateway flow.
+    // For now, it will just show a placeholder alert.
     
-    if (newFiles.length > 0) {
-        try {
-            const compressedFile = await imageCompression(newFiles[0], {
-                maxSizeMB: 0.5,
-                maxWidthOrHeight: 1280,
-                useWebWorker: true,
-            });
-            finalPhotoUrl = await imageCompression.getDataUrlFromFile(compressedFile);
-        } catch (error) {
-            console.error("Image compression failed:", error);
-            toast({ variant: 'destructive', title: 'फोटो एरर', description: 'फोटोवर प्रक्रिया करण्यात अयशस्वी.' });
-            setIsSubmitting(false);
-            return;
-        }
-    }
+    // 1. You would first call your backend to create a Razorpay order.
+    // 2. Your backend returns an order_id.
+    // 3. You use Razorpay's checkout library with the order_id to open the payment modal.
+    // 4. After payment, a webhook confirms the payment on your backend, and the ad is created.
     
-    if (!finalPhotoUrl) {
-        toast({ variant: 'destructive', title: 'फोटो आवश्यक', description: 'कृपया एक फोटो निवडा.' });
-        setIsSubmitting(false);
-        return;
-    }
-    
-    if (!user || !userProfile) {
-       toast({ variant: 'destructive', title: 'त्रुटी', description: 'वापरकर्ता प्रमाणीकरण अयशस्वी झाले.' });
-       setIsSubmitting(false);
-       return;
-    }
-
-    const generatedTitle = data.subcategory ? `${data.category} - ${data.subcategory}` : data.category;
-    
-    adDataToSubmit.current = {
-        userId: user.uid,
-        userName: userProfile.name || user.email || 'Unknown User',
-        title: generatedTitle,
-        description: '',
-        status: 'pending' as const,
-        rejectionReason: '',
-        ...data,
-        photos: [finalPhotoUrl],
-    };
-    
-    setIsSubmitting(false);
-
-    if (isEditMode) {
-      await processAdSubmission();
-    } else {
-      setShowPaymentChoice(true);
-    }
- };
-
- const handlePaymentRedirect = (app: 'phonepe' | 'gpay') => {
-    setShowPaymentChoice(false);
-    
-    const transactionNote = `AdPost-${user?.uid.slice(0, 5)}-${Date.now()}`;
-    let upiUrl = '';
-
-    if (app === 'phonepe') {
-        upiUrl = `phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
-    } else if (app === 'gpay') {
-        upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${PAYMENT_AMOUNT}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
-    }
-
     toast({
-        title: 'पेमेंट ॲपवर रीडायरेक्ट करत आहे...',
-        description: 'पेमेंटनंतर कृपया या पेजवर परत या आणि सबमिशनची पुष्टी करा.',
-        duration: 8000,
+        title: 'Payment Gateway Integration Needed',
+        description: `This would now proceed to payment for ₹${PAYMENT_AMOUNT}.`,
     });
-
-    window.location.href = upiUrl;
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        setShowConfirmation(true);
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
  };
  
- const processAdSubmission = async () => {
-    setShowConfirmation(false);
-    const dataToSubmit = adDataToSubmit.current;
-    if (!user || !userProfile || !dataToSubmit || isSubmitting) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-        if (isEditMode && existingAd) {
-            const adDocRef = doc(db, 'ads', existingAd.id);
-            await updateDoc(adDocRef, { ...dataToSubmit, updatedAt: serverTimestamp() });
-            toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पुन्हा पाठवली आहे." });
-        } else {
-            await addDoc(collection(db, 'ads'), {
-                ...dataToSubmit,
-                createdAt: serverTimestamp(),
-            });
-            toast({ title: "यशस्वी!", description: "तुमची जाहिरात समीक्षेसाठी पाठवली आहे." });
-        }
-        
-        if (dataToSubmit.mobileNumber && dataToSubmit.mobileNumber !== userProfile.mobileNumber) {
-            const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, { mobileNumber: dataToSubmit.mobileNumber });
-        }
-        adDataToSubmit.current = null;
-        router.push('/my-ads');
-    } catch (error: any) {
-        console.error("Submission failed:", error);
-         let errorMessage = "जाहिरात सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.";
-         if (error.code === 'resource-exhausted' || error.message.includes('too large')) {
-             errorMessage = "फोटो खूप मोठा आहे. कृपया लहान आकाराचा फोटो निवडा.";
-         } else if (error.code === 'permission-denied') {
-             errorMessage = "जाहिरात सेव्ह करण्यासाठी परवानगी नाही. कृपया तुमच्या फायरस्टोअर नियमांची तपासणी करा.";
-         }
-        toast({
-            variant: "destructive",
-            title: "त्रुटी!",
-            description: errorMessage,
-        });
-    } finally {
-        setIsSubmitting(false);
-    }
-};
 
   const subcategories = selectedCategory ? categories.find(c => c.name === selectedCategory)?.subcategories : [];
   const isLoading = isSubmitting;
@@ -437,54 +321,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
           <Button type="submit" className="w-full !mt-8" size="lg" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isSubmitting ? (isEditMode ? 'अद्यतनित करत आहे...' : 'पोस्ट करत आहे...') : (isEditMode ? 'जाहिरात अद्यतनित करा' : 'जाहिरात पोस्ट करा')}
+              {isEditMode ? 'जाहिरात अद्यतनित करा' : `₹${PAYMENT_AMOUNT} भरण्यासाठी पुढे जा`}
           </Button>
         </form>
       </Form>
-
-      <AlertDialog open={showPaymentChoice} onOpenChange={setShowPaymentChoice}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>पेमेंट पद्धत निवडा</AlertDialogTitle>
-                <AlertDialogDescription>
-                    तुमची जाहिरात पोस्ट करण्यासाठी कृपया ₹{PAYMENT_AMOUNT} चे पेमेंट पूर्ण करा.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
-                <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePaymentRedirect('phonepe')}>
-                    <Image src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" width={80} height={25} />
-                    PhonePe
-                </Button>
-                 <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePaymentRedirect('gpay')}>
-                    <Image src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" width={60} height={25} />
-                    Google Pay
-                </Button>
-            </div>
-            <AlertDialogFooter>
-                <AlertDialogCancel>रद्द करा</AlertDialogCancel>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>सबमिशनची पुष्टी करा</AlertDialogTitle>
-                <AlertDialogDescription>
-                    तुम्ही पेमेंट पूर्ण केले असल्यास, कृपया जाहिरात पोस्ट करण्यासाठी 'पुष्टी करा' बटण दाबा. तुम्ही पेमेंट रद्द केले असल्यास, 'रद्द करा' दाबा.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => adDataToSubmit.current = null} disabled={isSubmitting}>रद्द करा</AlertDialogCancel>
-                <AlertDialogAction onClick={processAdSubmission} disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    पुष्टी करा
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
-
-    
