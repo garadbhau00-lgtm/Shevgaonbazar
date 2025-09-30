@@ -27,7 +27,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/language-context';
 
 // --- PAYMENT CONFIGURATION ---
-const UPI_ID = 'YOUR_UPI_ID_HERE@yourbank'; // <-- IMPORTANT: REPLACE THIS WITH YOUR REAL UPI ID
+const UPI_ID = 'hari.garad@ybl'; // <-- IMPORTANT: REPLACE THIS WITH YOUR REAL UPI ID
 const PAYEE_NAME = 'Shevgaon Bazar';
 const PAYMENT_AMOUNT = '15.00';
 // ---------------------------
@@ -476,3 +476,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
+
+    
