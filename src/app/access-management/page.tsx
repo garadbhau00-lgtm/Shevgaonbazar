@@ -10,7 +10,6 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 
@@ -64,7 +63,6 @@ export default function AccessManagementPage() {
         return (
             <>
                 <div className="relative h-28 w-full">
-                    <AppHeader />
                 </div>
                 <div className="flex justify-center items-center h-[calc(100vh-8rem)]">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -76,7 +74,6 @@ export default function AccessManagementPage() {
     return (
         <>
             <div className="relative h-28 w-full">
-                <AppHeader />
                 <Image
                     src="https://picsum.photos/seed/access-management/1200/400"
                     alt="Access Management background"

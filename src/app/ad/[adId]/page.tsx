@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, BadgeIndianRupee, MapPin, Phone, User, CalendarDays } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
-import AppHeader from '@/components/layout/app-header';
 import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/language-context';
@@ -67,12 +66,9 @@ export default function AdDetailPage() {
 
     if (loading || authLoading) {
         return (
-            <>
-                <AppHeader />
-                <div className="flex justify-center items-center h-[calc(100vh-8rem)]">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-            </>
+            <div className="flex justify-center items-center h-screen">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
         );
     }
     
@@ -84,7 +80,6 @@ export default function AdDetailPage() {
 
     return (
         <main className="pb-24">
-            <AppHeader />
             <div className="p-4 bg-card">
                <Carousel className="w-full">
                     <CarouselContent>

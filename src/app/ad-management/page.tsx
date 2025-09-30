@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import AppHeader from '@/components/layout/app-header';
 import { useLanguage } from '@/contexts/language-context';
 
 const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'destructive' => {
@@ -124,7 +123,6 @@ export default function AdManagementPage() {
         return (
             <>
                 <div className="relative h-28 w-full">
-                  <AppHeader />
                 </div>
                 <div className="flex justify-center items-center h-[calc(100vh-8rem)]">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -136,7 +134,6 @@ export default function AdManagementPage() {
     return (
         <>
             <div className="relative h-28 w-full">
-                <AppHeader />
                 <Image
                   src="https://picsum.photos/seed/ad-management/1200/400"
                   alt="Ad Management background"

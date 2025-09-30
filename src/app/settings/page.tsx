@@ -10,7 +10,6 @@ import { z } from 'zod';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -102,7 +101,6 @@ export default function SettingsPage() {
         return (
             <>
                 <div className="relative h-28 w-full">
-                    <AppHeader />
                 </div>
                 <div className="flex justify-center items-center h-[calc(100vh-8rem)]">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -116,7 +114,6 @@ export default function SettingsPage() {
     return (
         <div>
             <div className="relative h-28 w-full">
-                <AppHeader />
                 <Image
                     src="https://picsum.photos/seed/settings/1200/400"
                     alt="Settings background"

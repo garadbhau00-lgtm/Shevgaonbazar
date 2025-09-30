@@ -10,7 +10,6 @@ import AdForm from '@/app/post-ad/_components/ad-form';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
-import AppHeader from '@/components/layout/app-header';
 import { useLanguage } from '@/contexts/language-context';
 
 export default function EditAdPage() {
@@ -63,8 +62,7 @@ export default function EditAdPage() {
     if (loading || authLoading) {
         return (
             <>
-                <AppHeader />
-                <div className="flex justify-center items-center h-[calc(100vh-8rem)]">
+                <div className="flex justify-center items-center h-screen">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             </>
@@ -73,7 +71,6 @@ export default function EditAdPage() {
 
     return (
         <>
-            <AppHeader />
             <main className="p-4">
                 <div className="mb-4">
                     <h1 className="text-2xl font-bold">{dictionary.editAd.title}</h1>

@@ -24,7 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import AppHeader from '@/components/layout/app-header';
 import { useLanguage } from '@/contexts/language-context';
 
 const getStatusVariant = (status: Ad['status']): 'default' | 'secondary' | 'destructive' => {
@@ -115,8 +114,7 @@ export default function MyAdsPage() {
     if (authLoading || adsLoading) {
         return (
             <div>
-                <AppHeader />
-                <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+                <div className="flex h-screen items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             </div>
@@ -126,7 +124,6 @@ export default function MyAdsPage() {
     return (
         <div>
              <div className="relative h-28 w-full">
-                <AppHeader />
                 <Image
                     src="https://picsum.photos/seed/my-ads/1200/400"
                     alt="My ads background"

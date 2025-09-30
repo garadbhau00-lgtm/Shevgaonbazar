@@ -63,7 +63,7 @@ export default function AppHeader() {
       );
     }
     return (
-        <Button asChild size="sm">
+        <Button asChild size="sm" className="h-auto px-3 py-1 text-xs">
             <Link href="/login">लॉगिन करा</Link>
         </Button>
     );
@@ -71,8 +71,7 @@ export default function AppHeader() {
 
   return (
     <header className={cn(
-        "flex h-16 items-center justify-end px-4 z-10",
-        isTransparentPage ? 'absolute top-0 right-0' : 'border-b bg-card'
+        "fixed top-2 right-2 z-50"
     )}>
       <div className="flex items-center gap-2">
         {renderUserOptions()}

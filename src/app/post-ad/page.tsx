@@ -1,7 +1,6 @@
 'use client';
 
 import AdForm from './_components/ad-form';
-import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 
@@ -10,7 +9,6 @@ export default function PostAdPage() {
   return (
     <div>
       <div className="relative h-28 w-full">
-        <AppHeader />
         <Image
           src="https://picsum.photos/seed/post-ad/1200/400"
           alt="Post ad background"

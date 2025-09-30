@@ -1,7 +1,6 @@
 'use client';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
@@ -14,7 +13,6 @@ export default function HelpCenterPage() {
     return (
         <div>
             <div className="relative h-28 w-full">
-                <AppHeader />
                 <Image
                     src="https://picsum.photos/seed/help-center/1200/400"
                     alt="Help Center background"

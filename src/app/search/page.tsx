@@ -9,7 +9,6 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import AppHeader from '@/components/layout/app-header';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 
@@ -97,7 +96,6 @@ export default function SearchPage() {
   return (
     <div>
       <div className="relative h-28 w-full">
-        <AppHeader />
         <Image
           src="https://picsum.photos/seed/search-page/1200/400"
           alt="Search page background"

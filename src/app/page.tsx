@@ -13,7 +13,6 @@ import { categories } from '@/lib/categories';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import AppHeader from '@/components/layout/app-header';
 import { useLanguage } from '@/contexts/language-context';
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
@@ -94,10 +93,9 @@ export default function Home() {
     : ads.filter(ad => ad.category === selectedCategory);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-theme(spacing.28))]">
+    <div className="flex flex-col h-full">
       <header className="sticky top-0 z-20">
         <div className="relative h-28 w-full">
-          <AppHeader />
           <Image
               src="https://picsum.photos/seed/header/1200/400"
               alt="Header background"
