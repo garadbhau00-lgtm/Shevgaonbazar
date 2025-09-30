@@ -23,12 +23,23 @@ import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
 import { useLanguage } from '@/contexts/language-context';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type AdFormProps = {
     existingAd?: Ad;
 };
 
 const MAX_FILES = 1;
+const AD_POST_FEE = 15;
+const UPI_ID = '9545886257@ybl';
 
 export default function AdForm({ existingAd }: AdFormProps) {
   const { toast } = useToast();
@@ -39,6 +50,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!existingAd;
@@ -147,6 +159,76 @@ export default function AdForm({ existingAd }: AdFormProps) {
         fileInputRef.current.value = "";
     }
   };
+  
+  const handlePayment = () => {
+     const upiUrl = `upi://pay?pa=${UPI_ID}&pn=Shevgaon%20Bazar&am=${AD_POST_FEE}&cu=INR&tn=Ad%20Posting%20Fee`;
+     window.location.href = upiUrl;
+     
+     // We can't actually verify the payment, so we'll assume it's successful after a delay
+     setIsSubmitting(true);
+     setTimeout(async () => {
+        const data = form.getValues();
+        await handleActualSubmit(data);
+     }, 10000); // Wait 10 seconds before submitting
+  }
+  
+  const handleActualSubmit = async (data: AdFormValues) => {
+    if (!user || !userProfile) {
+        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.loginRequired });
+        return;
+    }
+
+    try {
+        let photoUrl = '';
+        if (newFiles.length > 0) {
+            const file = newFiles[0];
+            const compressedFile = await imageCompression(file, {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1024,
+                useWebWorker: true,
+            });
+            const photoDataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
+
+            const storageRef = ref(storage, `ad_photos/${user.uid}/${Date.now()}`);
+            const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
+            photoUrl = await getDownloadURL(uploadResult.ref);
+        } else if (isEditMode && existingAd?.photos?.[0]) {
+            photoUrl = existingAd.photos[0];
+        }
+
+        if (!photoUrl) {
+            throw new Error(adFormDictionary.toast.photoRequiredDescription);
+        }
+
+        const submissionData = {
+            ...data,
+            photos: [photoUrl],
+            userId: user.uid,
+            userName: userProfile.name || user.email!,
+            status: 'pending' as const,
+            createdAt: isEditMode && existingAd ? existingAd.createdAt : serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+
+        if (isEditMode && existingAd) {
+            const adDocRef = doc(db, 'ads', existingAd.id);
+            await updateDoc(adDocRef, submissionData);
+            toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
+            router.push('/my-ads');
+        } else {
+            await addDoc(collection(db, 'ads'), submissionData);
+            toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
+            router.push('/my-ads');
+        }
+    } catch (error) {
+        console.error("Error submitting ad:", error);
+        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.submitError });
+    } finally {
+        setIsSubmitting(false);
+        setShowPaymentDialog(false);
+    }
+};
+
 
   const handleFormSubmit = async (data: AdFormValues) => {
     if (!user || !userProfile) {
@@ -157,58 +239,14 @@ export default function AdForm({ existingAd }: AdFormProps) {
       toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
       return;
     }
-    
-    setIsSubmitting(true);
 
-    try {
-      let photoUrl = '';
-      if (newFiles.length > 0) {
-        const file = newFiles[0];
-        const compressedFile = await imageCompression(file, {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1024,
-          useWebWorker: true,
-        });
-        const photoDataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
-
-        const storageRef = ref(storage, `ad_photos/${user.uid}/${Date.now()}`);
-        const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
-        photoUrl = await getDownloadURL(uploadResult.ref);
-      } else if (isEditMode && existingAd?.photos?.[0]) {
-        photoUrl = existingAd.photos[0];
-      }
-
-      if (!photoUrl) {
-          toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
-          setIsSubmitting(false); // Stop submission if no photo
-          return;
-      }
-
-      const submissionData = {
-        ...data,
-        photos: [photoUrl],
-        userId: user.uid,
-        userName: userProfile.name || user.email!,
-        status: 'pending' as const,
-        createdAt: isEditMode && existingAd ? existingAd.createdAt : serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      if (isEditMode && existingAd) {
-        const adDocRef = doc(db, 'ads', existingAd.id);
-        await updateDoc(adDocRef, submissionData);
-        toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
-        router.push('/my-ads');
-      } else {
-        await addDoc(collection(db, 'ads'), submissionData);
-        toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
-        router.push('/my-ads');
-      }
-    } catch (error) {
-      console.error("Error submitting ad:", error);
-      toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.submitError });
-    } finally {
-      setIsSubmitting(false);
+    if (isEditMode) {
+      // No payment needed for editing
+      setIsSubmitting(true);
+      await handleActualSubmit(data);
+    } else {
+      // Show payment dialog for new ads
+      setShowPaymentDialog(true);
     }
   };
 
@@ -243,7 +281,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             )}
           />
 
-          {subcategories && subcategories.length > 0 && (
+          {subcategories.length > 0 && (
             <FormField
               control={form.control}
               name="subcategory"
@@ -367,10 +405,36 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
           <Button type="submit" className="w-full !mt-8" size="lg" disabled={isLoading}>
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton}
+              {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton.replace('${amount}', AD_POST_FEE.toString())}
           </Button>
         </form>
       </Form>
+      
+       <AlertDialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{adFormDictionary.paymentDialog.title}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                         {adFormDictionary.paymentDialog.description.replace('${amount}', AD_POST_FEE.toString())}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="text-center my-4">
+                    <p className="text-sm text-muted-foreground">{adFormDictionary.paymentDialog.scanOrPay}</p>
+                    <div className="flex justify-center my-2">
+                        <Image src={`https://upiqr.in/api/qr?name=ShevgaonBazar&vpa=${UPI_ID}`} width={200} height={200} alt="UPI QR Code" />
+                    </div>
+                     <p className="font-mono text-lg font-semibold">{UPI_ID}</p>
+                </div>
+                <AlertDialogFooter className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="outline" className="w-full" onClick={() => setShowPaymentDialog(false)}>{adFormDictionary.paymentDialog.cancelButton}</Button>
+                    <Button className="w-full" onClick={handlePayment}>{adFormDictionary.paymentDialog.payButton.replace('${amount}', AD_POST_FEE.toString())}</Button>
+                </AlertDialogFooter>
+                <div className="text-xs text-muted-foreground mt-4 text-center">
+                    {adFormDictionary.paymentDialog.note}
+                </div>
+            </AlertDialogContent>
+        </AlertDialog>
     </>
   );
 }
+

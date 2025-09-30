@@ -138,7 +138,7 @@
             "limitText": "You can upload ${maxFiles} photo."
         },
         "updateAdButton": "Update Ad",
-        "postAdButton": "Post Ad",
+        "postAdButton": "Pay ₹${amount} and Post Ad",
         "validation": {
             "categoryRequired": "Please select a category.",
             "pricePositive": "Price must be greater than 0.",
@@ -157,6 +157,14 @@
             "updateSuccess": "Your ad has been successfully updated and submitted for review.",
             "submitSuccess": "Your ad has been successfully submitted. It will be live after approval.",
             "submitError": "Failed to submit ad."
+        },
+        "paymentDialog": {
+            "title": "Ad Posting Fee",
+            "description": "To post your ad, a fee of ₹${amount} is required. Please proceed to pay.",
+            "scanOrPay": "Scan QR or use UPI App",
+            "payButton": "Pay ₹${amount} via UPI App",
+            "cancelButton": "Cancel",
+            "note": "After completing the payment, your ad will be automatically submitted for review. Do not close this window."
         }
     },
     "myAds": {
