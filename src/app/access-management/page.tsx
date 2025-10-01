@@ -162,6 +162,7 @@ export default function AccessManagementPage() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure you want to delete this user?</AlertDialogTitle>
+
                         <AlertDialogDescription>
                            This action cannot be undone. This will permanently delete the user's profile. It will not delete their authentication record or their ads.
                         </AlertDialogDescription>
@@ -182,4 +183,3 @@ export default function AccessManagementPage() {
         </>
     );
 }
-    
