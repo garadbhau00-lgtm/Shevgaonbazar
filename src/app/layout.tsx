@@ -20,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="mr">
       <head>
+        <title>शेवगाव बाजार</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
