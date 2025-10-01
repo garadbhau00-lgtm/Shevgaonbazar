@@ -162,9 +162,10 @@ export default function AdForm({ existingAd }: AdFormProps) {
         if (newFiles.length > 0) {
              const file = newFiles[0];
             const compressedFile = await imageCompression(file, {
-                maxSizeMB: 1,
-                maxWidthOrHeight: 1024,
+                maxSizeMB: 0.5,
+                maxWidthOrHeight: 800,
                 useWebWorker: true,
+                maxIteration: 5,
             });
             const dataUri = await imageCompression.getDataUrlFromFile(compressedFile);
             finalPhotoDataUris = [dataUri];
@@ -363,3 +364,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
+
+    
