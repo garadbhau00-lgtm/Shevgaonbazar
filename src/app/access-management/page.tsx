@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
@@ -9,9 +9,11 @@ import type { UserProfile } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function AccessManagementPage() {
     const { userProfile, loading: authLoading } = useAuth();
@@ -21,6 +23,8 @@ export default function AccessManagementPage() {
 
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
+    const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -56,6 +60,23 @@ export default function AccessManagementPage() {
         } catch (error) {
             console.error("Error updating user status:", error);
             toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorUpdateStatus });
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!userToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            await deleteDoc(doc(db, 'users', userToDelete.uid));
+            setUsers(users.filter(u => u.uid !== userToDelete.uid));
+            toast({ title: dictionary.accessManagement.successTitle, description: "User successfully deleted." });
+            setUserToDelete(null);
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: "Failed to delete user." });
+        } finally {
+            setIsDeleting(false);
         }
     };
     
@@ -110,6 +131,15 @@ export default function AccessManagementPage() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
+                                 <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={() => setUserToDelete(user)}
+                                    disabled={userProfile?.uid === user.uid}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
                                 <span className={`text-sm font-medium ${user.disabled ? 'text-destructive' : 'text-primary'}`}>
                                     {user.disabled ? dictionary.accessManagement.disabled : dictionary.accessManagement.enabled}
                                 </span>
@@ -128,6 +158,27 @@ export default function AccessManagementPage() {
                     )}
                 </div>
             </main>
+            <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to delete this user?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           This action cannot be undone. This will permanently delete the user's profile. It will not delete their authentication record or their ads.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Delete User
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

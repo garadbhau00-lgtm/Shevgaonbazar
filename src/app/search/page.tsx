@@ -38,7 +38,7 @@ function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-3 gap-2">
       {ads.map((ad) => (
         <AdCard key={ad.id} ad={ad} />
       ))}

@@ -2,6 +2,7 @@
 
 export type Ad = {
   id: string;
+  title?: string;
   category:
     | 'पशुधन'
     | 'शेती उत्पादने'
