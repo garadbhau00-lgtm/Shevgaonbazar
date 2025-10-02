@@ -10,7 +10,7 @@ import type { UserProfile } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
@@ -131,13 +131,17 @@ export default function AccessManagementPage() {
             setIsDeleting(false);
         }
     };
+
+    const now = new Date().getTime();
+    const onlineCount = users.filter(u => u.lastSeen && (now - u.lastSeen.toDate().getTime()) < 5 * 60 * 1000).length;
+    const offlineCount = users.length - onlineCount;
     
     if (authLoading || pageLoading) {
         return (
             <>
-                <div className="relative h-28 w-full">
+                <div className="relative h-40 w-full">
                 </div>
-                <div className="flex justify-center items-center h-[calc(100vh-8rem)]">
+                <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             </>
@@ -146,7 +150,7 @@ export default function AccessManagementPage() {
 
     return (
         <>
-            <div className="relative h-28 w-full">
+            <div className="relative h-40 w-full">
                 <Image
                     src="https://picsum.photos/seed/access-management/1200/400"
                     alt="Access Management background"
@@ -154,17 +158,24 @@ export default function AccessManagementPage() {
                     className="object-cover"
                     data-ai-hint="farm security"
                 />
-                <div className="absolute inset-0 bg-black/50" />
+                <div className="absolute inset-0 bg-black/60" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-lg font-bold">{dictionary.accessManagement.title}</h1>
-                        {!pageLoading && (
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                                {users.length}
-                            </span>
-                        )}
-                    </div>
+                    <h1 className="text-lg font-bold">{dictionary.accessManagement.title}</h1>
                     <p className="mt-2 text-xs max-w-xl">{dictionary.accessManagement.description}</p>
+                    <div className="mt-4 flex items-center justify-center gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
+                        <div className="flex items-center gap-1.5" title="Online Users">
+                             <Wifi className="h-4 w-4 text-green-400"/>
+                             <span>{onlineCount}</span>
+                        </div>
+                         <div className="flex items-center gap-1.5" title="Offline Users">
+                             <WifiOff className="h-4 w-4 text-red-400"/>
+                             <span>{offlineCount}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5" title="Total Users">
+                            <Users className="h-4 w-4"/>
+                            <span>{users.length}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <main className="p-4">
@@ -233,3 +244,4 @@ export default function AccessManagementPage() {
         </>
     );
 }
+
