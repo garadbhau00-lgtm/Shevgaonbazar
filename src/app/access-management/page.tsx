@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -140,7 +141,7 @@ export default function AccessManagementPage() {
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
-                                <span className={`text-sm font-medium ${user.disabled ? 'text-destructive' : 'text-primary'}`}>
+                                <span className={`text-sm font-medium ${user.disabled ? 'text-red-600' : 'text-green-600'}`}>
                                     {user.disabled ? dictionary.accessManagement.disabled : dictionary.accessManagement.enabled}
                                 </span>
                                 <Switch
