@@ -58,10 +58,18 @@ export default function AccessManagementPage() {
         try {
             const userDoc = doc(db, 'users', uid);
             await updateDoc(userDoc, { disabled: isDisabled });
-            setUsers(users.map(u => u.uid === uid ? { ...u, disabled: isDisabled } : u));
+
+            setUsers(currentUsers =>
+                currentUsers.map(u => (u.uid === uid ? { ...u, disabled: isDisabled } : u))
+            );
+
             toast({ title: dictionary.accessManagement.successTitle, description: `User successfully ${!isDisabled ? 'enabled' : 'disabled'}.` });
         } catch (error) {
             console.error("Error updating user status:", error);
+            // Revert UI change on error
+            setUsers(currentUsers =>
+                currentUsers.map(u => (u.uid === uid ? { ...u, disabled: !isDisabled } : u))
+            );
             toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorUpdateStatus });
         }
     };
