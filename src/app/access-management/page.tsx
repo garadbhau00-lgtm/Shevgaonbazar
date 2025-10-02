@@ -166,7 +166,7 @@ export default function AccessManagementPage() {
     return (
         <div className="flex flex-col">
             <header className="sticky top-0 z-10">
-                <div className="relative h-28 w-full">
+                <div className="relative h-24 w-full">
                     <Image
                         src="https://picsum.photos/seed/access-management/1200/400"
                         alt="Access Management background"
@@ -175,7 +175,7 @@ export default function AccessManagementPage() {
                         data-ai-hint="farm security"
                     />
                     <div className="absolute inset-0 bg-black/60" />
-                     <div className="absolute inset-0 flex flex-col justify-between p-4 text-white">
+                     <div className="absolute inset-0 flex flex-col justify-between p-2 text-white">
                         <div className="flex items-start justify-between">
                             <div className="flex items-center justify-start gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm w-fit">
                                 <div className="flex items-center gap-1.5" title={dictionary.accessManagement.onlineUsers}>
@@ -286,6 +286,8 @@ export default function AccessManagementPage() {
         </div>
     );
 }
+
+    
 
     
 
