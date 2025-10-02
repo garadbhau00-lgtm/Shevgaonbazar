@@ -267,7 +267,7 @@
         "permissionDeniedDescription": "Permission to create a profile in the database is denied. Please check your Firestore rules."
     },
     "accessManagement": {
-        "title": "Access Management",
+        "title": "User Management",
         "description": "",
         "users": "Users",
         "enabled": "Enabled",
@@ -422,5 +422,6 @@
     }
 }
 
+    
     
     
