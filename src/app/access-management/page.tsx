@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -214,7 +213,7 @@ export default function AccessManagementPage() {
                             <div className="flex items-center gap-4 flex-1 min-w-0">
                                 <Avatar>
                                     <AvatarImage src={user.photoURL || undefined} />
-                                    <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}</AvatarFallback>
+                                    <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U')}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-grow min-w-0">
                                     <p className="font-semibold truncate">{user.name || 'N/A'}</p>
@@ -284,5 +283,3 @@ export default function AccessManagementPage() {
         </div>
     );
 }
-
-    
