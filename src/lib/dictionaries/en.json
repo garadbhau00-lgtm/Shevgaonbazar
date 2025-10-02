@@ -283,7 +283,8 @@
         "offlineUsers": "Offline Users",
         "totalUsers": "Total Users",
         "adminUsers": "Admin Users",
-        "farmerUsers": "Farmer Users"
+        "farmerUsers": "Farmer Users",
+        "joinedOn": "Joined:"
     },
     "adDetail": {
         "loginRequiredTitle": "Login Required",

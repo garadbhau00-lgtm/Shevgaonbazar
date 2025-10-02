@@ -283,7 +283,8 @@
         "offlineUsers": "ऑफलाइन उपयोगकर्ता",
         "totalUsers": "कुल उपयोगकर्ता",
         "adminUsers": "एडमिन उपयोगकर्ता",
-        "farmerUsers": "किसान उपयोगकर्ता"
+        "farmerUsers": "किसान उपयोगकर्ता",
+        "joinedOn": "शामिल हुए:"
     },
     "adDetail": {
         "loginRequiredTitle": "लॉगिन आवश्यक",

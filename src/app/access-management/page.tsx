@@ -9,13 +9,13 @@ import type { UserProfile } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, Users, Wifi, WifiOff, ListChecks, Shield, Tractor } from 'lucide-react';
+import { Loader2, Trash2, Users, Wifi, WifiOff, ListChecks, Shield, Tractor, CalendarPlus } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { hi, enUS } from 'date-fns/locale';
 
 const locales: { [key: string]: Locale } = { hi, en: enUS };
@@ -164,7 +164,7 @@ export default function AccessManagementPage() {
 
     return (
         <div className="flex flex-col">
-            <header className="sticky top-0 z-10">
+             <header className="sticky top-0 z-10">
                 <div className="relative h-24 w-full">
                     <Image
                         src="https://picsum.photos/seed/access-management/1200/400"
@@ -218,7 +218,15 @@ export default function AccessManagementPage() {
                                 <div className="flex-grow min-w-0">
                                     <p className="font-semibold truncate">{user.name || 'N/A'}</p>
                                     <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                                    <UserStatus user={user} dictionary={dictionary} language={language} />
+                                    {user.createdAt?.toDate && (
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                            <CalendarPlus className="h-3 w-3" />
+                                            <span>{dictionary.accessManagement.joinedOn} {format(user.createdAt.toDate(), 'dd MMM yyyy')}</span>
+                                        </p>
+                                    )}
+                                    <div className="mt-1">
+                                      <UserStatus user={user} dictionary={dictionary} language={language} />
+                                    </div>
                                 </div>
                             </div>
                              <div className="flex items-center gap-4 flex-shrink-0 ml-4">
