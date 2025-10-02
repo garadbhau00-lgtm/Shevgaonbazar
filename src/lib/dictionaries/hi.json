@@ -172,6 +172,10 @@
             "label": "कीमत (₹)",
             "placeholder": "जैसे १५०००"
         },
+        "taluka": {
+            "label": "तालुका",
+            "placeholder": "एक तालुका चुनें"
+        },
         "location": {
             "label": "गांव",
             "placeholder": "एक गांव चुनें"
@@ -190,6 +194,7 @@
         "validation": {
             "categoryRequired": "कृपया एक श्रेणी चुनें।",
             "pricePositive": "कीमत 0 से अधिक होनी चाहिए।",
+            "talukaRequired": "कृपया एक तालुका चुनें।",
             "locationRequired": "कृपया एक गांव चुनें।",
             "mobileInvalid": "कृपया एक मान्य 10-अंकीय मोबाइल नंबर दर्ज करें।"
         },
@@ -268,7 +273,6 @@
     },
     "accessManagement": {
         "title": "उपयोगकर्ता प्रबंधन",
-        "description": "",
         "users": "उपयोगकर्ता",
         "enabled": "सक्षम",
         "disabled": "अक्षम",
@@ -422,7 +426,3 @@
         }
     }
 }
-
-    
-    
-    

@@ -12,6 +12,7 @@ export type Ad = {
     | 'आर्थिक';
   subcategory?: string;
   price: number;
+  taluka: string;
   location: string; // village
   mobileNumber: string;
   photos: string[]; // image urls

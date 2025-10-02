@@ -122,7 +122,7 @@ export default function AdDetailPage() {
 
                 <div className="flex items-center text-lg font-semibold text-green-600">
                     <MapPin className="h-5 w-5 mr-2" />
-                    <span>{ad.location}</span>
+                    <span>{ad.location}, {ad.taluka}</span>
                 </div>
                  
                  <Link href={`tel:${ad.mobileNumber}`} className="flex items-center text-lg font-semibold text-green-600">

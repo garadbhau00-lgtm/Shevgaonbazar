@@ -172,6 +172,10 @@
             "label": "Price (₹)",
             "placeholder": "e.g., 15000"
         },
+        "taluka": {
+            "label": "Taluka",
+            "placeholder": "Select a taluka"
+        },
         "location": {
             "label": "Village",
             "placeholder": "Select a village"
@@ -190,6 +194,7 @@
         "validation": {
             "categoryRequired": "Please select a category.",
             "pricePositive": "Price must be greater than 0.",
+            "talukaRequired": "Please select a taluka.",
             "locationRequired": "Please select a village.",
             "mobileInvalid": "Please enter a valid 10-digit mobile number."
         },
@@ -268,7 +273,6 @@
     },
     "accessManagement": {
         "title": "User Management",
-        "description": "",
         "users": "Users",
         "enabled": "Enabled",
         "disabled": "Disabled",
@@ -422,7 +426,3 @@
         }
     }
 }
-
-    
-    
-    

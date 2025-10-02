@@ -22,6 +22,7 @@ import imageCompression from 'browser-image-compression';
 import { villageList } from '@/lib/villages';
 import { categories } from '@/lib/categories';
 import { useLanguage } from '@/contexts/language-context';
+import { talukaList } from '@/lib/talukas';
 
 type AdFormProps = {
     existingAd?: Ad;
@@ -61,6 +62,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     ),
     subcategory: z.string().optional(),
     price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }),
+    taluka: z.string({ required_error: adFormDictionary.validation.talukaRequired }),
     location: z.string({ required_error: adFormDictionary.validation.locationRequired }),
     mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: adFormDictionary.validation.mobileInvalid }),
   });
@@ -71,6 +73,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     resolver: zodResolver(adSchema),
     defaultValues: {
       price: undefined,
+      taluka: undefined,
       location: undefined,
       mobileNumber: '',
       category: undefined,
@@ -97,6 +100,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         category: existingAd.category,
         subcategory: existingAd.subcategory,
         price: existingAd.price,
+        taluka: existingAd.taluka,
         location: existingAd.location,
         mobileNumber: existingAd.mobileNumber,
       });
@@ -276,6 +280,30 @@ export default function AdForm({ existingAd }: AdFormProps) {
               </FormItem>
             )}
           />
+
+           <FormField
+            control={form.control}
+            name="taluka"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{adFormDictionary.taluka.label}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={adFormDictionary.taluka.placeholder} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                      {talukaList.map((taluka) => (
+                          <SelectItem key={taluka} value={taluka}>{taluka}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="location"
@@ -364,5 +392,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </>
   );
 }
-
-    
