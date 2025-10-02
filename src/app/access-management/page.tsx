@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, where,getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
@@ -10,7 +10,7 @@ import type { UserProfile } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
+import { Loader2, Trash2, Users, Wifi, WifiOff, ListChecks } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
@@ -73,8 +73,25 @@ export default function AccessManagementPage() {
         const fetchUsers = async () => {
             try {
                 const querySnapshot = await getDocs(collection(db, "users"));
-                const usersList = querySnapshot.docs.map(doc => doc.data() as UserProfile);
+                const usersList = querySnapshot.docs.map(doc => ({ ...doc.data() as UserProfile, adCount: -1 }));
+                
                 setUsers(usersList.sort((a, b) => (b.lastSeen?.toMillis() || 0) - (a.lastSeen?.toMillis() || 0)));
+
+                usersList.forEach(async (user, index) => {
+                    const adsQuery = query(collection(db, 'ads'), where('userId', '==', user.uid));
+                    const snapshot = await getCountFromServer(adsQuery);
+                    const count = snapshot.data().count;
+
+                    setUsers(currentUsers => {
+                        const newUsers = [...currentUsers];
+                        const userIndex = newUsers.findIndex(u => u.uid === user.uid);
+                        if(userIndex !== -1) {
+                           newUsers[userIndex] = { ...newUsers[userIndex], adCount: count };
+                        }
+                        return newUsers;
+                    });
+                });
+
             } catch (error) {
                 console.error("Error fetching users:", error);
                 toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorFetchUsers });
@@ -194,6 +211,18 @@ export default function AccessManagementPage() {
                                     <UserStatus user={user} dictionary={dictionary} language={language} />
                                 </div>
                             </div>
+                             <div className="flex items-center gap-4 flex-shrink-0 ml-4">
+                                {user.adCount !== undefined && user.adCount > -1 ? (
+                                    <div className="text-center">
+                                        <p className="font-bold text-lg">{user.adCount}</p>
+                                        <p className="text-xs text-muted-foreground">Ads</p>
+                                    </div>
+                                ) : (
+                                    <div className="text-center">
+                                         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground"/>
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                                  <Button 
                                     variant="ghost" 
@@ -244,4 +273,3 @@ export default function AccessManagementPage() {
         </>
     );
 }
-

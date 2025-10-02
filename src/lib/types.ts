@@ -1,5 +1,4 @@
 
-
 export type Ad = {
   id: string;
   title?: string;
@@ -36,6 +35,7 @@ export type UserProfile = {
     disabled: boolean;
     createdAt: any; // Firestore timestamp
     lastSeen?: any; // Firestore timestamp
+    adCount?: number;
 };
 
 export type User = {
