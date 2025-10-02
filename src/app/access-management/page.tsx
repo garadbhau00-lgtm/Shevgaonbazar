@@ -172,18 +172,18 @@ export default function AccessManagementPage() {
                 <div className="space-y-4">
                     {users.length > 0 ? users.map((user) => (
                         <div key={user.uid} className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
                                 <Avatar>
                                     <AvatarImage src={`https://picsum.photos/seed/${user.uid}/100`} />
                                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}</AvatarFallback>
                                 </Avatar>
-                                <div className="flex-grow">
-                                    <p className="font-semibold">{user.name || 'N/A'}</p>
-                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                <div className="flex-grow min-w-0">
+                                    <p className="font-semibold truncate">{user.name || 'N/A'}</p>
+                                    <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                                     <UserStatus user={user} dictionary={dictionary} language={language} />
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                                  <Button 
                                     variant="ghost" 
                                     size="icon" 
@@ -233,5 +233,3 @@ export default function AccessManagementPage() {
         </>
     );
 }
-
-    
