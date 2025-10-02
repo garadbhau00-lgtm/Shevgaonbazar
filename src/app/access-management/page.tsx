@@ -15,6 +15,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
 
 export default function AccessManagementPage() {
     const { userProfile, loading: authLoading } = useAuth();
@@ -141,9 +142,12 @@ export default function AccessManagementPage() {
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
-                                <span className={`text-sm font-medium ${user.disabled ? 'text-red-600' : 'text-green-600'}`}>
-                                    {user.disabled ? dictionary.accessManagement.disabled : dictionary.accessManagement.enabled}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <div className={cn("h-2.5 w-2.5 rounded-full", user.disabled ? "bg-destructive" : "bg-green-600")} />
+                                    <span className={`text-sm font-medium ${user.disabled ? 'text-destructive' : 'text-green-600'}`}>
+                                        {user.disabled ? dictionary.accessManagement.disabled : dictionary.accessManagement.enabled}
+                                    </span>
+                                </div>
                                 <Switch
                                     checked={!user.disabled}
                                     onCheckedChange={(checked) => handleUserToggle(user.uid, !checked)}
