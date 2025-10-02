@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, where,getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
@@ -9,7 +10,7 @@ import type { UserProfile } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, Users, Wifi, WifiOff, ListChecks, Shield, Tractor, CalendarPlus } from 'lucide-react';
+import { Loader2, Trash2, Users, Wifi, WifiOff, ListChecks, Shield, Tractor, CalendarPlus, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
@@ -65,40 +66,43 @@ export default function AccessManagementPage() {
 
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, "users"));
-                const usersList = querySnapshot.docs.map(doc => ({ ...doc.data() as UserProfile, adCount: -1 }));
-                
-                setUsers(usersList.sort((a, b) => (b.lastSeen?.toMillis() || 0) - (a.lastSeen?.toMillis() || 0)));
+    const fetchUsers = useCallback(async () => {
+        setIsRefreshing(true);
+        try {
+            const querySnapshot = await getDocs(collection(db, "users"));
+            const usersList = querySnapshot.docs.map(doc => ({ ...doc.data() as UserProfile, adCount: -1 }));
+            
+            setUsers(usersList.sort((a, b) => (b.lastSeen?.toMillis() || 0) - (a.lastSeen?.toMillis() || 0)));
 
-                usersList.forEach(async (user, index) => {
-                    const adsQuery = query(collection(db, 'ads'), where('userId', '==', user.uid));
-                    const snapshot = await getCountFromServer(adsQuery);
-                    const count = snapshot.data().count;
+            usersList.forEach(async (user, index) => {
+                const adsQuery = query(collection(db, 'ads'), where('userId', '==', user.uid));
+                const snapshot = await getCountFromServer(adsQuery);
+                const count = snapshot.data().count;
 
-                    setUsers(currentUsers => {
-                        const newUsers = [...currentUsers];
-                        const userIndex = newUsers.findIndex(u => u.uid === user.uid);
-                        if(userIndex !== -1) {
-                           newUsers[userIndex] = { ...newUsers[userIndex], adCount: count };
-                        }
-                        return newUsers;
-                    });
+                setUsers(currentUsers => {
+                    const newUsers = [...currentUsers];
+                    const userIndex = newUsers.findIndex(u => u.uid === user.uid);
+                    if(userIndex !== -1) {
+                        newUsers[userIndex] = { ...newUsers[userIndex], adCount: count };
+                    }
+                    return newUsers;
                 });
+            });
 
-            } catch (error) {
-                console.error("Error fetching users:", error);
-                toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorFetchUsers });
-            } finally {
-                setPageLoading(false);
-            }
-        };
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorFetchUsers });
+        } finally {
+            setPageLoading(false);
+            setIsRefreshing(false);
+        }
+    }, [toast, dictionary]);
 
+    useEffect(() => {
         if (!authLoading) {
             if (userProfile?.role !== 'Admin') {
                 toast({ variant: 'destructive', title: dictionary.accessManagement.accessDeniedTitle, description: dictionary.accessManagement.accessDeniedDescription });
@@ -107,7 +111,7 @@ export default function AccessManagementPage() {
             }
             fetchUsers();
         }
-    }, [authLoading, userProfile, router, toast, dictionary]);
+    }, [authLoading, userProfile, router, toast, dictionary, fetchUsers]);
 
 
     const handleUserToggle = async (uid: string, checked: boolean) => {
@@ -175,7 +179,12 @@ export default function AccessManagementPage() {
                     />
                     <div className="absolute inset-0 bg-black/60" />
                      <div className="absolute inset-0 flex flex-col justify-center p-2 text-white">
-                        <h1 className="text-center text-lg font-bold">{dictionary.accessManagement.title}</h1>
+                        <div className="flex items-center justify-center relative">
+                            <h1 className="text-center text-lg font-bold">{dictionary.accessManagement.title}</h1>
+                            <Button variant="ghost" size="icon" className="absolute right-0 text-white hover:bg-white/20 hover:text-white" onClick={fetchUsers} disabled={isRefreshing}>
+                                <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                            </Button>
+                        </div>
                         <div className="mt-2 flex w-full items-center justify-between">
                             <div className="flex w-fit items-center justify-start gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
                                 <div className="flex items-center gap-1.5" title={dictionary.accessManagement.onlineUsers}>
@@ -291,3 +300,5 @@ export default function AccessManagementPage() {
         </div>
     );
 }
+
+    
