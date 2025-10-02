@@ -16,12 +16,53 @@ import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { hi, enUS } from 'date-fns/locale';
+
+const locales: { [key: string]: Locale } = { hi, en: enUS };
+
+const UserStatus = ({ user, dictionary, language }: { user: UserProfile, dictionary: any, language: string }) => {
+    const isOnline = user.lastSeen && (new Date().getTime() - user.lastSeen.toDate().getTime()) < 5 * 60 * 1000;
+    const locale = locales[language] || enUS;
+    
+    if (user.disabled) {
+        return (
+            <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-destructive" />
+                <span className="text-sm font-medium text-destructive">
+                    {dictionary.accessManagement.disabled}
+                </span>
+            </div>
+        );
+    }
+    
+    if (isOnline) {
+        return (
+            <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-green-600 animate-pulse" />
+                <span className="text-sm font-medium text-green-600">
+                    Online
+                </span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center gap-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/50" />
+            <span className="text-sm font-medium text-muted-foreground">
+                {user.lastSeen ? `Active ${formatDistanceToNow(user.lastSeen.toDate(), { addSuffix: true, locale })}` : 'Never active'}
+            </span>
+        </div>
+    );
+};
+
 
 export default function AccessManagementPage() {
     const { userProfile, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
-    const { dictionary } = useLanguage();
+    const { dictionary, language } = useLanguage();
 
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
@@ -33,7 +74,7 @@ export default function AccessManagementPage() {
             try {
                 const querySnapshot = await getDocs(collection(db, "users"));
                 const usersList = querySnapshot.docs.map(doc => doc.data() as UserProfile);
-                setUsers(usersList);
+                setUsers(usersList.sort((a, b) => (b.lastSeen?.toMillis() || 0) - (a.lastSeen?.toMillis() || 0)));
             } catch (error) {
                 console.error("Error fetching users:", error);
                 toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorFetchUsers });
@@ -136,9 +177,10 @@ export default function AccessManagementPage() {
                                     <AvatarImage src={`https://picsum.photos/seed/${user.uid}/100`} />
                                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}</AvatarFallback>
                                 </Avatar>
-                                <div>
+                                <div className="flex-grow">
                                     <p className="font-semibold">{user.name || 'N/A'}</p>
                                     <p className="text-sm text-muted-foreground">{user.email}</p>
+                                    <UserStatus user={user} dictionary={dictionary} language={language} />
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -151,12 +193,6 @@ export default function AccessManagementPage() {
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
-                                <div className="flex items-center gap-2">
-                                    <div className={cn("h-2.5 w-2.5 rounded-full", user.disabled ? "bg-destructive" : "bg-green-600")} />
-                                    <span className={`text-sm font-medium ${user.disabled ? 'text-destructive' : 'text-green-600'}`}>
-                                        {user.disabled ? dictionary.accessManagement.disabled : dictionary.accessManagement.enabled}
-                                    </span>
-                                </div>
                                 <Switch
                                     checked={!user.disabled}
                                     onCheckedChange={(checked) => handleUserToggle(user.uid, checked)}
@@ -197,3 +233,5 @@ export default function AccessManagementPage() {
         </>
     );
 }
+
+    

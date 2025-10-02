@@ -397,7 +397,7 @@
         "saveChangesButton": "परिवर्तन सहेजें",
         "securityTitle": "सुरक्षा",
         "passwordLabel": "पासवर्ड",
-        "passwordDescription": "हम आपको अपना पासवर्ड बदलने के लिए एक ईमेल भेजेंगे।",
+        "passwordDescription": "हम आपको अपना पासवर्ड बदलने के لیے एक ईमेल भेजेंगे।",
         "sendResetEmailButton": "पासवर्ड रीसेट ईमेल भेजें",
         "logoutButton": "लॉगआउट",
         "validation": {
@@ -416,3 +416,5 @@
         }
     }
 }
+
+    
