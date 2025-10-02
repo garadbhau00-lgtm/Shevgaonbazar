@@ -53,12 +53,13 @@ export default function AccessManagementPage() {
     }, [authLoading, userProfile, router, toast, dictionary]);
 
 
-    const handleUserToggle = async (uid: string, currentStatus: boolean) => {
+    const handleUserToggle = async (uid: string, checked: boolean) => {
+        const isDisabled = !checked;
         try {
             const userDoc = doc(db, 'users', uid);
-            await updateDoc(userDoc, { disabled: currentStatus });
-            setUsers(users.map(u => u.uid === uid ? { ...u, disabled: currentStatus } : u));
-            toast({ title: dictionary.accessManagement.successTitle, description: `User successfully ${!currentStatus ? 'disabled' : 'enabled'}.` });
+            await updateDoc(userDoc, { disabled: isDisabled });
+            setUsers(users.map(u => u.uid === uid ? { ...u, disabled: isDisabled } : u));
+            toast({ title: dictionary.accessManagement.successTitle, description: `User successfully ${!isDisabled ? 'enabled' : 'disabled'}.` });
         } catch (error) {
             console.error("Error updating user status:", error);
             toast({ variant: 'destructive', title: dictionary.accessManagement.errorTitle, description: dictionary.accessManagement.errorUpdateStatus });
@@ -150,7 +151,7 @@ export default function AccessManagementPage() {
                                 </div>
                                 <Switch
                                     checked={!user.disabled}
-                                    onCheckedChange={(checked) => handleUserToggle(user.uid, !checked)}
+                                    onCheckedChange={(checked) => handleUserToggle(user.uid, checked)}
                                     disabled={userProfile?.uid === user.uid} // Admin can't disable themselves
                                     aria-label={`Toggle user ${user.email}`}
                                 />
