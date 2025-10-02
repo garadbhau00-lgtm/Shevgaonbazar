@@ -175,9 +175,9 @@ export default function AccessManagementPage() {
                         data-ai-hint="farm security"
                     />
                     <div className="absolute inset-0 bg-black/60" />
-                     <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center justify-start gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm w-fit">
+                     <div className="absolute inset-0 flex items-end p-2 text-white">
+                        <div className="flex w-full items-center justify-between">
+                            <div className="flex items-center justify-start gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
                                 <div className="flex items-center gap-1.5" title={dictionary.accessManagement.onlineUsers}>
                                      <Wifi className="h-4 w-4 text-green-400"/>
                                      <span>{onlineCount}</span>
@@ -194,7 +194,7 @@ export default function AccessManagementPage() {
                             <div className="flex-1 text-center">
                                 <h1 className="text-lg font-bold">{dictionary.accessManagement.title}</h1>
                             </div>
-                            <div className="flex items-center justify-end gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm w-fit">
+                            <div className="flex items-center justify-end gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
                                 <div className="flex items-center gap-1.5" title={dictionary.accessManagement.adminUsers}>
                                      <Shield className="h-4 w-4 text-blue-400"/>
                                      <span>{adminCount}</span>
