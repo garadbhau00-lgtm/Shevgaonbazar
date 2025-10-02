@@ -2,7 +2,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, Unsubscribe, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { useToast } from './use-toast';
@@ -46,10 +46,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         let unsubscribeProfile: Unsubscribe | undefined;
+        let activityInterval: NodeJS.Timeout | undefined;
 
         if (user) {
             setLoading(true);
             const userDocRef = doc(db, 'users', user.uid);
+
+            const updateLastSeen = async () => {
+                try {
+                    await updateDoc(userDocRef, { lastSeen: serverTimestamp() });
+                } catch (error) {
+                    // It might fail if the doc doesn't exist yet, which is fine
+                }
+            };
+            
+            activityInterval = setInterval(updateLastSeen, 60 * 1000); // Update every 60 seconds
+            updateLastSeen(); // Initial update
+
             unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const profileData = docSnap.data() as UserProfile;
@@ -82,19 +95,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (unsubscribeProfile) {
                 unsubscribeProfile();
             }
+            if (activityInterval) {
+                clearInterval(activityInterval);
+            }
         };
     }, [user, toast, authDict]);
 
 
     const handleLogout = useCallback(async () => {
         try {
+            if (user) {
+                const userDocRef = doc(db, 'users', user.uid);
+                await updateDoc(userDocRef, { lastSeen: serverTimestamp() });
+            }
             await signOut(auth);
             toast({ title: authDict.logoutSuccess });
         } catch (error) {
             console.error("Logout error", error);
             toast({ variant: 'destructive', title: authDict.logoutFailedTitle, description: authDict.logoutFailedDescription });
         }
-    }, [toast, authDict]);
+    }, [user, toast, authDict]);
 
     const handleGoogleSignIn = useCallback(async () => {
         const provider = new GoogleAuthProvider();
@@ -116,6 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         role: userRole,
                         disabled: false,
                         createdAt: serverTimestamp(),
+                        lastSeen: serverTimestamp(),
                     });
                      toast({
                         title: authDict.accountCreatedTitle,

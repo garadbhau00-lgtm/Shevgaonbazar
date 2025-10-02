@@ -35,6 +35,7 @@ export type UserProfile = {
     role: 'Farmer' | 'Admin';
     disabled: boolean;
     createdAt: any; // Firestore timestamp
+    lastSeen?: any; // Firestore timestamp
 };
 
 export type User = {
