@@ -181,9 +181,6 @@ export default function AccessManagementPage() {
                      <div className="absolute inset-0 flex flex-col justify-center p-2 text-white">
                         <div className="flex items-center justify-center relative">
                             <h1 className="text-center text-lg font-bold">{dictionary.accessManagement.title}</h1>
-                            <Button variant="ghost" size="icon" className="absolute right-0 text-white hover:bg-white/20 hover:text-white" onClick={fetchUsers} disabled={isRefreshing}>
-                                <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-                            </Button>
                         </div>
                         <div className="mt-2 flex w-full items-center justify-between">
                             <div className="flex w-fit items-center justify-start gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
@@ -215,7 +212,12 @@ export default function AccessManagementPage() {
                 </div>
             </header>
             <div className="p-4">
-                <h2 className="text-lg font-bold mb-2">{dictionary.accessManagement.users}</h2>
+                 <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-lg font-bold">{dictionary.accessManagement.users}</h2>
+                     <Button variant="ghost" size="icon" onClick={fetchUsers} disabled={isRefreshing}>
+                        <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                    </Button>
+                </div>
                 <div className="space-y-4">
                     {users.length > 0 ? users.map((user) => (
                         <div key={user.uid} className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm">
@@ -300,5 +302,7 @@ export default function AccessManagementPage() {
         </div>
     );
 }
+
+    
 
     
