@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { z } from 'zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +19,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { Ad } from '@/lib/types';
 import imageCompression from 'browser-image-compression';
-import { villageList } from '@/lib/villages';
+import { talukaVillageMap } from '@/lib/village-data';
 import { categories } from '@/lib/categories';
 import { useLanguage } from '@/contexts/language-context';
 import { talukaList } from '@/lib/talukas';
@@ -86,6 +86,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
     name: 'category',
   });
 
+  const selectedTaluka = useWatch({
+    control: form.control,
+    name: 'taluka',
+  });
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -130,6 +135,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
         form.setValue('subcategory', undefined);
     }
   }, [selectedCategory, form]);
+
+  useEffect(() => {
+    form.setValue('location', undefined);
+  }, [selectedTaluka, form]);
+  
+  const villageList = useMemo(() => {
+    if (!selectedTaluka) return [];
+    return talukaVillageMap[selectedTaluka] || [];
+  }, [selectedTaluka]);
+
 
   if (authLoading) {
       return (
@@ -310,7 +325,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{adFormDictionary.location.label}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading || !selectedTaluka}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder={adFormDictionary.location.placeholder} />
