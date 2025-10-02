@@ -268,7 +268,7 @@
     },
     "accessManagement": {
         "title": "पहुंच प्रबंधन",
-        "description": "उपयोगकर्ता खातों को सक्षम या अक्षम करें।",
+        "description": "",
         "users": "उपयोगकर्ता",
         "enabled": "सक्षम",
         "disabled": "अक्षम",
@@ -422,4 +422,5 @@
     }
 }
 
+    
     

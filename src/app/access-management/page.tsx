@@ -40,7 +40,7 @@ const UserStatus = ({ user, dictionary, language }: { user: UserProfile, diction
         return (
             <div className="flex items-center gap-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-green-600 animate-pulse" />
-                <span className="text-sm font-medium text-green-600">
+                <span className="text_sm font_medium text_green_600">
                     Online
                 </span>
             </div>
@@ -50,7 +50,7 @@ const UserStatus = ({ user, dictionary, language }: { user: UserProfile, diction
     return (
         <div className="flex items-center gap-2">
             <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/50" />
-            <span className="text-sm font-medium text-muted-foreground">
+            <span className="text_sm font_medium text_muted_foreground">
                 {user.lastSeen ? `Active ${formatDistanceToNow(user.lastSeen.toDate(), { addSuffix: true, locale })}` : 'Never active'}
             </span>
         </div>
@@ -204,7 +204,6 @@ export default function AccessManagementPage() {
                         </div>
                         <div className='text-center'>
                             <h1 className="text-lg font-bold">{dictionary.accessManagement.title}</h1>
-                            <p className="mt-2 text-xs max-w-xl mx-auto">{dictionary.accessManagement.description}</p>
                         </div>
                     </div>
                 </div>
@@ -287,5 +286,7 @@ export default function AccessManagementPage() {
         </div>
     );
 }
+
+    
 
     

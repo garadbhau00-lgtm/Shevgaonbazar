@@ -268,7 +268,7 @@
     },
     "accessManagement": {
         "title": "Access Management",
-        "description": "Enable or disable user accounts.",
+        "description": "",
         "users": "Users",
         "enabled": "Enabled",
         "disabled": "Disabled",
@@ -422,4 +422,5 @@
     }
 }
 
+    
     
