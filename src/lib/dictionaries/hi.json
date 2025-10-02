@@ -278,7 +278,12 @@
         "accessDeniedTitle": "प्रवेश वर्जित",
         "accessDeniedDescription": "आपको इस संसाधन को देखने की अनुमति नहीं है।",
         "successTitle": "सफलता",
-        "errorUpdateStatus": "उपयोगकर्ता स्थिति को अपडेट करने में विफल।"
+        "errorUpdateStatus": "उपयोगकर्ता स्थिति को अपडेट करने में विफल।",
+        "onlineUsers": "ऑनलाइन उपयोगकर्ता",
+        "offlineUsers": "ऑफलाइन उपयोगकर्ता",
+        "totalUsers": "कुल उपयोगकर्ता",
+        "adminUsers": "एडमिन उपयोगकर्ता",
+        "farmerUsers": "किसान उपयोगकर्ता"
     },
     "adDetail": {
         "loginRequiredTitle": "लॉगिन आवश्यक",

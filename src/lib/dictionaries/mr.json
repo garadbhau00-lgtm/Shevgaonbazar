@@ -15,7 +15,7 @@
             "description": "जाहिराती आणण्यासाठी फायरस्टोअर इंडेक्स आवश्यक आहे. कृपया फायरबेस कन्सोलमध्ये इंडेक्स तयार करा."
         },
         "fetchError": {
-            "title": "त्रुटी",
+            "title": "त्रुटि",
             "description": "जाहिराती आणण्यात अयशस्वी."
         },
         "sortOptions": {
@@ -85,7 +85,7 @@
             "welcome": "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
             "loginFailedTitle": "लॉगिन अयशस्वी",
             "loginFailedDescription": "कृपया तुमचा ईमेल आणि पासवर्ड तपासा.",
-            "errorTitle": "त्रुटी",
+            "errorTitle": "त्रुटि",
             "emailRequired": "ईमेल पत्ता आवश्यक आहे.",
             "resetEmailSentTitle": "पासवर्ड रीसेट ईमेल पाठवला",
             "resetEmailSentDescription": "तुमचा पासवर्ड रीसेट करण्यासाठी तुमच्या ईमेल पत्त्यावर एक लिंक पाठवली आहे.",
@@ -196,7 +196,7 @@
         "toast": {
             "unauthorizedTitle": "प्रवेश प्रतिबंधित",
             "unauthorizedDescription": "जाहिरात पोस्ट करण्यासाठी कृपया लॉगिन करा.",
-            "errorTitle": "त्रुटी",
+            "errorTitle": "त्रुटि",
             "loginRequired": "जाहिरात पोस्ट करण्यासाठी तुम्ही लॉग इन केलेले असणे आवश्यक आहे.",
             "photoRequiredTitle": "फोटो आवश्यक",
             "photoRequiredDescription": "कृपया तुमच्या जाहिरातीसाठी किमान एक फोटो अपलोड करा.",
@@ -225,7 +225,7 @@
         "deleteButton": "हटवा",
         "accessDeniedTitle": "प्रवेश प्रतिबंधित",
         "accessDeniedDescription": "तुमच्या जाहिराती पाहण्यासाठी कृपया लॉगिन करा.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorIndex": "तुमच्या जाहिराती आणण्यात अयशस्वी. कृपया फायरस्टोअर इंडेक्स तपासा.",
         "errorFetch": "तुमच्या जाहिराती आणण्यात अयशस्वी.",
         "deleteSuccessTitle": "यशस्वी!",
@@ -242,7 +242,7 @@
         "forbiddenDescription": "तुम्हाला ही जाहिरात संपादित करण्याची परवानगी नाही.",
         "notFoundTitle": "सापडली नाही",
         "notFoundDescription": "जाहिरात आढळली नाही.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorDescription": "जाहिरातीचे तपशील आणण्यात अयशस्वी."
     },
     "auth": {
@@ -273,12 +273,17 @@
         "enabled": "सक्षम",
         "disabled": "अक्षम",
         "noUsersFound": "कोणतेही वापरकर्ते आढळले नाहीत.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorFetchUsers": "वापरकर्त्यांची सूची आणण्यात अयशस्वी. कृपया तुमच्या फायरस्टोअर नियमांची तपासणी करा.",
         "accessDeniedTitle": "प्रवेश प्रतिबंधित",
         "accessDeniedDescription": "तुमच्याकडे ही संसाधने पाहण्याची परवानगी नाही.",
         "successTitle": "यशस्वी",
-        "errorUpdateStatus": "वापरकर्त्याची स्थिती अद्यतनित करण्यात अयशस्वी."
+        "errorUpdateStatus": "वापरकर्त्याची स्थिती अद्यतनित करण्यात अयशस्वी.",
+        "onlineUsers": "ऑनलाइन वापरकर्ते",
+        "offlineUsers": "ऑफलाइन वापरकर्ते",
+        "totalUsers": "एकूण वापरकर्ते",
+        "adminUsers": "ऍडमिन वापरकर्ते",
+        "farmerUsers": "शेतकरी वापरकर्ते"
     },
     "adDetail": {
         "loginRequiredTitle": "लॉगिन आवश्यक",
@@ -287,7 +292,7 @@
         "adNotAvailableDescription": "ही जाहिरात सध्या पाहण्यासाठी उपलब्ध नाही.",
         "notFoundTitle": "सापडली नाही",
         "notFoundDescription": "जाहिरात आढळली नाही.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorDescription": "जाहिरातीचे तपशील आणण्यात अयशस्वी.",
         "noPhoto": "फोटो नाही",
         "postedOn": "पोस्ट केले",

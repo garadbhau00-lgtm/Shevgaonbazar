@@ -278,7 +278,12 @@
         "accessDeniedTitle": "Access Denied",
         "accessDeniedDescription": "You do not have permission to view this resource.",
         "successTitle": "Success",
-        "errorUpdateStatus": "Failed to update user status."
+        "errorUpdateStatus": "Failed to update user status.",
+        "onlineUsers": "Online Users",
+        "offlineUsers": "Offline Users",
+        "totalUsers": "Total Users",
+        "adminUsers": "Admin Users",
+        "farmerUsers": "Farmer Users"
     },
     "adDetail": {
         "loginRequiredTitle": "Login Required",

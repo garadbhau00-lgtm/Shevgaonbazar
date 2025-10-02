@@ -10,7 +10,7 @@ import type { UserProfile } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, Users, Wifi, WifiOff, ListChecks } from 'lucide-react';
+import { Loader2, Trash2, Users, Wifi, WifiOff, ListChecks, Shield, Tractor } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
@@ -152,6 +152,8 @@ export default function AccessManagementPage() {
     const now = new Date().getTime();
     const onlineCount = users.filter(u => u.lastSeen && (now - u.lastSeen.toDate().getTime()) < 5 * 60 * 1000).length;
     const offlineCount = users.length - onlineCount;
+    const adminCount = users.filter(u => u.role === 'Admin').length;
+    const farmerCount = users.filter(u => u.role === 'Farmer').length;
     
     if (authLoading || pageLoading) {
         return (
@@ -174,18 +176,30 @@ export default function AccessManagementPage() {
                     />
                     <div className="absolute inset-0 bg-black/60" />
                      <div className="absolute inset-0 flex flex-col justify-between p-4 text-white">
-                        <div className="flex items-center justify-start gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm w-fit">
-                            <div className="flex items-center gap-1.5" title="Online Users">
-                                 <Wifi className="h-4 w-4 text-green-400"/>
-                                 <span>{onlineCount}</span>
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center justify-start gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm w-fit">
+                                <div className="flex items-center gap-1.5" title={dictionary.accessManagement.onlineUsers}>
+                                     <Wifi className="h-4 w-4 text-green-400"/>
+                                     <span>{onlineCount}</span>
+                                </div>
+                                 <div className="flex items-center gap-1.5" title={dictionary.accessManagement.offlineUsers}>
+                                     <WifiOff className="h-4 w-4 text-red-400"/>
+                                     <span>{offlineCount}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5" title={dictionary.accessManagement.totalUsers}>
+                                    <Users className="h-4 w-4"/>
+                                    <span>{users.length}</span>
+                                </div>
                             </div>
-                             <div className="flex items-center gap-1.5" title="Offline Users">
-                                 <WifiOff className="h-4 w-4 text-red-400"/>
-                                 <span>{offlineCount}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5" title="Total Users">
-                                <Users className="h-4 w-4"/>
-                                <span>{users.length}</span>
+                            <div className="flex items-center justify-end gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm w-fit">
+                                <div className="flex items-center gap-1.5" title={dictionary.accessManagement.adminUsers}>
+                                     <Shield className="h-4 w-4 text-blue-400"/>
+                                     <span>{adminCount}</span>
+                                </div>
+                                 <div className="flex items-center gap-1.5" title={dictionary.accessManagement.farmerUsers}>
+                                     <Tractor className="h-4 w-4 text-orange-400"/>
+                                     <span>{farmerCount}</span>
+                                </div>
                             </div>
                         </div>
                         <div className='text-center'>
@@ -273,7 +287,5 @@ export default function AccessManagementPage() {
         </div>
     );
 }
-
-    
 
     
