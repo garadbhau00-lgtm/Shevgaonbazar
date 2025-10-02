@@ -213,7 +213,7 @@ export default function AccessManagementPage() {
                         <div key={user.uid} className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm">
                             <div className="flex items-center gap-4 flex-1 min-w-0">
                                 <Avatar>
-                                    <AvatarImage src={`https://picsum.photos/seed/${user.uid}/100`} />
+                                    <AvatarImage src={user.photoURL || undefined} />
                                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-grow min-w-0">

@@ -56,7 +56,7 @@ export default function BottomNav() {
                 {item.href === '/' ? (
                    <div className={cn("relative flex h-8 w-8 items-center justify-center rounded-full")}>
                         <Avatar className={cn("h-7 w-7", isActive && 'ring-2 ring-primary')}>
-                             <AvatarImage src={user?.photoURL || undefined} />
+                             <AvatarImage src={userProfile?.photoURL || undefined} />
                              <AvatarFallback>
                                {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : <User className="h-4 w-4"/>}
                              </AvatarFallback>

@@ -39,7 +39,7 @@ export default function AppHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
                <Avatar className={cn("h-9 w-9 cursor-pointer border-2", isTransparentPage ? 'border-primary-foreground/50' : 'border-primary/50')}>
-                  {user.photoURL && <AvatarImage src={user.photoURL} />}
+                  {userProfile.photoURL && <AvatarImage src={userProfile.photoURL} />}
                   <AvatarFallback className={cn("font-bold", isTransparentPage ? 'bg-transparent text-primary-foreground' : 'bg-muted text-primary')}>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>

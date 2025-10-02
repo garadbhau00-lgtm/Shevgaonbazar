@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -62,7 +63,7 @@ export default function MorePage() {
             return (
                 <div className="flex items-center gap-4 rounded-lg bg-card p-4 shadow-sm mb-6">
                     <Avatar className="h-16 w-16">
-                        <AvatarImage src={user.photoURL || undefined} alt="User" />
+                        <AvatarImage src={userProfile.photoURL || undefined} alt="User" />
                         <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>

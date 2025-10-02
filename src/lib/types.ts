@@ -36,6 +36,7 @@ export type UserProfile = {
     createdAt: any; // Firestore timestamp
     lastSeen?: any; // Firestore timestamp
     adCount?: number;
+    photoURL?: string;
 };
 
 export type User = {
