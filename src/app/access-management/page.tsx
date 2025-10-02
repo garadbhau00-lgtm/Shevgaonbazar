@@ -139,7 +139,7 @@ export default function AccessManagementPage() {
     if (authLoading || pageLoading) {
         return (
             <>
-                <div className="relative h-40 w-full">
+                <div className="relative h-28 w-full">
                 </div>
                 <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -150,7 +150,7 @@ export default function AccessManagementPage() {
 
     return (
         <>
-            <div className="relative h-40 w-full">
+            <div className="relative h-28 w-full">
                 <Image
                     src="https://picsum.photos/seed/access-management/1200/400"
                     alt="Access Management background"
