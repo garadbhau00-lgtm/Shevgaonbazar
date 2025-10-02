@@ -176,10 +176,8 @@ export default function AccessManagementPage() {
                     data-ai-hint="farm security"
                 />
                 <div className="absolute inset-0 bg-black/60" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">{dictionary.accessManagement.title}</h1>
-                    <p className="mt-2 text-xs max-w-xl">{dictionary.accessManagement.description}</p>
-                    <div className="mt-4 flex items-center justify-center gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
+                 <div className="absolute inset-0 flex flex-col justify-between p-4 text-white">
+                    <div className="flex items-center justify-start gap-4 rounded-full bg-black/30 px-4 py-1.5 text-xs font-medium backdrop-blur-sm w-fit">
                         <div className="flex items-center gap-1.5" title="Online Users">
                              <Wifi className="h-4 w-4 text-green-400"/>
                              <span>{onlineCount}</span>
@@ -192,6 +190,10 @@ export default function AccessManagementPage() {
                             <Users className="h-4 w-4"/>
                             <span>{users.length}</span>
                         </div>
+                    </div>
+                    <div className='text-center'>
+                        <h1 className="text-lg font-bold">{dictionary.accessManagement.title}</h1>
+                        <p className="mt-2 text-xs max-w-xl mx-auto">{dictionary.accessManagement.description}</p>
                     </div>
                 </div>
             </div>
@@ -273,3 +275,5 @@ export default function AccessManagementPage() {
         </>
     );
 }
+
+    
