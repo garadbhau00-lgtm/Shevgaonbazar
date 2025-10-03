@@ -4,58 +4,87 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // Helper Functions
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-    
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isNotDisabled() {
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == false;
+    }
+
     function isAdmin() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
-    // USERS
-    // All users can read all profiles
-    // Only the owner can write to their own profile
-    // Admins can write to any user profile
+    // User profiles
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if isOwner(userId) || isAdmin();
+      // Anyone can create their own user profile during signup
+      allow create: if isSignedIn() && isOwner(userId);
+      
+      // Users can only read their own profile, Admins can read any
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+
+      // Admins can read all profiles for management
+      allow list: if isSignedIn() && isAdmin();
+
+      // Users can update their own profile, Admins can update any (for disabling)
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin());
+      
+      // Only admins can delete user profiles
+      allow delete: if isSignedIn() && isAdmin();
     }
     
-    // ADS
-    // All users can read approved ads
-    // Owners can read their own unapproved ads
-    // Admins can read all ads
-    // Authenticated users can create ads
-    // Owners and Admins can update/delete ads
+    // Ads
     match /ads/{adId} {
-      allow read: if resource.data.status == 'approved' 
-                    || isOwner(resource.data.userId) 
-                    || isAdmin();
-      allow create: if request.auth != null;
-      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      // Any signed-in, non-disabled user can create an ad
+      allow create: if isSignedIn() && isNotDisabled();
+      
+      // Anyone can read approved ads. Users can read their own ads regardless of status.
+      allow get: if resource.data.status == 'approved' || (isSignedIn() && isOwner(resource.data.userId));
+      
+      // Anyone can list approved ads
+      allow list: if isSignedIn();
+
+      // Users can update their own ads if they are not yet approved
+      // Admins can update any ad (for approval/rejection)
+      allow update: if isSignedIn() && isNotDisabled() && 
+                    ((isOwner(resource.data.userId) && resource.data.status != 'approved') || isAdmin());
+                    
+      // Users can delete their own ads, Admins can delete any ad
+      allow delete: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin());
     }
-    
-    // CONVERSATIONS & MESSAGES
-    // Participants can read/write to their own conversations and messages
+
+    // Conversations & Messages
     match /conversations/{conversationId} {
-      allow read, write: if request.auth.uid in resource.data.participants;
-      
-      // Allow creating a new conversation
-      allow create: if request.auth != null && request.resource.data.participants.hasAny([request.auth.uid]);
-      
-      match /messages/{messageId} {
-        allow read, write, create: if get( /databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
-      }
+        // Participants can read/write conversation details
+        allow get, update: if isSignedIn() && request.auth.uid in resource.data.participants;
+        // Only participants can list conversations they are in
+        allow list: if isSignedIn() && request.auth.uid in resource.data.participants;
+        // Participants of an ad can create a conversation
+        allow create: if isSignedIn();
+        
+        match /messages/{messageId} {
+            // Participants can read messages
+            allow get, list: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+            // Participants can create messages
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.senderId && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+            // Messages cannot be updated or deleted by clients
+            allow update, delete: if false;
+        }
     }
     
-    // NOTIFICATIONS
-    // Users can read/update their own notifications
-    // Admins can delete any notification
+    // Notifications
     match /notifications/{notificationId} {
-        allow read, update: if isOwner(resource.data.userId);
-        allow create: if request.auth != null; // Admins create broadcasts, server creates status updates
-        allow delete: if isOwner(resource.data.userId) || isAdmin();
+      // Admins can create notifications for anyone (broadcasts, ad status)
+      allow create: if isSignedIn() && isAdmin();
+      
+      // Users can read/update/delete their own notifications
+      allow get, list, update, delete: if isSignedIn() && isOwner(resource.data.userId);
     }
   }
 }
