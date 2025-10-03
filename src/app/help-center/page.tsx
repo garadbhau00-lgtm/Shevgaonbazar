@@ -20,6 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/errors';
 
 export default function HelpCenterPage() {
     const { dictionary } = useLanguage();
@@ -55,13 +57,16 @@ export default function HelpCenterPage() {
     }, [user, userProfile, form]);
 
     const onSubmit = async (data: IssueFormValues) => {
-        try {
-            await addDoc(collection(db, 'issues'), {
-                ...data,
-                userId: user?.uid || null,
-                status: 'new',
-                createdAt: serverTimestamp(),
-            });
+        const issueData = {
+            ...data,
+            userId: user?.uid || null,
+            status: 'new' as const,
+            createdAt: serverTimestamp(),
+        };
+
+        const issuesCollection = collection(db, 'issues');
+        addDoc(issuesCollection, issueData)
+          .then(() => {
             toast({
                 title: issueDict.toast.successTitle,
                 description: issueDict.toast.successDescription,
@@ -71,14 +76,16 @@ export default function HelpCenterPage() {
                 email: user ? user.email || '' : '',
                 description: '',
             });
-        } catch (error) {
-            console.error('Error submitting issue:', error);
-            toast({
-                variant: 'destructive',
-                title: issueDict.toast.errorTitle,
-                description: issueDict.toast.errorDescription,
+          })
+          .catch((serverError) => {
+            console.error('Error submitting issue:', serverError);
+            const permissionError = new FirestorePermissionError({
+                path: issuesCollection.path,
+                operation: 'create',
+                requestResourceData: issueData
             });
-        }
+            errorEmitter.emit('permission-error', permissionError);
+        });
     };
 
 
