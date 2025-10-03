@@ -165,7 +165,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
   useEffect(() => {
     const subcategoriesForSelected = categories.find(c => c.name === selectedCategory)?.subcategories || [];
-    if (!subcategoriesForSelected.some(sc => sc.key === form.getValues('subcategory'))) {
+    if (!subcategoriesForSelected.some(sc => sc.name === form.getValues('subcategory'))) {
         form.setValue('subcategory', undefined);
     }
   }, [selectedCategory, form]);
@@ -271,69 +271,57 @@ export default function AdForm({ existingAd }: AdFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-6">
           
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{adFormDictionary.category.label}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={adFormDictionary.category.placeholder} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.name} value={cat.name}>{dictionary.categories[cat.name] || cat.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{adFormDictionary.category.label}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={adFormDictionary.category.placeholder} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.name} value={cat.name}>{dictionary.categories[cat.name] || cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {subcategories.length > 0 && (
-            <FormField
-              control={form.control}
-              name="subcategory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{adFormDictionary.subcategory.label}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={adFormDictionary.subcategory.placeholder} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {subcategories.map(subcat => (
-                        <SelectItem key={subcat.key} value={subcat.name}>
-                            {dictionary.subcategories[subcat.key] || subcat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+              {subcategories.length > 0 && (
+                <FormField
+                  control={form.control}
+                  name="subcategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{adFormDictionary.subcategory.label}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={adFormDictionary.subcategory.placeholder} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subcategories.map(subcat => (
+                            <SelectItem key={subcat.key} value={subcat.name}>
+                                {dictionary.subcategories[subcat.key] || subcat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
-          )}
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{adFormDictionary.description.label}</FormLabel>
-                <FormControl>
-                  <Textarea placeholder={adFormDictionary.description.placeholder} {...field} disabled={isLoading} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            </div>
 
           <FormField
             control={form.control}
@@ -348,52 +336,55 @@ export default function AdForm({ existingAd }: AdFormProps) {
               </FormItem>
             )}
           />
+          
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <FormField
+                control={form.control}
+                name="taluka"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{adFormDictionary.taluka.label}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={adFormDictionary.taluka.placeholder} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          {talukaList.map((taluka) => (
+                              <SelectItem key={taluka} value={taluka}>{taluka}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-           <FormField
-            control={form.control}
-            name="taluka"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{adFormDictionary.taluka.label}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={adFormDictionary.taluka.placeholder} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                      {talukaList.map((taluka) => (
-                          <SelectItem key={taluka} value={taluka}>{taluka}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{adFormDictionary.location.label}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isLoading || !selectedTaluka}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={adFormDictionary.location.placeholder} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          {villageList.map((village, index) => (
+                              <SelectItem key={`${village}-${index}`} value={village}>{village}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+          </div>
 
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{adFormDictionary.location.label}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading || !selectedTaluka}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={adFormDictionary.location.placeholder} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                      {villageList.map((village, index) => (
-                          <SelectItem key={`${village}-${index}`} value={village}>{village}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <FormField
             control={form.control}
             name="mobileNumber"
@@ -408,50 +399,64 @@ export default function AdForm({ existingAd }: AdFormProps) {
             )}
           />
 
-          <FormItem>
-            <FormLabel>{adFormDictionary.photo.label}</FormLabel>
-            <FormControl>
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  disabled={isLoading}
-                />
-                {photoPreviews.length > 0 ? (
-                  <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                    <Image src={photoPreviews[0]} alt="Preview" fill className="object-cover" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                      onClick={removePhoto}
-                      disabled={isLoading}
-                    >
-                      <XIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    className={cn(
-                      "flex aspect-video w-full flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
-                      isLoading ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
-                    )}
-                    onClick={() => !isLoading && fileInputRef.current?.click()}
-                  >
-                    <Upload className="h-10 w-10 text-muted-foreground" />
-                    <p className="mt-2 text-sm font-semibold text-muted-foreground">{adFormDictionary.photo.uploadText}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{adFormDictionary.photo.limitText.replace('${maxFiles}', '1')}</p>
-                  </div>
-                )}
-              </div>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{adFormDictionary.description.label}</FormLabel>
+                <FormControl>
+                  <Textarea placeholder={adFormDictionary.description.placeholder} {...field} disabled={isLoading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
+        
+        <FormItem>
+          <FormLabel>{adFormDictionary.photo.label}</FormLabel>
+          <FormControl>
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+                disabled={isLoading}
+              />
+              {photoPreviews.length > 0 ? (
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                  <Image src={photoPreviews[0]} alt="Preview" fill className="object-cover" />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                    onClick={removePhoto}
+                    disabled={isLoading}
+                  >
+                    <XIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    "flex aspect-video w-full flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+                    isLoading ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
+                  )}
+                  onClick={() => !isLoading && fileInputRef.current?.click()}
+                >
+                  <Upload className="h-10 w-10 text-muted-foreground" />
+                  <p className="mt-2 text-sm font-semibold text-muted-foreground">{adFormDictionary.photo.uploadText}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{adFormDictionary.photo.limitText.replace('${maxFiles}', '1')}</p>
+                </div>
+              )}
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
 
         <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -461,3 +466,4 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
