@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -116,21 +117,23 @@ export default function HelpCenterPage() {
 
 
     return (
-        <div>
-            <div className="relative h-28 w-full">
-                <Image
-                    src="https://picsum.photos/seed/help-center/1200/400"
-                    alt="Help Center background"
-                    fill
-                    className="object-cover"
-                    data-ai-hint="support customer service"
-                />
-                <div className="absolute inset-0 bg-black/50" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-base font-bold">{dictionary.helpCenter.title}</h1>
-                    <p className="mt-2 text-xs max-w-xl">{dictionary.helpCenter.description}</p>
+        <div className="flex flex-col">
+            <header className="sticky top-0 z-10">
+                <div className="relative h-28 w-full">
+                    <Image
+                        src="https://picsum.photos/seed/help-center/1200/400"
+                        alt="Help Center background"
+                        fill
+                        className="object-cover"
+                        data-ai-hint="support customer service"
+                    />
+                    <div className="absolute inset-0 bg-black/50" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+                        <h1 className="text-base font-bold">{dictionary.helpCenter.title}</h1>
+                        <p className="mt-2 text-xs max-w-xl">{dictionary.helpCenter.description}</p>
+                    </div>
                 </div>
-            </div>
+            </header>
             <main className="p-4 space-y-8">
                  <Accordion type="single" collapsible className="w-full space-y-2">
                     {faqs.map((faq: { question: string, answer: string }, index: number) => (
