@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Loader2, List, Filter, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
@@ -74,6 +74,7 @@ export default function Home() {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [advertisementUrl, setAdvertisementUrl] = useState<string | null>(null);
   const [isAdOpen, setIsAdOpen] = useState(false);
+  const adShownRef = useRef(false);
 
 
   const sortOptions: { value: SortOption, label: string }[] = [
@@ -121,10 +122,9 @@ export default function Home() {
                 const adData = adDocSnap.data();
                 if (adData.imageUrl) {
                     setAdvertisementUrl(adData.imageUrl);
-                    const hasSeenAd = sessionStorage.getItem('hasSeenAdvertisement');
-                    if (!hasSeenAd) {
+                    if (!adShownRef.current) {
                         setIsAdOpen(true);
-                        sessionStorage.setItem('hasSeenAdvertisement', 'true');
+                        adShownRef.current = true;
                     }
                 }
             }
