@@ -194,8 +194,8 @@
             "uploadText": "फोटो अपलोड करा",
             "limitText": "कृपया तुमच्या जाहिरातीसाठी एक फोटो अपलोड करा."
         },
-        "updateAdButton": "जाहिरात अद्यतनित करा",
-        "postAdButton": "जाहिरात पोस्ट करा",
+        "updateAdButton": "अपडेट करा",
+        "postAdButton": "जाहिरात टाका",
         "validation": {
             "categoryRequired": "कृपया एक श्रेणी निवडा.",
             "pricePositive": "किंमत एक सकारात्मक संख्या असणे आवश्यक आहे.",
@@ -431,3 +431,5 @@
         }
     }
 }
+
+    
