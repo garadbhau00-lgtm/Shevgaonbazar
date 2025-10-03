@@ -139,8 +139,11 @@ export default function AdDetailPage() {
                 text: `Check out this ad on Shevgaon Bazar: ${ad.price ? `₹${ad.price.toLocaleString('en-IN')}` : ''}`,
                 url: window.location.href
             });
-        } catch (error) {
-            console.error('Error sharing:', error);
+        } catch (error: any) {
+            // Silently fail if the user cancels the share action (AbortError)
+            if (error.name !== 'AbortError') {
+                console.error('Error sharing:', error);
+            }
         }
     } else {
         toast({ title: 'Not Supported', description: 'Share feature is not supported on your browser.' });
