@@ -48,22 +48,22 @@ export default function MorePage() {
                         <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <h2 className="text-lg font-bold">{userProfile.name || dictionary.more.user}</h2>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <h2 className="text-base font-bold">{userProfile.name || dictionary.more.user}</h2>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                 </div>
             );
         }
 
         return (
-             <div className="rounded-lg bg-card p-4 text-center shadow-sm mb-6">
-                <h2 className="text-lg font-bold">{dictionary.more.joinShevgaonBazar}</h2>
-                <p className="mt-2 text-sm text-muted-foreground">{dictionary.more.connectWithCommunity}</p>
-                <div className="mt-4 flex gap-2">
-                    <Button asChild className="flex-1">
+             <div className="rounded-lg bg-card p-2 text-center shadow-sm mb-6">
+                <h2 className="text-base font-bold">{dictionary.more.joinShevgaonBazar}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">{dictionary.more.connectWithCommunity}</p>
+                <div className="mt-3 flex gap-2">
+                    <Button asChild className="flex-1" size="sm">
                         <Link href="/login">{dictionary.login.loginButton}</Link>
                     </Button>
-                    <Button asChild variant="outline" className="flex-1">
+                    <Button asChild variant="outline" className="flex-1" size="sm">
                         <Link href="/signup">{dictionary.signup.signupButton}</Link>
                     </Button>
                 </div>
