@@ -2,30 +2,43 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import type { AppNotification } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BellOff, BellRing, Check, Info } from 'lucide-react';
+import { Loader2, BellOff, BellRing, Info, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { formatDistanceToNow } from 'date-fns';
-import { hi, enUS } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
-const locales: { [key: string]: Locale } = { hi, en: enUS };
+
+const locales: { [key: string]: Locale } = { en: enUS };
 
 export default function NotificationsPage() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, userProfile, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
     const { dictionary, language } = useLanguage();
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
+    const [notificationToDelete, setNotificationToDelete] = useState<AppNotification | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const notificationDict = dictionary.notifications;
 
@@ -37,13 +50,13 @@ export default function NotificationsPage() {
             return;
         }
 
-        const q = query(
-            collection(db, 'notifications'),
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
-        );
+        // Admins see all notifications, users see their own
+        const notificationsQuery = userProfile?.role === 'Admin'
+            ? query(collection(db, 'notifications'), orderBy('createdAt', 'desc'))
+            : query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+
+        const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
             const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
             setNotifications(notifs);
             setPageLoading(false);
@@ -54,7 +67,7 @@ export default function NotificationsPage() {
         });
 
         return () => unsubscribe();
-    }, [user, authLoading, router, toast, notificationDict]);
+    }, [user, userProfile, authLoading, router, toast, notificationDict]);
 
     const handleMarkAsRead = async (notificationId: string) => {
         try {
@@ -70,7 +83,7 @@ export default function NotificationsPage() {
         
         const batch = writeBatch(db);
         notifications.forEach(notif => {
-            if (!notif.isRead) {
+            if (!notif.isRead && notif.userId === user.uid) {
                  const notifRef = doc(db, 'notifications', notif.id);
                  batch.update(notifRef, { isRead: true });
             }
@@ -82,6 +95,22 @@ export default function NotificationsPage() {
             console.error("Error marking all notifications as read:", error);
         }
     }
+    
+    const handleDeleteNotification = async () => {
+        if (!notificationToDelete) return;
+        setIsDeleting(true);
+        try {
+            await deleteDoc(doc(db, 'notifications', notificationToDelete.id));
+            toast({ title: "Success", description: "Notification deleted successfully." });
+            setNotificationToDelete(null);
+        } catch (error) {
+            console.error("Error deleting notification:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Failed to delete notification." });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
 
     const formatTimestamp = (timestamp: any) => {
         if (!timestamp) return '';
@@ -100,7 +129,7 @@ export default function NotificationsPage() {
         );
     }
     
-    const hasUnread = notifications.some(n => !n.isRead);
+    const hasUnread = notifications.some(n => !n.isRead && n.userId === user?.uid);
 
     return (
         <div>
@@ -119,7 +148,7 @@ export default function NotificationsPage() {
                 </div>
             </div>
             <main className="p-4">
-                 {notifications.length > 0 && hasUnread && (
+                 {notifications.length > 0 && hasUnread && userProfile?.role !== 'Admin' && (
                     <div className="mb-4 flex justify-end">
                         <Button variant="link" className="p-0 h-auto text-sm" onClick={handleMarkAllAsRead}>
                             {dictionary.notifications.markAsRead}
@@ -129,17 +158,19 @@ export default function NotificationsPage() {
                 <div className="space-y-3">
                     {notifications.length > 0 ? (
                         notifications.map(notif => {
-                            const Wrapper = notif.link ? Link : 'div';
-                            const props = notif.link ? { href: notif.link } : {};
+                            const isOwnNotification = notif.userId === user?.uid;
+                            const Wrapper = notif.link && isOwnNotification ? Link : 'div';
+                            const props = notif.link && isOwnNotification ? { href: notif.link } : {};
                             
                             return (
                                 <Wrapper key={notif.id} {...props}>
                                     <div 
                                         className={cn(
-                                            "block rounded-lg p-4 shadow-sm transition-colors hover:bg-secondary",
-                                            notif.isRead ? 'bg-card' : 'bg-secondary'
+                                            "block rounded-lg p-4 shadow-sm transition-colors",
+                                            isOwnNotification && "hover:bg-secondary",
+                                            isOwnNotification && !notif.isRead ? 'bg-secondary' : 'bg-card'
                                         )}
-                                        onClick={() => !notif.isRead && handleMarkAsRead(notif.id)}
+                                        onClick={() => isOwnNotification && !notif.isRead && handleMarkAsRead(notif.id)}
                                     >
                                         <div className="flex items-start gap-4">
                                             <div className={cn(
@@ -156,9 +187,24 @@ export default function NotificationsPage() {
                                                 <h3 className="font-semibold">{notif.title}</h3>
                                                 <p className="text-sm text-muted-foreground">{notif.message}</p>
                                                 <p className="mt-1 text-xs text-muted-foreground">{formatTimestamp(notif.createdAt)}</p>
+                                                {userProfile?.role === 'Admin' && <p className="text-xs text-muted-foreground">To: {notif.userId === user?.uid ? 'You' : notif.userId.slice(0,6)}...</p>}
                                             </div>
-                                            {!notif.isRead && (
+                                            {isOwnNotification && !notif.isRead && (
                                                 <div className="h-2.5 w-2.5 flex-shrink-0 mt-1.5 rounded-full bg-primary"></div>
+                                            )}
+                                             {userProfile?.role === 'Admin' && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 flex-shrink-0 text-destructive hover:text-destructive"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setNotificationToDelete(notif);
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
                                             )}
                                         </div>
                                     </div>
@@ -178,6 +224,28 @@ export default function NotificationsPage() {
                     )}
                 </div>
             </main>
+
+             <AlertDialog open={!!notificationToDelete} onOpenChange={(open) => !open && setNotificationToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to delete this notification?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           This action cannot be undone. This will permanently delete this notification for all users it was sent to.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteNotification}
+                            disabled={isDeleting}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Delete Notification
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

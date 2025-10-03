@@ -78,7 +78,7 @@ export type Conversation = {
 
 export type AppNotification = {
   id: string;
-  userId: string;
+  userId: string; // The user this notification is for
   title: string;
   message: string;
   link?: string;
