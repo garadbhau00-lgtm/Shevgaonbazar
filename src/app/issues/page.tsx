@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, updateDoc, where, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, updateDoc, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
 import Image from 'next/image';
 import { db } from '@/lib/firebase';
 import type { Issue } from '@/lib/types';
@@ -72,10 +72,24 @@ export default function IssuesPage() {
         }
     }, [authLoading, userProfile, router, toast, issuesDict]);
     
-    const handleUpdateStatus = async (issueId: string, status: Issue['status']) => {
+    const handleUpdateStatus = async (issue: Issue, status: Issue['status']) => {
         try {
-            const issueDoc = doc(db, 'issues', issueId);
+            const issueDoc = doc(db, 'issues', issue.id);
             await updateDoc(issueDoc, { status });
+
+            if (issue.userId) {
+                const statusMessage = issuesDict.status[status] || status;
+                 await addDoc(collection(db, 'notifications'), {
+                    userId: issue.userId,
+                    title: 'तुमच्या समस्येची स्थिती अद्यतनित झाली आहे',
+                    message: `तुमच्या समस्येची स्थिती आता "${statusMessage}" आहे.`,
+                    link: `/help-center`,
+                    isRead: false,
+                    createdAt: serverTimestamp(),
+                    type: 'ad_status',
+                });
+            }
+
             toast({ title: issuesDict.toast.successTitle, description: issuesDict.toast.updateSuccess });
         } catch (error) {
             console.error("Error updating issue status:", error);
@@ -136,7 +150,7 @@ export default function IssuesPage() {
                                 </p>
                             </CardContent>
                             <CardFooter className="bg-muted/50 p-3 flex justify-end">
-                                <Select value={issue.status} onValueChange={(value) => handleUpdateStatus(issue.id, value as Issue['status'])}>
+                                <Select value={issue.status} onValueChange={(value) => handleUpdateStatus(issue, value as Issue['status'])}>
                                     <SelectTrigger className="w-[180px] h-9">
                                         <SelectValue placeholder={issuesDict.changeStatus} />
                                     </SelectTrigger>
@@ -159,3 +173,5 @@ export default function IssuesPage() {
         </div>
     );
 }
+
+    
