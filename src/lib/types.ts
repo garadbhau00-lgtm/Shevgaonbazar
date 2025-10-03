@@ -86,3 +86,13 @@ export type AppNotification = {
   createdAt: any; // Firestore Timestamp
   type: 'ad_status' | 'broadcast';
 };
+
+export type Issue = {
+  id: string;
+  userId?: string;
+  name: string;
+  email: string;
+  description: string;
+  status: 'new' | 'in-progress' | 'resolved';
+  createdAt: any; // Firestore timestamp
+};

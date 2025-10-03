@@ -1,14 +1,86 @@
+
 'use client';
 
+import { useEffect } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/language-context';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useAuth } from '@/hooks/use-auth';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HelpCenterPage() {
     const { dictionary } = useLanguage();
     const faqs = dictionary.helpCenter.faqs;
+    const { user, userProfile, loading: authLoading } = useAuth();
+    const { toast } = useToast();
+    const issueDict = dictionary.helpCenter.issueForm;
+
+    const issueSchema = z.object({
+        name: z.string().min(1, { message: issueDict.validation.nameRequired }),
+        email: z.string().email({ message: issueDict.validation.emailRequired }),
+        description: z.string().min(10, { message: issueDict.validation.descriptionRequired }),
+    });
+
+    type IssueFormValues = z.infer<typeof issueSchema>;
+
+    const form = useForm<IssueFormValues>({
+        resolver: zodResolver(issueSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            description: '',
+        },
+    });
+
+    const { isSubmitting } = form.formState;
+
+    useEffect(() => {
+        if (user && userProfile) {
+            form.setValue('name', userProfile.name || '');
+            form.setValue('email', user.email || '');
+        }
+    }, [user, userProfile, form]);
+
+    const onSubmit = async (data: IssueFormValues) => {
+        try {
+            await addDoc(collection(db, 'issues'), {
+                ...data,
+                userId: user?.uid || null,
+                status: 'new',
+                createdAt: serverTimestamp(),
+            });
+            toast({
+                title: issueDict.toast.successTitle,
+                description: issueDict.toast.successDescription,
+            });
+            form.reset({
+                name: user && userProfile ? userProfile.name || '' : '',
+                email: user ? user.email || '' : '',
+                description: '',
+            });
+        } catch (error) {
+            console.error('Error submitting issue:', error);
+            toast({
+                variant: 'destructive',
+                title: issueDict.toast.errorTitle,
+                description: issueDict.toast.errorDescription,
+            });
+        }
+    };
+
 
     return (
         <div>
@@ -38,15 +110,62 @@ export default function HelpCenterPage() {
                     ))}
                 </Accordion>
 
-                <div className="rounded-lg bg-card p-6 text-center shadow-sm">
-                    <h3 className="text-lg font-semibold">{dictionary.helpCenter.moreHelpTitle}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        {dictionary.helpCenter.moreHelpDescription}
-                    </p>
-                    <a href="mailto:shevgaonbazar084@gmail.com" className="mt-4 inline-block font-semibold text-primary hover:underline">
-                        shevgaonbazar084@gmail.com
-                    </a>
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{issueDict.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{issueDict.nameLabel}</FormLabel>
+                                                <FormControl>
+                                                    <Input {...field} placeholder={issueDict.namePlaceholder} disabled={isSubmitting || authLoading} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{issueDict.emailLabel}</FormLabel>
+                                                <FormControl>
+                                                    <Input {...field} type="email" placeholder={issueDict.emailPlaceholder} disabled={isSubmitting || authLoading} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <FormField
+                                    control={form.control}
+                                    name="description"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>{issueDict.descriptionLabel}</FormLabel>
+                                            <FormControl>
+                                                <Textarea {...field} placeholder={issueDict.descriptionPlaceholder} rows={5} disabled={isSubmitting} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" className="w-full" disabled={isSubmitting || authLoading}>
+                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {issueDict.submitButton}
+                                </Button>
+                            </form>
+                        </Form>
+                    </CardContent>
+                </Card>
 
                 <div className="text-center text-xs text-muted-foreground">
                     <Link href="#" className="hover:underline">
@@ -61,4 +180,3 @@ export default function HelpCenterPage() {
         </div>
     )
 }
-    

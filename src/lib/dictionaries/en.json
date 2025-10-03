@@ -59,7 +59,8 @@
         "adManagement": "Ad Management",
         "broadcast": "Broadcast Message",
         "logout": "Logout",
-        "language": "Language"
+        "language": "Language",
+        "issues": "Issues"
     },
     "login": {
         "title": "Login to Shevgaon Bazar",
@@ -362,7 +363,28 @@
         "moreHelpTitle": "Need more help?",
         "moreHelpDescription": "If you can't find the answer here, please contact us.",
         "termsOfService": "Terms of Service",
-        "privacyPolicy": "Privacy Policy"
+        "privacyPolicy": "Privacy Policy",
+        "issueForm": {
+            "title": "Report an Issue",
+            "nameLabel": "Your Name",
+            "namePlaceholder": "Enter your name",
+            "emailLabel": "Your Email",
+            "emailPlaceholder": "Enter your email",
+            "descriptionLabel": "Describe the Issue",
+            "descriptionPlaceholder": "Please provide as much detail as possible...",
+            "submitButton": "Submit Issue",
+            "validation": {
+                "nameRequired": "Name is required.",
+                "emailRequired": "A valid email is required.",
+                "descriptionRequired": "Please describe the issue in at least 10 characters."
+            },
+            "toast": {
+                "successTitle": "Issue Submitted",
+                "successDescription": "Thank you for your feedback. We will look into it shortly.",
+                "errorTitle": "Submission Failed",
+                "errorDescription": "There was an error submitting your issue. Please try again."
+            }
+        }
     },
     "inbox": {
         "title": "Inbox",
@@ -459,6 +481,27 @@
             "successDescription": "Broadcast message sent successfully.",
             "errorTitle": "Error",
             "errorDescription": "Failed to send broadcast message."
+        }
+    },
+    "issues": {
+        "title": "User Issues",
+        "description": "Review and manage user-submitted issues.",
+        "noIssuesTitle": "No issues found.",
+        "noIssuesDescription": "When users report problems, they will appear here.",
+        "status": {
+            "new": "New",
+            "in-progress": "In Progress",
+            "resolved": "Resolved"
+        },
+        "changeStatus": "Change status",
+        "accessDeniedTitle": "Access Denied",
+        "accessDeniedDescription": "You do not have permission to view this resource.",
+        "errorTitle": "Error",
+        "errorFetch": "Failed to fetch issues.",
+        "toast": {
+            "successTitle": "Success",
+            "updateSuccess": "Issue status has been updated.",
+            "updateError": "Failed to update issue status."
         }
     }
 }

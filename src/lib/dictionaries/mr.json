@@ -59,7 +59,8 @@
         "adManagement": "जाहिरात व्यवस्थापन",
         "broadcast": "ब्रॉडकास्ट संदेश",
         "logout": "लॉगआउट",
-        "language": "भाषा"
+        "language": "भाषा",
+        "issues": "समस्या"
     },
     "login": {
         "title": "शेवगाव बाजारमध्ये लॉगिन करा",
@@ -362,7 +363,28 @@
         "moreHelpTitle": "अधिक मदतीची गरज आहे?",
         "moreHelpDescription": "तुम्हाला येथे उत्तर न सापडल्यास, कृपया आमच्याशी संपर्क साधा.",
         "termsOfService": "सेवा अटी",
-        "privacyPolicy": "गोपनीयता धोरण"
+        "privacyPolicy": "गोपनीयता धोरण",
+        "issueForm": {
+            "title": "समस्या कळवा",
+            "nameLabel": "तुमचे नाव",
+            "namePlaceholder": "तुमचे नाव टाका",
+            "emailLabel": "तुमचा ईमेल",
+            "emailPlaceholder": "तुमचा ईमेल टाका",
+            "descriptionLabel": "समस्येचे वर्णन करा",
+            "descriptionPlaceholder": "कृपया शक्य तितकी सविस्तर माहिती द्या...",
+            "submitButton": "समस्या सबमिट करा",
+            "validation": {
+                "nameRequired": "नाव आवश्यक आहे.",
+                "emailRequired": "एक वैध ईमेल आवश्यक आहे.",
+                "descriptionRequired": "कृपया समस्येचे किमान १० वर्णांमध्ये वर्णन करा."
+            },
+            "toast": {
+                "successTitle": "समस्या सबमिट झाली",
+                "successDescription": "तुमच्या अभिप्रायाबद्दल धन्यवाद. आम्ही लवकरच यावर लक्ष देऊ.",
+                "errorTitle": "सबमिशन अयशस्वी",
+                "errorDescription": "तुमची समस्या सबमिट करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा."
+            }
+        }
     },
     "inbox": {
         "title": "इनबॉक्स",
@@ -459,6 +481,27 @@
             "successDescription": "ब्रॉडकास्ट संदेश यशस्वीरित्या पाठवला.",
             "errorTitle": "त्रुटि",
             "errorDescription": "ब्रॉडकास्ट संदेश पाठवण्यात अयशस्वी."
+        }
+    },
+    "issues": {
+        "title": "वापरकर्ता समस्या",
+        "description": "वापरकर्त्यांनी सबमिट केलेल्या समस्यांचे पुनरावलोकन आणि व्यवस्थापन करा.",
+        "noIssuesTitle": "कोणत्याही समस्या आढळल्या नाहीत.",
+        "noIssuesDescription": "जेव्हा वापरकर्ते समस्या कळवतील, तेव्हा त्या येथे दिसतील.",
+        "status": {
+            "new": "नवीन",
+            "in-progress": "प्रगतीपथावर",
+            "resolved": "निराकरण झाले"
+        },
+        "changeStatus": "स्थिती बदला",
+        "accessDeniedTitle": "प्रवेश प्रतिबंधित",
+        "accessDeniedDescription": "तुम्हाला हे संसाधन पाहण्याची परवानगी नाही.",
+        "errorTitle": "त्रुटी",
+        "errorFetch": "समस्या आणण्यात अयशस्वी.",
+        "toast": {
+            "successTitle": "यशस्वी",
+            "updateSuccess": "समस्येची स्थिती अद्यतनित केली आहे.",
+            "updateError": "समस्येची स्थिती अद्यतनित करण्यात अयशस्वी."
         }
     }
 }

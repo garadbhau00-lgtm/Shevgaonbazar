@@ -59,7 +59,8 @@
         "adManagement": "विज्ञापन प्रबंधन",
         "broadcast": "ब्रॉडकास्ट संदेश",
         "logout": "लॉगआउट",
-        "language": "भाषा"
+        "language": "भाषा",
+        "issues": "समस्याएं"
     },
     "login": {
         "title": "शेवगांव बाजार में लॉगिन करें",
@@ -362,7 +363,28 @@
         "moreHelpTitle": "और मदद चाहिए?",
         "moreHelpDescription": "यदि आपको यहां उत्तर नहीं मिल रहा है, तो कृपया हमसे संपर्क करें।",
         "termsOfService": "सेवा की शर्तें",
-        "privacyPolicy": "गोपनीयता नीति"
+        "privacyPolicy": "गोपनीयता नीति",
+        "issueForm": {
+            "title": "समस्या की रिपोर्ट करें",
+            "nameLabel": "आपका नाम",
+            "namePlaceholder": "अपना नाम दर्ज करें",
+            "emailLabel": "आपका ईमेल",
+            "emailPlaceholder": "अपना ईमेल दर्ज करें",
+            "descriptionLabel": "समस्या का वर्णन करें",
+            "descriptionPlaceholder": "कृपया जितना संभव हो उतना विवरण प्रदान करें...",
+            "submitButton": "समस्या सबमिट करें",
+            "validation": {
+                "nameRequired": "नाम आवश्यक है।",
+                "emailRequired": "एक मान्य ईमेल आवश्यक है।",
+                "descriptionRequired": "कृपया समस्या का वर्णन कम से कम 10 अक्षरों में करें।"
+            },
+            "toast": {
+                "successTitle": "समस्या सबमिट की गई",
+                "successDescription": "आपकी प्रतिक्रिया के लिए धन्यवाद। हम शीघ्र ही इसकी जांच करेंगे।",
+                "errorTitle": "सबमिशन विफल",
+                "errorDescription": "आपकी समस्या सबमिट करने में कोई त्रुटि हुई। कृपया पुन: प्रयास करें।"
+            }
+        }
     },
     "inbox": {
         "title": "इनबॉक्स",
@@ -459,6 +481,27 @@
             "successDescription": "ब्रॉडकास्ट संदेश सफलतापूर्वक भेजा गया।",
             "errorTitle": "त्रुटि",
             "errorDescription": "ब्रॉडकास्ट संदेश भेजने में विफल।"
+        }
+    },
+    "issues": {
+        "title": "उपयोगकर्ता समस्याएं",
+        "description": "उपयोगकर्ता द्वारा सबमिट की गई समस्याओं की समीक्षा और प्रबंधन करें।",
+        "noIssuesTitle": "कोई समस्या नहीं मिली।",
+        "noIssuesDescription": "जब उपयोगकर्ता समस्याओं की रिपोर्ट करेंगे, तो वे यहां दिखाई देंगे।",
+        "status": {
+            "new": "नया",
+            "in-progress": "प्रगति में",
+            "resolved": "हल किया गया"
+        },
+        "changeStatus": "स्थिति बदलें",
+        "accessDeniedTitle": "प्रवेश वर्जित",
+        "accessDeniedDescription": "आपको इस संसाधन को देखने की अनुमति नहीं है।",
+        "errorTitle": "त्रुटि",
+        "errorFetch": "समस्याएं लाने में विफल।",
+        "toast": {
+            "successTitle": "सफलता",
+            "updateSuccess": "समस्या की स्थिति अपडेट कर दी गई है।",
+            "updateError": "समस्या की स्थिति अपडेट करने में विफल।"
         }
     }
 }
