@@ -150,7 +150,7 @@ export default function AdDetailPage() {
     const formattedDate = ad.createdAt?.toDate ? format(ad.createdAt.toDate(), 'dd/MM/yyyy', { locale: enUS }) : 'N/A';
 
     return (
-        <main className="pb-24">
+        <div className="pb-24">
              <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-card px-4">
                 <Button variant="ghost" size="icon" onClick={() => router.back()}>
                     <ArrowLeft />
@@ -160,74 +160,76 @@ export default function AdDetailPage() {
                 </div>
             </header>
 
-            <div className="p-4 bg-card">
-               <Carousel className="w-full">
-                    <CarouselContent>
-                        {ad.photos && ad.photos.length > 0 ? ad.photos.map((photo, index) => (
-                            <CarouselItem key={index}>
-                                <div className="relative aspect-video w-full rounded-lg overflow-hidden">
-                                    <Image src={photo} alt={`${ad.category} - photo ${index+1}`} fill className="object-cover" />
-                                </div>
-                            </CarouselItem>
-                        )) : (
-                             <CarouselItem>
-                                <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-secondary flex items-center justify-center">
-                                   <p className="text-muted-foreground">{dictionary.adDetail.noPhoto}</p>
-                                </div>
-                            </CarouselItem>
+            <main>
+                <div className="p-4 bg-card">
+                   <Carousel className="w-full">
+                        <CarouselContent>
+                            {ad.photos && ad.photos.length > 0 ? ad.photos.map((photo, index) => (
+                                <CarouselItem key={index}>
+                                    <div className="relative aspect-video w-full rounded-lg overflow-hidden">
+                                        <Image src={photo} alt={`${ad.category} - photo ${index+1}`} fill className="object-cover" />
+                                    </div>
+                                </CarouselItem>
+                            )) : (
+                                 <CarouselItem>
+                                    <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-secondary flex items-center justify-center">
+                                       <p className="text-muted-foreground">{dictionary.adDetail.noPhoto}</p>
+                                    </div>
+                                </CarouselItem>
+                            )}
+                        </CarouselContent>
+                        {ad.photos && ad.photos.length > 1 && (
+                            <>
+                                <CarouselPrevious className="absolute left-2" />
+                                <CarouselNext className="absolute right-2" />
+                            </>
                         )}
-                    </CarouselContent>
-                    {ad.photos && ad.photos.length > 1 && (
+                    </Carousel>
+                </div>
+                
+                <div className="p-4 space-y-4">
+                     <h1 className="text-2xl font-bold">{dictionary.categories[ad.category] || ad.category}</h1>
+                     {ad.subcategory && <p className="text-lg text-muted-foreground -mt-3">{ad.subcategory}</p>}
+
+                    {ad.price && (
+                        <div className="flex items-center text-2xl font-bold text-primary">
+                            <BadgeIndianRupee className="h-6 w-6 mr-2" />
+                            <span>{ad.price.toLocaleString('en-IN')}</span>
+                        </div>
+                    )}
+                    
+                     {ad.description && (
                         <>
-                            <CarouselPrevious className="absolute left-2" />
-                            <CarouselNext className="absolute right-2" />
+                            <Separator />
+                            <div>
+                                <h2 className="text-lg font-semibold mb-2">{dictionary.adForm.description.label}</h2>
+                                <p className="text-muted-foreground whitespace-pre-wrap">{ad.description}</p>
+                            </div>
+                            <Separator />
                         </>
                     )}
-                </Carousel>
-            </div>
-            
-            <div className="p-4 space-y-4">
-                 <h1 className="text-2xl font-bold">{dictionary.categories[ad.category] || ad.category}</h1>
-                 {ad.subcategory && <p className="text-lg text-muted-foreground -mt-3">{ad.subcategory}</p>}
 
-                {ad.price && (
-                    <div className="flex items-center text-2xl font-bold text-primary">
-                        <BadgeIndianRupee className="h-6 w-6 mr-2" />
-                        <span>{ad.price.toLocaleString('en-IN')}</span>
+                     <div className="flex items-center text-lg font-semibold">
+                        <User className="h-5 w-5 mr-2" />
+                        <span>{ad.userName}</span>
                     </div>
-                )}
-                
-                 {ad.description && (
-                    <>
-                        <Separator />
-                        <div>
-                            <h2 className="text-lg font-semibold mb-2">{dictionary.adForm.description.label}</h2>
-                            <p className="text-muted-foreground whitespace-pre-wrap">{ad.description}</p>
-                        </div>
-                        <Separator />
-                    </>
-                )}
 
-                 <div className="flex items-center text-lg font-semibold">
-                    <User className="h-5 w-5 mr-2" />
-                    <span>{ad.userName}</span>
+                    <div className="flex items-center text-lg font-semibold text-green-600">
+                        <MapPin className="h-5 w-5 mr-2" />
+                        <span>{ad.location}, {ad.taluka}</span>
+                    </div>
+                     
+                     <Link href={`tel:${ad.mobileNumber}`} className="flex items-center text-lg font-semibold text-green-600">
+                        <Phone className="h-5 w-5 mr-2" />
+                        <span>{ad.mobileNumber}</span>
+                    </Link>
+                    
+                     <div className="flex items-center text-muted-foreground">
+                        <CalendarDays className="h-5 w-5 mr-2" />
+                        <span>{dictionary.adDetail.postedOn}: {formattedDate}</span>
+                    </div>
                 </div>
-
-                <div className="flex items-center text-lg font-semibold text-green-600">
-                    <MapPin className="h-5 w-5 mr-2" />
-                    <span>{ad.location}, {ad.taluka}</span>
-                </div>
-                 
-                 <Link href={`tel:${ad.mobileNumber}`} className="flex items-center text-lg font-semibold text-green-600">
-                    <Phone className="h-5 w-5 mr-2" />
-                    <span>{ad.mobileNumber}</span>
-                </Link>
-                
-                 <div className="flex items-center text-muted-foreground">
-                    <CalendarDays className="h-5 w-5 mr-2" />
-                    <span>{dictionary.adDetail.postedOn}: {formattedDate}</span>
-                </div>
-            </div>
+            </main>
 
             {user?.uid !== ad.userId && (
                  <div className="fixed bottom-0 left-0 right-0 w-full max-w-lg mx-auto p-4 bg-background/90 backdrop-blur-sm border-t">
@@ -261,6 +263,6 @@ export default function AdDetailPage() {
                     </div>
                  </div>
             )}
-        </main>
+        </div>
     );
 }
