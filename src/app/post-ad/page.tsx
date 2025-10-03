@@ -69,7 +69,7 @@ export default function PostAdPage() {
       </header>
       <main className="flex-1 overflow-y-auto p-4">
         {view === 'options' && (
-            <div className="flex flex-col items-center justify-center h-full gap-4 -mt-10">
+            <div className="flex flex-col items-center justify-center h-full gap-4">
                 <Button 
                     className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
                     onClick={() => setView('businessForm')}
