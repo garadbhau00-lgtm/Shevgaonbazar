@@ -53,12 +53,12 @@ export default function MyIssuesPage() {
         const q = query(
             collection(db, "issues"),
             where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
+            orderBy('createdAt', 'asc')
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const issuesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Issue));
-            setIssues(issuesList);
+            setIssues(issuesList.reverse()); // Manually reverse to show newest first
             setPageLoading(false);
         }, (error) => {
             console.error("Error fetching user issues:", error);

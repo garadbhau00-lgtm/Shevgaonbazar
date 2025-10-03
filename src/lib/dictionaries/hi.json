@@ -78,7 +78,7 @@
         "signupLink": "साइन अप करें",
         "resetPassword": {
             "title": "पासवर्ड रीसेट करें",
-            "description": "अपना ईमेल पता दर्ज करें और हम आपको पासवर्ड रीसेट करने के लिए एक लिंक भेजेंगे।",
+            "description": "अपना ईमेल पता दर्ज करें और हम आपको पासवर्ड रीसेट करने के لیے एक लिंक भेजेंगे।",
             "emailLabel": "ईमेल",
             "sendButton": "रीसेट लिंक भेजें",
             "cancelButton": "रद्द करें"
@@ -300,7 +300,7 @@
     },
     "adDetail": {
         "loginRequiredTitle": "लॉगिन आवश्यक",
-        "loginRequiredDescription": "विज्ञापन विवरण देखने के लिए कृपया लॉगिन करें।",
+        "loginRequiredDescription": "विज्ञापन विवरण देखने के لیے कृपया लॉगिन करें।",
         "adNotAvailableTitle": "विज्ञापन उपलब्ध नहीं है",
         "adNotAvailableDescription": "यह विज्ञापन वर्तमान में देखने के लिए उपलब्ध नहीं है।",
         "notFoundTitle": "नहीं मिला",

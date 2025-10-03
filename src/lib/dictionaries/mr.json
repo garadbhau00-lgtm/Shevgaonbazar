@@ -497,7 +497,7 @@
         "changeStatus": "स्थिती बदला",
         "accessDeniedTitle": "प्रवेश प्रतिबंधित",
         "accessDeniedDescription": "तुम्हाला हे संसाधन पाहण्याची परवानगी नाही.",
-        "errorTitle": "त्रुटी",
+        "errorTitle": "त्रुटि",
         "errorFetch": "समस्या आणण्यात अयशस्वी.",
         "toast": {
             "successTitle": "यशस्वी",

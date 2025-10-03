@@ -49,13 +49,13 @@ export default function IssuesPage() {
 
             const q = query(
                 collection(db, "issues"),
-                orderBy('createdAt', 'desc')
+                orderBy('createdAt', 'asc')
             );
 
             const unsubscribe = onSnapshot(q, (querySnapshot) => {
                 const issuesList = querySnapshot.docs
                   .map(doc => ({ id: doc.id, ...doc.data() } as Issue));
-                setIssues(issuesList);
+                setIssues(issuesList.reverse()); // Manually reverse to show newest first
                 setPageLoading(false);
             }, (error) => {
                 console.error("Error fetching issues:", error);
@@ -83,7 +83,7 @@ export default function IssuesPage() {
                     userId: issue.userId,
                     title: 'तुमच्या समस्येची स्थिती अद्यतनित झाली आहे',
                     message: `तुमच्या समस्येची स्थिती आता "${statusMessage}" आहे.`,
-                    link: `/help-center`,
+                    link: `/my-issues`,
                     isRead: false,
                     createdAt: serverTimestamp(),
                     type: 'ad_status',
