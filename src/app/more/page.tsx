@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -76,7 +75,7 @@ export default function MorePage() {
         }
 
         return (
-             <div className="rounded-lg bg-card p-6 text-center shadow-sm mb-6">
+             <div className="rounded-lg bg-card p-4 text-center shadow-sm mb-6">
                 <h2 className="text-lg font-bold">{dictionary.more.joinShevgaonBazar}</h2>
                 <p className="mt-2 text-sm text-muted-foreground">{dictionary.more.connectWithCommunity}</p>
                 <div className="mt-4 flex gap-2">
@@ -116,22 +115,22 @@ export default function MorePage() {
                 <div className="space-y-2">
                     <LanguageSwitcher />
 
-                    {getMenuItems().map((item) => (
-                        <Link
-                            href={item.href}
-                            key={item.label}
-                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary"
-                        >
-                            <div className="flex items-center gap-4">
-                                <item.icon className="h-5 w-5 text-primary" />
-                                <span className="font-medium">{item.label}</span>
-                            </div>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        </Link>
-                    ))}
+                    <div className="grid grid-cols-2 gap-2">
+                        {getMenuItems().map((item) => (
+                            <Link
+                                href={item.href}
+                                key={item.label}
+                                className="flex flex-col items-center justify-center gap-2 rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary text-center"
+                            >
+                                <item.icon className="h-6 w-6 text-primary" />
+                                <span className="text-xs font-medium">{item.label}</span>
+                            </Link>
+                        ))}
+                    </div>
+
                     {user && (
                         <div
-                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary cursor-pointer"
+                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary cursor-pointer mt-2"
                             onClick={onLogout}
                         >
                             <div className="flex items-center gap-4">
