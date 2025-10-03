@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -86,11 +85,11 @@ export default function AdvertisementPage() {
             const adDocRef = doc(db, 'config', 'advertisement');
             const adData: Advertisement = { 
                 imageUrl: dataUrl,
-                enabled: true,
+                enabled: ad?.enabled ?? true,
                 lastUpdated: new Date()
             };
 
-            setDoc(adDocRef, adData)
+            setDoc(adDocRef, adData, { merge: true })
                 .then(() => {
                     setAd(adData);
                     setNewAdPreview(null);
@@ -177,7 +176,7 @@ export default function AdvertisementPage() {
                     </CardHeader>
                     <CardContent>
                         {ad?.imageUrl ? (
-                            <div className="relative aspect-[9/16] w-full max-w-sm mx-auto rounded-lg overflow-hidden bg-secondary">
+                            <div className="relative aspect-video w-full max-w-sm mx-auto rounded-lg overflow-hidden bg-secondary">
                                 <Image src={ad.imageUrl} alt="Current Advertisement" fill className="object-contain" />
                             </div>
                         ) : (
@@ -215,7 +214,7 @@ export default function AdvertisementPage() {
                             disabled={isUploading}
                         />
                         {newAdPreview ? (
-                            <div className="relative w-full max-w-sm mx-auto aspect-[9/16] rounded-lg overflow-hidden bg-secondary">
+                            <div className="relative w-full max-w-sm mx-auto aspect-video rounded-lg overflow-hidden bg-secondary">
                                 <Image src={newAdPreview} alt="New Ad Preview" fill className="object-contain" />
                                 <Button
                                   type="button"
