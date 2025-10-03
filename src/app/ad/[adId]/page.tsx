@@ -220,31 +220,32 @@ export default function AdDetailPage() {
             </div>
 
             {user?.uid !== ad.userId && (
-                <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-2 bg-background border-t">
-                   <div className="flex gap-2">
-                        <Button 
-                            variant="outline" 
-                            className="w-full" 
-                            size="lg"
-                            onClick={handleStartChat}
-                            disabled={isCreatingChat}
-                        >
-                             {isCreatingChat ? (
-                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                             ) : (
-                                <MessageSquare className="mr-2 h-5 w-5" />
-                             )}
-                            चॅट करा
-                        </Button>
-                        <Link href={`tel:${ad.mobileNumber}`} className="w-full">
-                            <Button className="w-full bg-green-600 hover:bg-green-700" size="lg">
-                                <Phone className="mr-2 h-5 w-5" />
-                                {dictionary.adDetail.callButton}
-                            </Button>
-                        </Link>
-                   </div>
-                </div>
+                 <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-background border-t">
+                    <div className="flex justify-end gap-2">
+                         <Button 
+                             variant="outline" 
+                             size="lg"
+                             onClick={handleStartChat}
+                             disabled={isCreatingChat}
+                             className="shadow-lg"
+                         >
+                              {isCreatingChat ? (
+                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              ) : (
+                                 <MessageSquare className="mr-2 h-5 w-5" />
+                              )}
+                             चॅट करा
+                         </Button>
+                         <Link href={`tel:${ad.mobileNumber}`}>
+                             <Button className="bg-green-600 hover:bg-green-700 shadow-lg" size="lg">
+                                 <Phone className="mr-2 h-5 w-5" />
+                                 {dictionary.adDetail.callButton}
+                             </Button>
+                         </Link>
+                    </div>
+                 </div>
             )}
         </main>
     );
 }
+
