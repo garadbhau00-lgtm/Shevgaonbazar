@@ -140,8 +140,8 @@ export default function AdDetailPage() {
                 url: window.location.href
             });
         } catch (error: any) {
-            // Silently fail if the user cancels the share action (AbortError)
-            if (error.name !== 'AbortError') {
+            // Silently fail if the user cancels the share action (AbortError or NotAllowedError)
+            if (error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
                 console.error('Error sharing:', error);
             }
         }
