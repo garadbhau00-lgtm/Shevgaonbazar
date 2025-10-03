@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -15,13 +15,16 @@ import { cn } from '@/lib/utils';
 import imageCompression from 'browser-image-compression';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
+import type { Advertisement } from '@/lib/types';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export default function AdvertisementPage() {
     const { userProfile, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
 
-    const [currentAdUrl, setCurrentAdUrl] = useState<string | null>(null);
+    const [ad, setAd] = useState<Advertisement | null>(null);
     const [newAdPreview, setNewAdPreview] = useState<string | null>(null);
     const [newAdFile, setNewAdFile] = useState<File | null>(null);
     const [pageLoading, setPageLoading] = useState(true);
@@ -41,7 +44,7 @@ export default function AdvertisementPage() {
                     const adDocRef = doc(db, 'config', 'advertisement');
                     const adDocSnap = await getDoc(adDocRef);
                     if (adDocSnap.exists()) {
-                        setCurrentAdUrl(adDocSnap.data().imageUrl);
+                        setAd(adDocSnap.data() as Advertisement);
                     }
                 } catch (error) {
                     console.error("Error fetching advertisement:", error);
@@ -81,11 +84,15 @@ export default function AdvertisementPage() {
             const dataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
 
             const adDocRef = doc(db, 'config', 'advertisement');
-            const adData = { imageUrl: dataUrl };
+            const adData: Advertisement = { 
+                imageUrl: dataUrl,
+                enabled: true,
+                lastUpdated: new Date()
+            };
 
             setDoc(adDocRef, adData)
                 .then(() => {
-                    setCurrentAdUrl(dataUrl);
+                    setAd(adData);
                     setNewAdPreview(null);
                     setNewAdFile(null);
                     toast({ title: 'Success', description: 'Advertisement updated successfully.' });
@@ -108,6 +115,27 @@ export default function AdvertisementPage() {
             setIsUploading(false);
         }
     };
+
+    const handleToggleEnabled = async (checked: boolean) => {
+        if (!ad) return;
+        
+        const adDocRef = doc(db, 'config', 'advertisement');
+        const updatedAd = { ...ad, enabled: checked };
+        setAd(updatedAd); // Optimistic update
+
+        try {
+            await updateDoc(adDocRef, { enabled: checked });
+            toast({ title: 'Success', description: `Advertisement ${checked ? 'enabled' : 'disabled'}.` });
+        } catch (serverError) {
+            setAd(ad); // Revert on error
+            const permissionError = new FirestorePermissionError({
+                path: adDocRef.path,
+                operation: 'update',
+                requestResourceData: { enabled: checked },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
+    }
     
     const clearSelection = () => {
         setNewAdPreview(null);
@@ -148,9 +176,9 @@ export default function AdvertisementPage() {
                         <CardDescription>This image is currently shown to users when they open the app.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {currentAdUrl ? (
+                        {ad?.imageUrl ? (
                             <div className="relative aspect-[9/16] w-full max-w-sm mx-auto rounded-lg overflow-hidden bg-secondary">
-                                <Image src={currentAdUrl} alt="Current Advertisement" fill className="object-contain" />
+                                <Image src={ad.imageUrl} alt="Current Advertisement" fill className="object-contain" />
                             </div>
                         ) : (
                             <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
@@ -158,6 +186,18 @@ export default function AdvertisementPage() {
                             </div>
                         )}
                     </CardContent>
+                    {ad?.imageUrl && (
+                        <CardContent>
+                            <div className="flex items-center space-x-2 justify-center">
+                                <Switch 
+                                  id="ad-enabled" 
+                                  checked={ad.enabled}
+                                  onCheckedChange={handleToggleEnabled}
+                                />
+                                <Label htmlFor="ad-enabled">{ad.enabled ? 'Enabled' : 'Disabled'}</Label>
+                            </div>
+                        </CardContent>
+                    )}
                 </Card>
                 
                  <Card>

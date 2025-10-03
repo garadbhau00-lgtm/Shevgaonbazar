@@ -121,7 +121,7 @@ export default function Home() {
             const adDocSnap = await getDoc(adDocRef);
             if (adDocSnap.exists()) {
                 const adData = adDocSnap.data();
-                if (adData.imageUrl) {
+                if (adData.imageUrl && adData.enabled) {
                     setAdvertisementUrl(adData.imageUrl);
                     if (!hasAdBeenShown) {
                         setIsAdOpen(true);

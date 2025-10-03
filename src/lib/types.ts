@@ -101,4 +101,5 @@ export type Advertisement = {
     imageUrl: string;
     link?: string;
     lastUpdated: any; // Firestore timestamp
+    enabled: boolean;
 }
