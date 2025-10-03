@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -102,7 +101,7 @@ export default function HelpCenterPage() {
                 />
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">{dictionary.helpCenter.title}</h1>
+                    <h1 className="text-base font-bold">{dictionary.helpCenter.title}</h1>
                     <p className="mt-2 text-xs max-w-xl">{dictionary.helpCenter.description}</p>
                 </div>
             </div>
@@ -111,7 +110,7 @@ export default function HelpCenterPage() {
                     {faqs.map((faq: { question: string, answer: string }, index: number) => (
                         <AccordionItem key={index} value={`item-${index}`} className="rounded-lg bg-card px-4 shadow-sm">
                             <AccordionTrigger className="text-left font-semibold text-sm">{faq.question}</AccordionTrigger>
-                            <AccordionContent className="text-muted-foreground">
+                            <AccordionContent className="text-muted-foreground text-xs">
                                 {faq.answer}
                             </AccordionContent>
                         </AccordionItem>
