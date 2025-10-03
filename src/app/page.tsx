@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Loader2, List, Filter, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
@@ -19,8 +19,8 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { villageList } from '@/lib/villages';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import LanguageSwitcherIcon from '@/components/language-switcher-icon';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useAdvertisement } from '@/contexts/advertisement-context';
 
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
@@ -63,6 +63,8 @@ const MAX_PRICE_LIMIT = 500000;
 export default function Home() {
   const { toast } = useToast();
   const { dictionary } = useLanguage();
+  const { hasAdBeenShown, setAdAsShown } = useAdvertisement();
+
   const [ads, setAds] = useState<Ad[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
   
@@ -74,7 +76,6 @@ export default function Home() {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [advertisementUrl, setAdvertisementUrl] = useState<string | null>(null);
   const [isAdOpen, setIsAdOpen] = useState(false);
-  const adShownRef = useRef(false);
 
 
   const sortOptions: { value: SortOption, label: string }[] = [
@@ -122,9 +123,9 @@ export default function Home() {
                 const adData = adDocSnap.data();
                 if (adData.imageUrl) {
                     setAdvertisementUrl(adData.imageUrl);
-                    if (!adShownRef.current) {
+                    if (!hasAdBeenShown) {
                         setIsAdOpen(true);
-                        adShownRef.current = true;
+                        setAdAsShown();
                     }
                 }
             }
@@ -136,7 +137,7 @@ export default function Home() {
     fetchAdvertisement();
 
     return () => unsubscribe();
-  }, [toast, dictionary]);
+  }, [toast, dictionary, hasAdBeenShown, setAdAsShown]);
   
   const sortedAndFilteredAds = useMemo(() => {
     let filtered = ads;
