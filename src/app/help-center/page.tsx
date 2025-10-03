@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -29,6 +29,7 @@ export default function HelpCenterPage() {
     const { user, userProfile, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const issueDict = dictionary.helpCenter.issueForm;
+    const [isFormVisible, setIsFormVisible] = useState(false);
 
     const issueSchema = z.object({
         name: z.string().min(1, { message: issueDict.validation.nameRequired }),
@@ -76,6 +77,7 @@ export default function HelpCenterPage() {
                 email: user ? user.email || '' : '',
                 description: '',
             });
+            setIsFormVisible(false);
           })
           .catch((serverError) => {
             console.error('Error submitting issue:', serverError);
@@ -117,62 +119,72 @@ export default function HelpCenterPage() {
                     ))}
                 </Accordion>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">{issueDict.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {isFormVisible ? (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg">{issueDict.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>{issueDict.nameLabel}</FormLabel>
+                                                    <FormControl>
+                                                        <Input {...field} placeholder={issueDict.namePlaceholder} disabled={isSubmitting || authLoading} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="email"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>{issueDict.emailLabel}</FormLabel>
+                                                    <FormControl>
+                                                        <Input {...field} type="email" placeholder={issueDict.emailPlaceholder} disabled={isSubmitting || authLoading} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                     <FormField
                                         control={form.control}
-                                        name="name"
+                                        name="description"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>{issueDict.nameLabel}</FormLabel>
+                                                <FormLabel>{issueDict.descriptionLabel}</FormLabel>
                                                 <FormControl>
-                                                    <Input {...field} placeholder={issueDict.namePlaceholder} disabled={isSubmitting || authLoading} />
+                                                    <Textarea {...field} placeholder={issueDict.descriptionPlaceholder} rows={5} disabled={isSubmitting} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
-                                    <FormField
-                                        control={form.control}
-                                        name="email"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>{issueDict.emailLabel}</FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} type="email" placeholder={issueDict.emailPlaceholder} disabled={isSubmitting || authLoading} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                <FormField
-                                    control={form.control}
-                                    name="description"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>{issueDict.descriptionLabel}</FormLabel>
-                                            <FormControl>
-                                                <Textarea {...field} placeholder={issueDict.descriptionPlaceholder} rows={5} disabled={isSubmitting} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <Button type="submit" className="w-full" disabled={isSubmitting || authLoading}>
-                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    {issueDict.submitButton}
-                                </Button>
-                            </form>
-                        </Form>
-                    </CardContent>
-                </Card>
+                                    <Button type="submit" className="w-full" disabled={isSubmitting || authLoading}>
+                                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        {issueDict.submitButton}
+                                    </Button>
+                                </form>
+                            </Form>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <div className="text-center">
+                        <Button onClick={() => setIsFormVisible(true)} className="w-full max-w-sm">
+                            <MessageSquarePlus className="mr-2 h-4 w-4" />
+                            {issueDict.title}
+                        </Button>
+                    </div>
+                )}
+
 
                 <div className="text-center text-xs text-muted-foreground">
                     <Link href="#" className="hover:underline">
