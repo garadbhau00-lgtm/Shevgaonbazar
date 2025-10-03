@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/language-context';
 import { Separator } from '@/components/ui/separator';
+import { enUS } from 'date-fns/locale';
 
 
 export default function AdDetailPage() {
@@ -146,7 +147,7 @@ export default function AdDetailPage() {
         return null;
     }
     
-    const formattedDate = ad.createdAt?.toDate ? format(ad.createdAt.toDate(), 'dd/MM/yyyy') : 'N/A';
+    const formattedDate = ad.createdAt?.toDate ? format(ad.createdAt.toDate(), 'dd/MM/yyyy', { locale: enUS }) : 'N/A';
 
     return (
         <main className="pb-24">
@@ -248,3 +249,5 @@ export default function AdDetailPage() {
         </main>
     );
 }
+
+    
