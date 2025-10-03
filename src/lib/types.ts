@@ -12,7 +12,7 @@ export type Ad = {
     | 'व्यावसायिक सेवा'
     | 'आर्थिक';
   subcategory?: string;
-  price: number;
+  price?: number;
   taluka: string;
   location: string; // village
   mobileNumber: string;

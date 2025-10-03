@@ -157,7 +157,7 @@
     },
     "postAd": {
         "title": "Post a New Ad",
-        "description": "Fill in the details about your product."
+        "description": "Fill in the details about your product or service."
     },
     "adForm": {
         "category": {
@@ -170,11 +170,12 @@
         },
         "description": {
             "label": "More Information",
-            "placeholder": "Describe your product in detail..."
+            "placeholder": "Describe your product or service in detail..."
         },
         "price": {
             "label": "Price (₹)",
-            "placeholder": "e.g., 15000"
+            "placeholder": "e.g., 15000",
+            "placeholderOptional": "e.g., 500 (Optional)"
         },
         "taluka": {
             "label": "Taluka",
@@ -197,7 +198,7 @@
         "postAdButton": "Post Ad",
         "validation": {
             "categoryRequired": "Please select a category.",
-            "pricePositive": "Price must be greater than 0.",
+            "pricePositive": "Price must be a positive number.",
             "talukaRequired": "Please select a taluka.",
             "locationRequired": "Please select a village.",
             "mobileInvalid": "Please enter a valid 10-digit mobile number."

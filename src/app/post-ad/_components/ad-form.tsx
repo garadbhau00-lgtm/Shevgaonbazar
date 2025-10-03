@@ -63,7 +63,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     ),
     subcategory: z.string().optional(),
     description: z.string().optional(),
-    price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }),
+    price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }).optional().or(z.literal('')),
     taluka: z.string({ required_error: adFormDictionary.validation.talukaRequired }),
     location: z.string({ required_error: adFormDictionary.validation.locationRequired }),
     mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: adFormDictionary.validation.mobileInvalid }),
@@ -93,6 +93,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
     control: form.control,
     name: 'taluka',
   });
+  
+  const isServiceCategory = selectedCategory === 'व्यावसायिक सेवा';
 
   useEffect(() => {
     if (authLoading) return;
@@ -235,8 +237,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
             return;
         }
 
-        const submissionData: Omit<Ad, 'id'> = {
+        const submissionData: Omit<Ad, 'id' | 'price'> & { price?: number } = {
             ...data,
+            price: isServiceCategory ? (data.price ? Number(data.price) : undefined) : Number(data.price),
             photos: finalPhotoDataUris,
             userId: user.uid,
             userName: userProfile.name || user.email!,
@@ -244,6 +247,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
             createdAt: isEditMode && existingAd ? existingAd.createdAt : serverTimestamp(),
             updatedAt: serverTimestamp(),
         };
+        
+        if (!isServiceCategory && (submissionData.price === undefined || submissionData.price <= 0)) {
+            form.setError('price', { type: 'custom', message: adFormDictionary.validation.pricePositive });
+            setIsSubmitting(false);
+            return;
+        }
 
         if (isEditMode && existingAd) {
             const adDocRef = doc(db, 'ads', existingAd.id);
@@ -376,9 +385,16 @@ export default function AdForm({ existingAd }: AdFormProps) {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{adFormDictionary.price.label}</FormLabel>
+                  <FormLabel>{adFormDictionary.price.label} {!isServiceCategory && <span className="text-destructive">*</span>}</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder={adFormDictionary.price.placeholder} {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} disabled={isLoading}/>
+                    <Input 
+                        type="number" 
+                        placeholder={isServiceCategory ? adFormDictionary.price.placeholderOptional : adFormDictionary.price.placeholder}
+                        {...field} 
+                        onChange={e => field.onChange(e.target.value === '' ? '' : e.target.valueAsNumber)} 
+                        value={field.value ?? ''} 
+                        disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -466,5 +482,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
-
-    

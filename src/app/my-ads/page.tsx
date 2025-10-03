@@ -161,7 +161,11 @@ export default function MyAdsPage() {
                                     </CardHeader>
                                     <CardContent className="flex-grow p-3">
                                         <h3 className="font-semibold">{dictionary.categories[ad.category] || ad.category}</h3>
-                                        <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
+                                        {ad.price ? (
+                                          <p className="text-sm font-bold text-primary">₹{ad.price.toLocaleString('en-IN')}</p>
+                                        ) : (
+                                          <p className="text-sm font-semibold text-primary">Contact for price</p>
+                                        )}
 
                                         <Badge variant={getStatusVariant(ad.status)} className="mt-1">
                                             {statusTranslations[ad.status]}

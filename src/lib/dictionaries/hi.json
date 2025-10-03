@@ -157,7 +157,7 @@
     },
     "postAd": {
         "title": "नया विज्ञापन पोस्ट करें",
-        "description": "अपने उत्पाद के बारे में विवरण भरें।"
+        "description": "अपने उत्पाद या सेवा के बारे में विवरण भरें।"
     },
     "adForm": {
         "category": {
@@ -170,11 +170,12 @@
         },
         "description": {
             "label": "और जानकारी",
-            "placeholder": "अपने उत्पाद का विस्तार से वर्णन करें..."
+            "placeholder": "अपने उत्पाद या सेवा का विस्तार से वर्णन करें..."
         },
         "price": {
             "label": "कीमत (₹)",
-            "placeholder": "जैसे १५०००"
+            "placeholder": "जैसे १५०००",
+            "placeholderOptional": "जैसे ५०० (वैकल्पिक)"
         },
         "taluka": {
             "label": "तालुका",
@@ -197,7 +198,7 @@
         "postAdButton": "विज्ञापन पोस्ट करें",
         "validation": {
             "categoryRequired": "कृपया एक श्रेणी चुनें।",
-            "pricePositive": "कीमत 0 से अधिक होनी चाहिए।",
+            "pricePositive": "कीमत एक सकारात्मक संख्या होनी चाहिए।",
             "talukaRequired": "कृपया एक तालुका चुनें।",
             "locationRequired": "कृपया एक गांव चुनें।",
             "mobileInvalid": "कृपया एक मान्य 10-अंकीय मोबाइल नंबर दर्ज करें।"

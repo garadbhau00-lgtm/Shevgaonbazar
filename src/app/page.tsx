@@ -126,7 +126,7 @@ export default function Home() {
       filtered = filtered.filter(ad => ad.location === selectedVillage);
     }
     
-    filtered = filtered.filter(ad => ad.price <= maxPrice);
+    filtered = filtered.filter(ad => (ad.price ?? 0) <= maxPrice);
 
     switch (sortOption) {
       case 'newest':
@@ -134,9 +134,9 @@ export default function Home() {
       case 'oldest':
         return filtered.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
       case 'price-asc':
-        return filtered.sort((a, b) => a.price - b.price);
+        return filtered.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
       case 'price-desc':
-        return filtered.sort((a, b) => b.price - a.price);
+        return filtered.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
       default:
         return filtered;
     }

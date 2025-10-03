@@ -157,7 +157,7 @@
     },
     "postAd": {
         "title": "नवीन जाहिरात टाका",
-        "description": "तुमच्या उत्पादनाची माहिती भरा."
+        "description": "तुमच्या उत्पादनाची किंवा सेवेची माहिती भरा."
     },
     "adForm": {
         "category": {
@@ -170,11 +170,12 @@
         },
         "description": {
             "label": "अधिक माहिती",
-            "placeholder": "तुमच्या उत्पादनाबद्दल सविस्तर माहिती द्या..."
+            "placeholder": "तुमच्या उत्पादनाबद्दल किंवा सेवेबद्दल सविस्तर माहिती द्या..."
         },
         "price": {
             "label": "किंमत (₹)",
-            "placeholder": "उदा. १५०००"
+            "placeholder": "उदा. १५०००",
+            "placeholderOptional": "उदा. ५०० (ऐच्छिक)"
         },
         "taluka": {
             "label": "तालुका",
@@ -197,7 +198,7 @@
         "postAdButton": "जाहिरात पोस्ट करा",
         "validation": {
             "categoryRequired": "कृपया एक श्रेणी निवडा.",
-            "pricePositive": "किंमत ० पेक्षा जास्त असावी.",
+            "pricePositive": "किंमत एक सकारात्मक संख्या असणे आवश्यक आहे.",
             "talukaRequired": "कृपया एक तालुका निवडा.",
             "locationRequired": "कृपया एक गाव निवडा.",
             "mobileInvalid": "कृपया वैध १०-अंकी मोबाईल नंबर टाका."

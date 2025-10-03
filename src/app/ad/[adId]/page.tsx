@@ -111,10 +111,12 @@ export default function AdDetailPage() {
                  <h1 className="text-2xl font-bold">{dictionary.categories[ad.category] || ad.category}</h1>
                  {ad.subcategory && <p className="text-lg text-muted-foreground -mt-3">{ad.subcategory}</p>}
 
-                <div className="flex items-center text-2xl font-bold text-primary">
-                    <BadgeIndianRupee className="h-6 w-6 mr-2" />
-                    <span>{ad.price.toLocaleString('en-IN')}</span>
-                </div>
+                {ad.price && (
+                    <div className="flex items-center text-2xl font-bold text-primary">
+                        <BadgeIndianRupee className="h-6 w-6 mr-2" />
+                        <span>{ad.price.toLocaleString('en-IN')}</span>
+                    </div>
+                )}
                 
                  {ad.description && (
                     <>

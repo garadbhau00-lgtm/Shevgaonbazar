@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -97,9 +98,11 @@ export default function AdCard({ ad }: AdCardProps) {
                 <p className="text-[10px] text-muted-foreground truncate">{ad.location}</p>
               </div>
               <div className="flex-shrink-0">
-                <p className="text-xs font-bold text-primary text-right">
-                  ₹{ad.price.toLocaleString('en-IN')}
-                </p>
+                {ad.price ? (
+                  <p className="text-xs font-bold text-primary text-right">
+                    ₹{ad.price.toLocaleString('en-IN')}
+                  </p>
+                ) : null}
               </div>
             </div>
           </CardContent>
