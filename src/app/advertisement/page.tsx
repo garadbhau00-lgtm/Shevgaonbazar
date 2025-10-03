@@ -168,84 +168,86 @@ export default function AdvertisementPage() {
                     <p className="mt-2 text-xs max-w-xl">Upload and manage the app-wide advertisement.</p>
                 </div>
             </div>
-             <main className="p-4 space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Current Advertisement</CardTitle>
-                        <CardDescription>This image is currently shown to users when they open the app.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {ad?.imageUrl ? (
-                            <div className="relative aspect-video w-full max-w-xs mx-auto rounded-lg overflow-hidden bg-secondary">
-                                <Image src={ad.imageUrl} alt="Current Advertisement" fill className="object-contain" />
-                            </div>
-                        ) : (
-                            <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
-                                No advertisement is currently set.
-                            </div>
-                        )}
-                    </CardContent>
-                    {ad?.imageUrl && (
+             <main className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Current Advertisement</CardTitle>
+                            <CardDescription>This image is currently shown to users.</CardDescription>
+                        </CardHeader>
                         <CardContent>
-                            <div className="flex items-center space-x-2 justify-center">
-                                <Switch 
-                                  id="ad-enabled" 
-                                  checked={ad.enabled}
-                                  onCheckedChange={handleToggleEnabled}
-                                />
-                                <Label htmlFor="ad-enabled">{ad.enabled ? 'Enabled' : 'Disabled'}</Label>
-                            </div>
+                            {ad?.imageUrl ? (
+                                <div className="relative aspect-video w-full max-w-xs mx-auto rounded-lg overflow-hidden bg-secondary">
+                                    <Image src={ad.imageUrl} alt="Current Advertisement" fill className="object-contain" />
+                                </div>
+                            ) : (
+                                <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
+                                    No advertisement is currently set.
+                                </div>
+                            )}
                         </CardContent>
-                    )}
-                </Card>
-                
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Upload New Advertisement</CardTitle>
-                        <CardDescription>Select a new image to replace the current one. Recommended aspect ratio is 9:16 (portrait).</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            disabled={isUploading}
-                        />
-                        {newAdPreview ? (
-                            <div className="relative w-full max-w-xs mx-auto aspect-video rounded-lg overflow-hidden bg-secondary">
-                                <Image src={newAdPreview} alt="New Ad Preview" fill className="object-contain" />
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="icon"
-                                  className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                                  onClick={clearSelection}
-                                  disabled={isUploading}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ) : (
-                             <div
-                                className={cn(
-                                "flex aspect-video w-full flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
-                                isUploading ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
-                                )}
-                                onClick={() => !isUploading && fileInputRef.current?.click()}
-                            >
-                                <Upload className="h-10 w-10 text-muted-foreground" />
-                                <p className="mt-2 text-sm font-semibold text-muted-foreground">Click to upload image</p>
-                                <p className="mt-1 text-xs text-muted-foreground">Portrait image (9:16) recommended</p>
-                            </div>
+                        {ad?.imageUrl && (
+                            <CardContent>
+                                <div className="flex items-center space-x-2 justify-center">
+                                    <Switch 
+                                    id="ad-enabled" 
+                                    checked={ad.enabled}
+                                    onCheckedChange={handleToggleEnabled}
+                                    />
+                                    <Label htmlFor="ad-enabled">{ad.enabled ? 'Enabled' : 'Disabled'}</Label>
+                                </div>
+                            </CardContent>
                         )}
-                         <Button onClick={handleSave} disabled={isUploading || !newAdFile} className="w-full">
-                            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Save and Publish
-                        </Button>
-                    </CardContent>
-                </Card>
+                    </Card>
+                    
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Upload New Advertisement</CardTitle>
+                            <CardDescription>Select a new image to replace the current one.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                disabled={isUploading}
+                            />
+                            {newAdPreview ? (
+                                <div className="relative w-full max-w-xs mx-auto aspect-video rounded-lg overflow-hidden bg-secondary">
+                                    <Image src={newAdPreview} alt="New Ad Preview" fill className="object-contain" />
+                                    <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                                    onClick={clearSelection}
+                                    disabled={isUploading}
+                                    >
+                                    <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div
+                                    className={cn(
+                                    "flex aspect-video w-full flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+                                    isUploading ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
+                                    )}
+                                    onClick={() => !isUploading && fileInputRef.current?.click()}
+                                >
+                                    <Upload className="h-10 w-10 text-muted-foreground" />
+                                    <p className="mt-2 text-sm font-semibold text-muted-foreground">Click to upload image</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">Portrait image (9:16) recommended</p>
+                                </div>
+                            )}
+                            <Button onClick={handleSave} disabled={isUploading || !newAdFile} className="w-full">
+                                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Save and Publish
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </main>
         </div>
     )
