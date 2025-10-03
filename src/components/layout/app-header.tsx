@@ -4,30 +4,50 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
-import { LogOut } from 'lucide-react';
+import { LogOut, Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter, usePathname } from 'next/navigation';
 import { Skeleton } from '../ui/skeleton';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { AppNotification } from '@/lib/types';
 
 export default function AppHeader() {
   const { user, userProfile, loading: authLoading, handleLogout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, 'notifications'),
+      where('userId', '==', user.uid),
+      where('isRead', '==', false)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setHasUnread(!snapshot.empty);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const onLogout = async () => {
     await handleLogout();
     router.push('/login');
   };
 
-  const isTransparentPage = ['/', '/post-ad', '/my-ads', '/more', '/search', '/ad-management', '/access-management', '/help-center', '/settings'].includes(pathname);
+  const isTransparentPage = ['/', '/post-ad', '/my-ads', '/more', '/search', '/ad-management', '/access-management', '/help-center', '/settings', '/notifications', '/broadcast'].includes(pathname);
 
   const renderUserOptions = () => {
     if (!isClient || authLoading) {
@@ -36,6 +56,12 @@ export default function AppHeader() {
     if (user && userProfile) {
        return (
         <>
+          <Link href="/notifications">
+            <Button variant="ghost" size="icon" className={cn("relative rounded-full h-9 w-9", isTransparentPage ? 'text-white hover:bg-white/20 hover:text-white' : 'text-primary')}>
+              <Bell className="h-5 w-5"/>
+              {hasUnread && <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background"></span>}
+            </Button>
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
                <Avatar className={cn("h-9 w-9 cursor-pointer border-2", isTransparentPage ? 'border-primary-foreground/50' : 'border-primary/50')}>

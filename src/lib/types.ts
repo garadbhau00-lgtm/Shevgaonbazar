@@ -75,3 +75,14 @@ export type Conversation = {
     [uid: string]: boolean;
   }
 };
+
+export type AppNotification = {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  link?: string;
+  isRead: boolean;
+  createdAt: any; // Firestore Timestamp
+  type: 'ad_status' | 'broadcast';
+};

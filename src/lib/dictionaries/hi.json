@@ -57,6 +57,7 @@
         "helpCenter": "सहायता केंद्र",
         "accessManagement": "एक्सेस प्रबंधन",
         "adManagement": "विज्ञापन प्रबंधन",
+        "broadcast": "ब्रॉडकास्ट संदेश",
         "logout": "लॉगआउट",
         "language": "भाषा"
     },
@@ -429,7 +430,35 @@
             "resetEmailSentDescription": "आपके पासवर्ड को रीसेट करने के लिए आपके ईमेल पर एक लिंक भेजा गया है।",
             "resetEmailError": "पासवर्ड रीसेट ईमेल भेजने में विफल। कृपया पुन: प्रयास करें।"
         }
+    },
+    "notifications": {
+        "title": "सूचनाएं",
+        "description": "अपनी सभी सूचनाएं यहां देखें।",
+        "noNotificationsTitle": "कोई सूचना नहीं",
+        "noNotificationsDescription": "जब कुछ होगा, तो आपको यहां सूचित किया जाएगा।",
+        "markAsRead": "पढ़ा हुआ चिह्नित करें",
+        "errorTitle": "त्रुटि",
+        "errorFetch": "सूचनाएं लाने में विफल।"
+    },
+    "broadcast": {
+        "title": "ब्रॉडकास्ट संदेश भेजें",
+        "description": "सभी उपयोगकर्ताओं को एक सूचना भेजें।",
+        "messageTitleLabel": "शीर्षक",
+        "messageTitlePlaceholder": "जैसे नया फ़ीचर!",
+        "messageBodyLabel": "संदेश",
+        "messageBodyPlaceholder": "सभी उपयोगकर्ताओं को आपका संदेश...",
+        "sendButton": "संदेश भेजें",
+        "accessDeniedTitle": "प्रवेश वर्जित",
+        "accessDeniedDescription": "आपको इस संसाधन को देखने की अनुमति नहीं है।",
+        "validation": {
+            "titleRequired": "कृपया एक शीर्षक दर्ज करें।",
+            "messageRequired": "कृपया एक संदेश दर्ज करें।"
+        },
+        "toast": {
+            "successTitle": "सफलता!",
+            "successDescription": "ब्रॉडकास्ट संदेश सफलतापूर्वक भेजा गया।",
+            "errorTitle": "त्रुटि",
+            "errorDescription": "ब्रॉडकास्ट संदेश भेजने में विफल।"
+        }
     }
 }
-
-    
