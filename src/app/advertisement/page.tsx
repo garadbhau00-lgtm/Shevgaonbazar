@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Loader2, Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import imageCompression from 'browser-image-compression';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/errors';
 
 export default function AdvertisementPage() {
     const { userProfile, loading: authLoading } = useAuth();
@@ -83,28 +85,45 @@ export default function AdvertisementPage() {
             const reader = new FileReader();
             reader.readAsDataURL(compressedFile);
             reader.onload = async () => {
-                const dataUrl = reader.result as string;
-                await uploadString(storageRef, dataUrl, 'data_url');
-                const downloadURL = await getDownloadURL(storageRef);
+                try {
+                    const dataUrl = reader.result as string;
+                    await uploadString(storageRef, dataUrl, 'data_url');
+                    const downloadURL = await getDownloadURL(storageRef);
 
-                const adDocRef = doc(db, 'config', 'advertisement');
-                await setDoc(adDocRef, { imageUrl: downloadURL });
+                    const adDocRef = doc(db, 'config', 'advertisement');
+                    const adData = { imageUrl: downloadURL };
 
-                setCurrentAdUrl(downloadURL);
-                setNewAdPreview(null);
-                setNewAdFile(null);
-                toast({ title: 'Success', description: 'Advertisement updated successfully.' });
-                setIsUploading(false);
+                    setDoc(adDocRef, adData)
+                        .then(() => {
+                            setCurrentAdUrl(downloadURL);
+                            setNewAdPreview(null);
+                            setNewAdFile(null);
+                            toast({ title: 'Success', description: 'Advertisement updated successfully.' });
+                            setIsUploading(false);
+                        })
+                        .catch((serverError) => {
+                            const permissionError = new FirestorePermissionError({
+                                path: adDocRef.path,
+                                operation: 'write',
+                                requestResourceData: adData,
+                            });
+                            errorEmitter.emit('permission-error', permissionError);
+                            setIsUploading(false);
+                        });
+                } catch (error) {
+                     console.error("Error during upload/URL retrieval:", error);
+                     toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error processing the image.' });
+                     setIsUploading(false);
+                }
             };
             reader.onerror = (error) => {
                  console.error('File Reader Error: ', error);
-                 throw new Error('Failed to read file for upload.');
+                 toast({ variant: 'destructive', title: 'File Error', description: 'Failed to read file for upload.' });
+                 setIsUploading(false);
             }
-
-
         } catch (error) {
-            console.error("Error updating advertisement:", error);
-            toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error updating the advertisement.' });
+            console.error("Error compressing advertisement image:", error);
+            toast({ variant: 'destructive', title: 'Image Processing Failed', description: 'There was an error compressing the image.' });
             setIsUploading(false);
         }
     };
