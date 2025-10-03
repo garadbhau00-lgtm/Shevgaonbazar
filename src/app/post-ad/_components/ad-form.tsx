@@ -437,8 +437,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                   disabled={isLoading}
                 />
                 {photoPreviews.length > 0 ? (
-                  <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                    <Image src={photoPreviews[0]} alt="Preview" fill className="object-cover" />
+                  <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-secondary">
+                    <Image src={photoPreviews[0]} alt="Preview" fill className="object-contain" />
                     <Button
                       type="button"
                       variant="destructive"
