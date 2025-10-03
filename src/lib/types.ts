@@ -96,3 +96,9 @@ export type Issue = {
   status: 'new' | 'in-progress' | 'resolved';
   createdAt: any; // Firestore timestamp
 };
+
+export type Advertisement = {
+    imageUrl: string;
+    link?: string;
+    lastUpdated: any; // Firestore timestamp
+}

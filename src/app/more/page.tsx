@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, HelpCircle, LogOut, Settings, ShieldCheck, ListChecks, Megaphone, Languages, AlertCircle } from "lucide-react";
+import { ChevronRight, HelpCircle, LogOut, Settings, ShieldCheck, ListChecks, Megaphone, Languages, AlertCircle, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,7 @@ export default function MorePage() {
         { label: dictionary.more.adManagement, icon: ListChecks, href: "/ad-management" },
         { label: dictionary.more.broadcast, icon: Megaphone, href: "/broadcast" },
         { label: dictionary.more.issues, icon: AlertCircle, href: "/issues" },
+        { label: "Advertisement", icon: ImageIcon, href: "/advertisement" },
     ];
     
     const getMenuItems = () => {

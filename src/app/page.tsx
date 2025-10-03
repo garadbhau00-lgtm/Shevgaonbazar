@@ -2,12 +2,12 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Loader2, List, Filter } from 'lucide-react';
+import { Loader2, List, Filter, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Ad } from '@/lib/types';
 import AdCard from '@/components/ad-card';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { categories } from '@/lib/categories';
 import Image from 'next/image';
@@ -20,6 +20,7 @@ import { Slider } from '@/components/ui/slider';
 import { villageList } from '@/lib/villages';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import LanguageSwitcherIcon from '@/components/language-switcher-icon';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
@@ -71,6 +72,9 @@ export default function Home() {
   const [selectedVillage, setSelectedVillage] = useState<string>('all');
   const [maxPrice, setMaxPrice] = useState<number>(MAX_PRICE_LIMIT);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const [advertisementUrl, setAdvertisementUrl] = useState<string | null>(null);
+  const [isAdOpen, setIsAdOpen] = useState(false);
+
 
   const sortOptions: { value: SortOption, label: string }[] = [
     { value: 'newest', label: dictionary.home.sortOptions.newest },
@@ -108,6 +112,28 @@ export default function Home() {
         }
         setAdsLoading(false);
     });
+
+    const fetchAdvertisement = async () => {
+        try {
+            const adDocRef = doc(db, 'config', 'advertisement');
+            const adDocSnap = await getDoc(adDocRef);
+            if (adDocSnap.exists()) {
+                const adData = adDocSnap.data();
+                if (adData.imageUrl) {
+                    setAdvertisementUrl(adData.imageUrl);
+                    const hasSeenAd = sessionStorage.getItem('hasSeenAdvertisement');
+                    if (!hasSeenAd) {
+                        setIsAdOpen(true);
+                        sessionStorage.setItem('hasSeenAdvertisement', 'true');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching advertisement:", error);
+        }
+    };
+    
+    fetchAdvertisement();
 
     return () => unsubscribe();
   }, [toast, dictionary]);
@@ -170,6 +196,18 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-full">
+      <Dialog open={isAdOpen} onOpenChange={setIsAdOpen}>
+        <DialogContent className="p-0 border-0 max-w-sm" hideCloseButton>
+            {advertisementUrl && (
+                <div className="relative">
+                    <Image src={advertisementUrl} alt="Advertisement" width={400} height={600} className="rounded-lg object-cover" />
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70 hover:text-white rounded-full h-8 w-8" onClick={() => setIsAdOpen(false)}>
+                        <X className="h-5 w-5" />
+                    </Button>
+                </div>
+            )}
+        </DialogContent>
+      </Dialog>
       <header className="sticky top-0 z-20">
         <div className="relative h-28 w-full">
           <Image
@@ -307,7 +345,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
-
-    
