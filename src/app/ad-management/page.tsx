@@ -77,31 +77,22 @@ export default function AdManagementPage() {
         }
     }, [authLoading, userProfile, router, toast, dictionary]);
     
-    const createNotification = async (ad: Ad, status: 'approved' | 'rejected', reason?: string) => {
-        const adTitle = dictionary.categories[ad.category] || ad.category;
+    const handleUpdateStatus = async (ad: Ad, status: 'approved') => {
         try {
+            const adDoc = doc(db, 'ads', ad.id);
+            await updateDoc(adDoc, { status });
+            
+            const adTitle = dictionary.categories[ad.category] || ad.category;
             await addDoc(collection(db, 'notifications'), {
                 userId: ad.userId,
-                title: status === 'approved' ? 'तुमची जाहिरात मंजूर झाली आहे' : 'तुमची जाहिरात नाकारली आहे',
-                message: status === 'approved' 
-                    ? `तुमची जाहिरात "${adTitle}" आता अॅपवर थेट आहे.`
-                    : `तुमची जाहिरात "${adTitle}" नाकारण्यात आली आहे. कारण: ${reason}`,
+                title: 'तुमची जाहिरात मंजूर झाली आहे',
+                message: `तुमची जाहिरात "${adTitle}" आता अॅपवर थेट आहे.`,
                 link: `/ad/${ad.id}`,
                 isRead: false,
                 createdAt: serverTimestamp(),
                 type: 'ad_status',
             });
-        } catch (error) {
-            console.error("Error creating notification:", error);
-            // Don't block the main flow if notification fails
-        }
-    }
 
-    const handleUpdateStatus = async (ad: Ad, status: 'approved') => {
-        try {
-            const adDoc = doc(db, 'ads', ad.id);
-            await updateDoc(adDoc, { status });
-            await createNotification(ad, status);
             toast({ title: dictionary.adManagement.successTitle, description: dictionary.adManagement.successApprove });
         } catch (error) {
             console.error("Error updating ad status:", error);
@@ -129,7 +120,18 @@ export default function AdManagementPage() {
             const adDoc = doc(db, 'ads', adToReject.id);
             const reason = rejectionReason.trim();
             await updateDoc(adDoc, { status: 'rejected', rejectionReason: reason });
-            await createNotification(adToReject, 'rejected', reason);
+
+            const adTitle = dictionary.categories[adToReject.category] || adToReject.category;
+            await addDoc(collection(db, 'notifications'), {
+                userId: adToReject.userId,
+                title: 'तुमची जाहिरात नाकारली आहे',
+                message: `तुमची जाहिरात "${adTitle}" नाकारण्यात आली आहे. कारण: ${reason}`,
+                link: `/ad/${adToReject.id}`,
+                isRead: false,
+                createdAt: serverTimestamp(),
+                type: 'ad_status',
+            });
+            
             toast({ title: dictionary.adManagement.successTitle, description: dictionary.adManagement.successReject });
             handleCloseRejectDialog();
         } catch (error) {

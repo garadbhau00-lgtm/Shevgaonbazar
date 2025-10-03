@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -90,8 +91,8 @@ export default function ChatPage() {
         if (!newMessage.trim() || !user || !conversation) return;
 
         setIsSending(true);
+        const messageText = newMessage.trim();
         try {
-            const messageText = newMessage.trim();
             setNewMessage('');
             
             const messagesRef = collection(db, 'conversations', conversationId as string, 'messages');

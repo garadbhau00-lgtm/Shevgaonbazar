@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -48,12 +49,12 @@ export default function NotificationsPage() {
             router.push('/login');
             return;
         }
+        
+        const q = user.uid ? query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc')) : null;
 
-        let q;
-        if (userProfile?.role === 'Admin') {
-            q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
-        } else {
-            q = query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+        if (!q) {
+            setPageLoading(false);
+            return;
         }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -67,7 +68,7 @@ export default function NotificationsPage() {
         });
 
         return () => unsubscribe();
-    }, [user, userProfile, authLoading, router, toast, notificationDict]);
+    }, [user, authLoading, router, toast, notificationDict]);
 
     const handleMarkAsRead = async (notificationId: string) => {
         const notifDoc = doc(db, 'notifications', notificationId);
