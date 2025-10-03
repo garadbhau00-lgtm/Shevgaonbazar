@@ -22,7 +22,7 @@ export default function PostAdPage() {
             return 'तुमचा व्यवसाय नोंदवा';
         case 'options':
         default:
-             return dictionary.postAd.title;
+             return 'तुम्ही काय करू इच्छिता?';
     }
   }
 
@@ -34,7 +34,7 @@ export default function PostAdPage() {
             return 'तुमच्या सेवेची माहिती भरा आणि अधिक ग्राहकांपर्यंत पोहोचा.';
         case 'options':
         default:
-             return dictionary.postAd.description;
+             return 'एक पर्याय निवडा';
     }
   }
 
@@ -68,24 +68,21 @@ export default function PostAdPage() {
       </header>
       <main className="flex-1 overflow-y-auto p-4">
         {view === 'options' && (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
+            <div className="flex items-center justify-center h-full gap-2">
                  <Button 
-                    className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
+                    className="w-full max-w-xs h-32 flex flex-col items-center justify-center gap-2 text-base"
                     onClick={() => setView('adForm')}
                 >
-                     <FilePlus2 className="h-6 w-6"/>
+                     <FilePlus2 className="h-8 w-8"/>
                     <span>जाहिरात टाका</span>
                 </Button>
-                <div className="relative w-full max-w-xs flex items-center justify-center my-2">
-                    <div className="w-full border-t border-border"></div>
-                    <span className="absolute bg-background px-2 text-muted-foreground text-sm">{dictionary.signup.or}</span>
-                </div>
+                
                  <Button 
-                    className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
+                    className="w-full max-w-xs h-32 flex flex-col items-center justify-center gap-2 text-base"
                     onClick={() => setView('businessForm')}
                 >
-                    <Briefcase className="h-6 w-6"/>
-                    <span>तुमचा व्यवसाय नोंदवा</span>
+                    <Briefcase className="h-8 w-8"/>
+                    <span>व्यवसाय नोंदवा</span>
                 </Button>
             </div>
         )}
