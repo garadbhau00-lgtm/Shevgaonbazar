@@ -268,8 +268,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           
            <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -295,7 +294,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
                 )}
               />
 
-              {subcategories.length > 0 && (
+              {subcategories.length > 0 ? (
                 <FormField
                   control={form.control}
                   name="subcategory"
@@ -320,22 +319,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     </FormItem>
                   )}
                 />
-              )}
+              ) : <div />}
             </div>
-
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{adFormDictionary.price.label}</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder={adFormDictionary.price.placeholder} {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} disabled={isLoading}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           
            <div className="grid grid-cols-2 gap-4">
                <FormField
@@ -385,19 +370,35 @@ export default function AdForm({ existingAd }: AdFormProps) {
               />
           </div>
 
-          <FormField
-            control={form.control}
-            name="mobileNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{adFormDictionary.mobile.label}</FormLabel>
-                <FormControl>
-                  <Input type="tel" placeholder={adFormDictionary.mobile.placeholder} {...field} disabled={isLoading}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{adFormDictionary.price.label}</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder={adFormDictionary.price.placeholder} {...field} onChange={e => field.onChange(e.target.valueAsNumber || undefined)} value={field.value ?? ''} disabled={isLoading}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mobileNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{adFormDictionary.mobile.label}</FormLabel>
+                  <FormControl>
+                    <Input type="tel" placeholder={adFormDictionary.mobile.placeholder} {...field} disabled={isLoading}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}
@@ -456,7 +457,6 @@ export default function AdForm({ existingAd }: AdFormProps) {
             </FormControl>
             <FormMessage />
           </FormItem>
-        </div>
         
         <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
