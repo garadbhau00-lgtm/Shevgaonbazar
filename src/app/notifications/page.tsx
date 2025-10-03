@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch, deleteDoc, QueryConstraint } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
@@ -52,10 +52,13 @@ export default function NotificationsPage() {
             return;
         }
 
-        // Admins see all notifications, users see their own
-        const notificationsQuery = userProfile?.role === 'Admin'
-            ? query(collection(db, 'notifications'), orderBy('createdAt', 'desc'))
-            : query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+        const queryConstraints: QueryConstraint[] = [orderBy('createdAt', 'desc')];
+
+        if (userProfile?.role !== 'Admin') {
+            queryConstraints.push(where('userId', '==', user.uid));
+        }
+
+        const notificationsQuery = query(collection(db, 'notifications'), ...queryConstraints);
 
 
         const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
