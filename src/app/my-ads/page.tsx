@@ -113,31 +113,31 @@ export default function MyAdsPage() {
 
     if (authLoading || adsLoading) {
         return (
-            <div>
-                <div className="flex h-screen items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         )
     }
 
     return (
-        <div>
-             <div className="relative h-28 w-full">
-                <Image
-                    src="https://picsum.photos/seed/my-ads/1200/400"
-                    alt="My ads background"
-                    fill
-                    className="object-cover"
-                    data-ai-hint="farm tools"
-                />
-                <div className="absolute inset-0 bg-black/50" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">{dictionary.myAds.title}</h1>
-                    <p className="mt-2 text-xs max-w-xl">{dictionary.myAds.description}</p>
+        <div className="flex flex-col h-full">
+            <header className="sticky top-0 z-10">
+                <div className="relative h-28 w-full">
+                    <Image
+                        src="https://picsum.photos/seed/my-ads/1200/400"
+                        alt="My ads background"
+                        fill
+                        className="object-cover"
+                        data-ai-hint="farm tools"
+                    />
+                    <div className="absolute inset-0 bg-black/50" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+                        <h1 className="text-lg font-bold">{dictionary.myAds.title}</h1>
+                        <p className="mt-2 text-xs max-w-xl">{dictionary.myAds.description}</p>
+                    </div>
                 </div>
-            </div>
-            <main className="p-4 pb-20">
+            </header>
+            <main className="flex-1 overflow-y-auto p-4 pb-20">
                 {myAds.length > 0 ? (
                     <div className="space-y-4">
                         {myAds.map(ad => (
