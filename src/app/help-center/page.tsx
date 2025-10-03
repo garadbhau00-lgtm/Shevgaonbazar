@@ -109,7 +109,7 @@ export default function HelpCenterPage() {
                  <Accordion type="single" collapsible className="w-full space-y-2">
                     {faqs.map((faq: { question: string, answer: string }, index: number) => (
                         <AccordionItem key={index} value={`item-${index}`} className="rounded-lg bg-card px-4 shadow-sm">
-                            <AccordionTrigger className="text-left font-semibold">{faq.question}</AccordionTrigger>
+                            <AccordionTrigger className="text-left font-semibold text-sm">{faq.question}</AccordionTrigger>
                             <AccordionContent className="text-muted-foreground">
                                 {faq.answer}
                             </AccordionContent>
@@ -119,7 +119,7 @@ export default function HelpCenterPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>{issueDict.title}</CardTitle>
+                        <CardTitle className="text-lg">{issueDict.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Form {...form}>
