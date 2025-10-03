@@ -82,9 +82,19 @@ export default function InboxPage() {
 
     return (
         <main className="flex-1">
-            <div className="border-b p-4">
-                <h1 className="text-2xl font-bold">{dictionary.inbox.title}</h1>
-                <p className="text-muted-foreground">{dictionary.inbox.description}</p>
+             <div className="relative h-28 w-full">
+                <Image
+                    src="https://picsum.photos/seed/inbox/1200/400"
+                    alt="Inbox background"
+                    fill
+                    className="object-cover"
+                    data-ai-hint="speech bubbles"
+                />
+                <div className="absolute inset-0 bg-black/50" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+                    <h1 className="text-lg font-bold">{dictionary.inbox.title}</h1>
+                    <p className="mt-2 text-xs max-w-xl">{dictionary.inbox.description}</p>
+                </div>
             </div>
             
             {conversations.length > 0 ? (
