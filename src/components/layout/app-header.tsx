@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { AppNotification } from '@/lib/types';
+import LanguageSwitcherIcon from '../language-switcher-icon';
 
 export default function AppHeader() {
   const { user, userProfile, loading: authLoading, handleLogout } = useAuth();
@@ -107,9 +108,10 @@ export default function AppHeader() {
   }
 
   return (
-    <header className={cn(
-        "fixed top-2 right-2 z-50"
-    )}>
+    <header className={cn("fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-2 max-w-lg mx-auto")}>
+       <div className="flex items-center">
+            {isTransparentPage && <LanguageSwitcherIcon />}
+       </div>
       <div className="flex items-center gap-2">
         {renderUserOptions()}
       </div>

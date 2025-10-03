@@ -181,9 +181,6 @@ export default function Home() {
               priority
           />
           <div className="absolute inset-0 bg-black/50" />
-          <div className="absolute top-2 left-2 z-10">
-            <LanguageSwitcherIcon />
-          </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
               <h1 className="text-lg font-bold">{dictionary.home.welcomeTitle}</h1>
               <p className="mt-2 text-xs max-w-xl">{dictionary.home.welcomeDescription}</p>
