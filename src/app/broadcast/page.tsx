@@ -9,7 +9,7 @@ import { useLanguage } from '@/contexts/language-context';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { addDoc, collection, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, getDocs, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
