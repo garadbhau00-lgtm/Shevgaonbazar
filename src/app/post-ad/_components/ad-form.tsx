@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Loader2, Upload, X as XIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -118,6 +118,36 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [isEditMode, existingAd, userProfile, form]);
   
   useEffect(() => {
+    if (!isEditMode && user) {
+      const fetchLastAdLocation = async () => {
+        try {
+            const adsRef = collection(db, 'ads');
+            const q = query(
+              adsRef,
+              where('userId', '==', user.uid),
+              orderBy('createdAt', 'desc'),
+              limit(1)
+            );
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+              const lastAd = querySnapshot.docs[0].data() as Ad;
+              if (lastAd.taluka) {
+                form.setValue('taluka', lastAd.taluka);
+              }
+              if (lastAd.location) {
+                form.setValue('location', lastAd.location);
+              }
+            }
+        } catch (error) {
+            console.warn("Could not fetch last ad location:", error);
+        }
+      };
+
+      fetchLastAdLocation();
+    }
+  }, [isEditMode, user, form]);
+
+  useEffect(() => {
     const generatePreviews = async () => {
         if (newFiles.length > 0) {
             const objectUrls = newFiles.map(file => URL.createObjectURL(file));
@@ -137,8 +167,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [selectedCategory, form]);
 
   useEffect(() => {
-    form.setValue('location', undefined);
-  }, [selectedTaluka, form]);
+    // Do not reset if we are in edit mode and the form is being populated
+    if (isEditMode && form.formState.isDirty) {
+      form.setValue('location', undefined);
+    } else if (!isEditMode) {
+      form.setValue('location', undefined);
+    }
+  }, [selectedTaluka, form, isEditMode]);
   
   const villageList = useMemo(() => {
     if (!selectedTaluka) return [];
@@ -332,8 +367,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                      {villageList.map((village) => (
-                          <SelectItem key={village} value={village}>{village}</SelectItem>
+                      {villageList.map((village, index) => (
+                          <SelectItem key={`${village}-${index}`} value={village}>{village}</SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
