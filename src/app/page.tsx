@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { villageList } from '@/lib/villages';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import LanguageSwitcherIcon from '@/components/language-switcher-icon';
 
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
@@ -180,6 +181,9 @@ export default function Home() {
               priority
           />
           <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute top-2 left-2">
+            <LanguageSwitcherIcon />
+          </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
               <h1 className="text-lg font-bold">{dictionary.home.welcomeTitle}</h1>
               <p className="mt-2 text-xs max-w-xl">{dictionary.home.welcomeDescription}</p>
