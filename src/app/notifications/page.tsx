@@ -199,8 +199,8 @@ export default function NotificationsPage() {
                                                 )}
                                             </div>
                                             <div className="flex-1">
-                                                <h3 className="font-semibold">{notif.title}</h3>
-                                                <p className="text-sm text-muted-foreground">{notif.message}</p>
+                                                <h3 className="font-semibold text-sm">{notif.title}</h3>
+                                                <p className="text-xs text-muted-foreground">{notif.message}</p>
                                                 <p className="mt-1 text-xs text-muted-foreground">{formatTimestamp(notif.createdAt)}</p>
                                                 {userProfile?.role === 'Admin' && <p className="text-xs text-muted-foreground">To: {notif.userId === user?.uid ? 'You' : notif.userId.slice(0,6)}...</p>}
                                             </div>
