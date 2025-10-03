@@ -50,6 +50,7 @@ export default function LoginPage() {
     const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
     const [resetEmail, setResetEmail] = useState('');
     const [isSendingReset, setIsSendingReset] = useState(false);
+    const [popupShown, setPopupShown] = useState(false);
     
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -66,6 +67,13 @@ export default function LoginPage() {
             router.push('/');
         }
     }, [user, loading, router]);
+    
+    useEffect(() => {
+        if (!loading && !user && !popupShown) {
+            handleGoogleSignIn();
+            setPopupShown(true);
+        }
+    }, [loading, user, popupShown, handleGoogleSignIn]);
 
 
     async function onSubmit(data: LoginFormValues) {
@@ -229,3 +237,5 @@ export default function LoginPage() {
     );
 }
 
+
+    
