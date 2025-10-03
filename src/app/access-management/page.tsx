@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -17,9 +16,9 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
-import { hi, enUS } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 
-const locales: { [key: string]: Locale } = { hi, en: enUS };
+const locales: { [key: string]: Locale } = { en: enUS };
 
 const UserStatus = ({ user, dictionary, language }: { user: UserProfile, dictionary: any, language: string }) => {
     const isOnline = user.lastSeen && (new Date().getTime() - user.lastSeen.toDate().getTime()) < 5 * 60 * 1000;

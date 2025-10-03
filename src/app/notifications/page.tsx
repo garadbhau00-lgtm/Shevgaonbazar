@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -12,7 +11,7 @@ import { Loader2, BellOff, BellRing, Info, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { formatDistanceToNow } from 'date-fns';
-import { enUS, hi, mr } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,7 @@ import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
 
 
-const locales: { [key: string]: Locale } = { en: enUS, hi, mr };
+const locales: { [key: string]: Locale } = { en: enUS };
 
 export default function NotificationsPage() {
     const { user, userProfile, loading: authLoading } = useAuth();
@@ -52,10 +51,12 @@ export default function NotificationsPage() {
             return;
         }
 
-        const q = userProfile?.role === 'Admin' 
-            ? query(collection(db, 'notifications'), orderBy('createdAt', 'desc'))
-            : query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-
+        let q;
+        if (userProfile?.role === 'Admin') {
+            q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
+        } else {
+            q = query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+        }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
@@ -107,7 +108,7 @@ export default function NotificationsPage() {
                 toast({ title: "Success", description: "Notification deleted successfully." });
                 setNotificationToDelete(null);
             })
-            .catch((serverError) => {
+            .catch(async (serverError) => {
                 const permissionError = new FirestorePermissionError({
                     path: notifDocRef.path,
                     operation: 'delete',
