@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -89,23 +90,21 @@ export default function AdCard({ ad }: AdCardProps) {
               </div>
             )}
           </div>
-          <CardContent className="p-1.5 flex-grow flex flex-col">
-            <div className="flex justify-between items-start flex-grow">
-              <div className="flex-grow overflow-hidden mr-2">
-                <h3 className="font-medium text-[11px] text-muted-foreground truncate">{dictionary.categories[ad.category] || ad.category}</h3>
-                {ad.subcategory && <p className="font-semibold text-xs truncate">{ad.subcategory}</p>}
-                <p className="text-[10px] text-muted-foreground truncate">{ad.location}</p>
-              </div>
-              <div className="flex-shrink-0">
+          <CardContent className="p-1.5 flex-grow flex flex-col justify-between">
+            <div>
+              <h3 className="font-medium text-[11px] text-muted-foreground truncate">{dictionary.categories[ad.category] || ad.category}</h3>
+              {ad.subcategory && <p className="font-semibold text-xs truncate">{ad.subcategory}</p>}
+              <p className="text-[10px] text-muted-foreground truncate">{ad.location}</p>
+            </div>
+            <div className="flex justify-between items-end mt-1">
+               <div>
                 {ad.price ? (
-                  <p className="text-xs font-bold text-primary text-right">
+                  <p className="text-xs font-bold text-primary">
                     ₹{ad.price.toLocaleString('en-IN')}
                   </p>
                 ) : null}
               </div>
-            </div>
-             <div className="flex justify-end mt-1">
-                <Button size="sm" className="h-6 px-2 text-xs bg-accent hover:bg-accent/90">
+               <Button size="sm" className="h-6 px-2 text-xs bg-accent hover:bg-accent/90">
                     पहा
                 </Button>
             </div>
