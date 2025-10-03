@@ -80,7 +80,6 @@ export default function HelpCenterPage() {
             setIsFormVisible(false);
           })
           .catch((serverError) => {
-            console.error('Error submitting issue:', serverError);
             const permissionError = new FirestorePermissionError({
                 path: issuesCollection.path,
                 operation: 'create',
@@ -122,7 +121,7 @@ export default function HelpCenterPage() {
                 {isFormVisible ? (
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-lg">{issueDict.title}</CardTitle>
+                            <CardTitle className="text-base">{issueDict.title}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <Form {...form}>
