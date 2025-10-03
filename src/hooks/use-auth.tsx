@@ -8,6 +8,7 @@ import { auth, db } from '@/lib/firebase';
 import type { UserProfile } from '@/lib/types';
 import { useToast } from './use-toast';
 import { useLanguage } from '@/contexts/language-context';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
     user: FirebaseUser | null;
@@ -31,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const { dictionary } = useLanguage();
+    const router = useRouter();
     
     const authDict = dictionary.auth;
 
@@ -132,12 +134,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (!userDoc.exists()) {
                 const userRole = 'Farmer';
+                const mobileNumber = signedInUser.phoneNumber || '';
                 try {
                     await setDoc(userDocRef, {
                         uid: signedInUser.uid,
                         email: signedInUser.email,
                         name: signedInUser.displayName || signedInUser.email?.split('@')[0],
-                        mobileNumber: signedInUser.phoneNumber || '',
+                        mobileNumber: mobileNumber,
                         photoURL: signedInUser.photoURL || '',
                         role: userRole,
                         disabled: false,
@@ -148,6 +151,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         title: authDict.accountCreatedTitle,
                         description: authDict.accountCreatedDescription.replace('${role}', userRole),
                     });
+                    if (!mobileNumber) {
+                        router.push('/settings?promptMobile=true');
+                    }
+
                 } catch (dbError: any) {
                     await signOut(auth); // Rollback auth state if profile creation fails
                     if (dbError.code === 'permission-denied' || dbError.code === 'PERMISSION_DENIED') {
@@ -188,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 duration: 9000,
             });
         }
-    }, [toast, authDict]);
+    }, [toast, authDict, router]);
     
     return (
         <AuthContext.Provider value={{ user, userProfile, loading, handleLogout, handleGoogleSignIn }}>

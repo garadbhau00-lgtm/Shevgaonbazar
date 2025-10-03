@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,13 +19,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
+import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
     const { user, userProfile, loading, handleLogout } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { toast } = useToast();
     const { dictionary } = useLanguage();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [highlightMobile, setHighlightMobile] = useState(false);
 
     const settingsDict = dictionary.settings;
 
@@ -56,7 +59,11 @@ export default function SettingsPage() {
                 mobileNumber: userProfile.mobileNumber || '',
             });
         }
-    }, [user, userProfile, loading, router, form]);
+        if (searchParams.get('promptMobile') === 'true') {
+            setHighlightMobile(true);
+            setTimeout(() => setHighlightMobile(false), 2000); // Highlight for 2 seconds
+        }
+    }, [user, userProfile, loading, router, form, searchParams]);
 
     const onSubmit = async (data: ProfileFormValues) => {
         if (!user) return;
@@ -160,7 +167,13 @@ export default function SettingsPage() {
                                         <FormItem>
                                             <FormLabel>{settingsDict.mobileLabel}</FormLabel>
                                             <FormControl>
-                                                <Input type="tel" {...field} disabled={isSubmitting} placeholder={settingsDict.mobilePlaceholder} />
+                                                <Input 
+                                                    type="tel" 
+                                                    {...field} 
+                                                    disabled={isSubmitting} 
+                                                    placeholder={settingsDict.mobilePlaceholder}
+                                                    className={cn(highlightMobile && 'animate-pulse ring-2 ring-primary')}
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
