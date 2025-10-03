@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch, deleteDoc, QueryConstraint } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,7 @@ import { Loader2, BellOff, BellRing, Info, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { formatDistanceToNow } from 'date-fns';
-import { enUS } from 'date-fns/locale';
+import { enUS, hi, mr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
 
 
-const locales: { [key: string]: Locale } = { en: enUS };
+const locales: { [key: string]: Locale } = { en: enUS, hi, mr };
 
 export default function NotificationsPage() {
     const { user, userProfile, loading: authLoading } = useAuth();
@@ -52,16 +52,12 @@ export default function NotificationsPage() {
             return;
         }
 
-        const queryConstraints: QueryConstraint[] = [orderBy('createdAt', 'desc')];
-
-        if (userProfile?.role !== 'Admin') {
-            queryConstraints.push(where('userId', '==', user.uid));
-        }
-
-        const notificationsQuery = query(collection(db, 'notifications'), ...queryConstraints);
+        const q = userProfile?.role === 'Admin' 
+            ? query(collection(db, 'notifications'), orderBy('createdAt', 'desc'))
+            : query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
 
 
-        const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
             setNotifications(notifs);
             setPageLoading(false);
@@ -111,7 +107,7 @@ export default function NotificationsPage() {
                 toast({ title: "Success", description: "Notification deleted successfully." });
                 setNotificationToDelete(null);
             })
-            .catch(async (serverError) => {
+            .catch((serverError) => {
                 const permissionError = new FirestorePermissionError({
                     path: notifDocRef.path,
                     operation: 'delete',
@@ -127,7 +123,12 @@ export default function NotificationsPage() {
     const formatTimestamp = (timestamp: any) => {
         if (!timestamp) return '';
         const locale = locales[language] || enUS;
-        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale });
+        try {
+            return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale });
+        } catch (e) {
+            // Fallback for cases where locale might not be available
+            return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: enUS });
+        }
     };
 
     if (authLoading || pageLoading) {
@@ -261,3 +262,5 @@ export default function NotificationsPage() {
         </div>
     );
 }
+
+    
