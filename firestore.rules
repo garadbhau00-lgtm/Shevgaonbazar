@@ -1,39 +1,20 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can read/write their own profile, admins can read/write any profile
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
-    // Ads can be created by any authenticated user.
-    // They can be read by anyone if 'approved'.
-    // They can only be read/updated/deleted by the owner or an admin.
     match /ads/{adId} {
+      allow read: if true;
       allow create: if request.auth != null;
-      allow read: if resource.data.status == 'approved';
-      allow read, update, delete: if request.auth != null && (request.auth.uid == resource.data.userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
-    // Conversations can be created by anyone.
-    // They can be read/written to only by participants in the conversation.
-    match /conversations/{conversationId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
-      
-      // Messages can be created by a participant.
-      // Messages can be read by a participant.
-      match /messages/{messageId} {
-        allow create, read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-      }
-    }
-    
-    // Notifications can be read/updated by the user they are for.
-    // Admins can create any notification.
     match /notifications/{notificationId} {
-        allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
-        allow create, read, update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read, write, update, delete: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
     }
   }
 }
