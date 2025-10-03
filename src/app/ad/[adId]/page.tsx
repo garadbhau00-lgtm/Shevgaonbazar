@@ -221,9 +221,9 @@ export default function AdDetailPage() {
             </div>
 
             {user?.uid !== ad.userId && (
-                 <div className="fixed bottom-0 left-0 right-0 z-10 max-w-lg mx-auto p-4 bg-background/90 backdrop-blur-sm border-t">
-                    <div className="flex justify-end gap-2">
-                        <Button 
+                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-sm border-t max-w-lg mx-auto">
+                    <div className="flex justify-end items-center gap-2">
+                         <Button 
                             variant="outline" 
                             size="lg"
                             onClick={handleStartChat}
