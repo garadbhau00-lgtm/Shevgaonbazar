@@ -16,11 +16,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
+import type { UserProfile } from '@/lib/types';
+
 
 export default function HelpCenterPage() {
     const { dictionary } = useLanguage();
@@ -56,6 +58,30 @@ export default function HelpCenterPage() {
         }
     }, [user, userProfile, form]);
 
+    const notifyAdmins = async (issueId: string, submitterName: string) => {
+        try {
+            const adminsQuery = query(collection(db, 'users'), where('role', '==', 'Admin'));
+            const adminSnapshot = await getDocs(adminsQuery);
+            
+            const notificationPromises = adminSnapshot.docs.map(adminDoc => {
+                const admin = adminDoc.data() as UserProfile;
+                return addDoc(collection(db, 'notifications'), {
+                    userId: admin.uid,
+                    title: 'नवीन समस्या नोंदवली आहे',
+                    message: `${submitterName} यांनी एक नवीन समस्या नोंदवली आहे.`,
+                    link: `/issues`,
+                    isRead: false,
+                    createdAt: serverTimestamp(),
+                    type: 'ad_status', // Using ad_status for generic notification icon
+                });
+            });
+            await Promise.all(notificationPromises);
+        } catch (error) {
+            console.error("Error notifying admins:", error);
+        }
+    };
+
+
     const onSubmit = async (data: IssueFormValues) => {
         const issueData = {
             ...data,
@@ -65,27 +91,27 @@ export default function HelpCenterPage() {
         };
 
         const issuesCollection = collection(db, 'issues');
-        addDoc(issuesCollection, issueData)
-          .then(() => {
+        try {
+            const docRef = await addDoc(issuesCollection, issueData);
             toast({
                 title: issueDict.toast.successTitle,
                 description: issueDict.toast.successDescription,
             });
+            notifyAdmins(docRef.id, data.name);
             form.reset({
                 name: user && userProfile ? userProfile.name || '' : '',
                 email: user ? user.email || '' : '',
                 description: '',
             });
             setIsFormVisible(false);
-          })
-          .catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
+        } catch (serverError) {
+             const permissionError = new FirestorePermissionError({
                 path: issuesCollection.path,
                 operation: 'create',
                 requestResourceData: issueData
             });
             errorEmitter.emit('permission-error', permissionError);
-        });
+        }
     };
 
 
