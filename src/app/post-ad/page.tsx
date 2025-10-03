@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -71,7 +70,6 @@ export default function PostAdPage() {
         {view === 'options' && (
             <div className="flex flex-col items-center justify-center h-full gap-4">
                  <Button 
-                    variant="outline"
                     className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
                     onClick={() => setView('adForm')}
                 >
@@ -83,7 +81,6 @@ export default function PostAdPage() {
                     <span className="absolute bg-background px-2 text-muted-foreground text-sm">{dictionary.signup.or}</span>
                 </div>
                  <Button 
-                    variant="outline"
                     className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
                     onClick={() => setView('businessForm')}
                 >
