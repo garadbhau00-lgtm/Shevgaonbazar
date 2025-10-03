@@ -29,13 +29,11 @@ import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
 
 
-const locales: { [key: string]: Locale } = { en: enUS };
-
 export default function NotificationsPage() {
     const { user, userProfile, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
-    const { dictionary, language } = useLanguage();
+    const { dictionary } = useLanguage();
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
     const [notificationToDelete, setNotificationToDelete] = useState<AppNotification | null>(null);
@@ -51,13 +49,14 @@ export default function NotificationsPage() {
             return;
         }
 
-        const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
+        let q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
+        
+        if (userProfile?.role !== 'Admin') {
+            q = query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+        }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             let notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
-            if (userProfile?.role !== 'Admin') {
-                notifs = notifs.filter(n => n.userId === user.uid);
-            }
             setNotifications(notifs);
             setPageLoading(false);
         }, (error) => {
@@ -121,11 +120,9 @@ export default function NotificationsPage() {
 
     const formatTimestamp = (timestamp: any) => {
         if (!timestamp) return '';
-        const locale = locales[language] || enUS;
         try {
-            return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale });
+            return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: enUS });
         } catch (e) {
-            // Fallback for cases where locale might not be available
             return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: enUS });
         }
     };
@@ -261,3 +258,5 @@ export default function NotificationsPage() {
         </div>
     );
 }
+
+    

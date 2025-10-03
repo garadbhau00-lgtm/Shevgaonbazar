@@ -18,11 +18,9 @@ import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 
-const locales: { [key: string]: Locale } = { en: enUS };
 
-const UserStatus = ({ user, dictionary, language }: { user: UserProfile, dictionary: any, language: string }) => {
+const UserStatus = ({ user, dictionary }: { user: UserProfile, dictionary: any }) => {
     const isOnline = user.lastSeen && (new Date().getTime() - user.lastSeen.toDate().getTime()) < 5 * 60 * 1000;
-    const locale = locales[language] || enUS;
     
     if (user.disabled) {
         return (
@@ -50,7 +48,7 @@ const UserStatus = ({ user, dictionary, language }: { user: UserProfile, diction
         <div className="flex items-center gap-2">
             <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/50" />
             <span className="text_sm font_medium text_muted_foreground">
-                {user.lastSeen ? `Active ${formatDistanceToNow(user.lastSeen.toDate(), { addSuffix: true, locale })}` : 'Never active'}
+                {user.lastSeen ? `Active ${formatDistanceToNow(user.lastSeen.toDate(), { addSuffix: true, locale: enUS })}` : 'Never active'}
             </span>
         </div>
     );
@@ -61,7 +59,7 @@ export default function AccessManagementPage() {
     const { userProfile, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
-    const { dictionary, language } = useLanguage();
+    const { dictionary } = useLanguage();
 
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
@@ -231,11 +229,11 @@ export default function AccessManagementPage() {
                                     {user.createdAt?.toDate && (
                                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                                             <CalendarPlus className="h-3 w-3" />
-                                            <span>{dictionary.accessManagement.joinedOn} {format(user.createdAt.toDate(), 'dd MMM yyyy')}</span>
+                                            <span>{dictionary.accessManagement.joinedOn} {format(user.createdAt.toDate(), 'dd MMM yyyy', { locale: enUS })}</span>
                                         </p>
                                     )}
                                     <div className="mt-1">
-                                      <UserStatus user={user} dictionary={dictionary} language={language} />
+                                      <UserStatus user={user} dictionary={dictionary} />
                                     </div>
                                 </div>
                             </div>
@@ -301,3 +299,5 @@ export default function AccessManagementPage() {
         </div>
     );
 }
+
+    

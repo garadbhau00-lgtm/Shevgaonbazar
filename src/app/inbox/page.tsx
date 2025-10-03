@@ -17,13 +17,12 @@ import { enUS } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 
-const locales: { [key: string]: Locale } = { en: enUS };
 
 export default function InboxPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
-    const { dictionary, language } = useLanguage();
+    const { dictionary } = useLanguage();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
 
@@ -78,8 +77,7 @@ export default function InboxPage() {
 
     const formatTimestamp = (timestamp: any) => {
         if (!timestamp) return '';
-        const locale = locales[language] || enUS;
-        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale });
+        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: enUS });
     };
 
     return (
@@ -139,4 +137,6 @@ export default function InboxPage() {
         </main>
     );
 }
+    
+
     
