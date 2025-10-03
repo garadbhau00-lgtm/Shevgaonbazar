@@ -4,7 +4,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -78,52 +77,34 @@ export default function AdvertisementPage() {
                 maxWidthOrHeight: 1024,
                 useWebWorker: true,
             });
-
-            const storage = getStorage();
-            const storageRef = ref(storage, `advertisements/main-ad-${Date.now()}`);
             
-            const reader = new FileReader();
-            reader.readAsDataURL(compressedFile);
-            reader.onload = async () => {
-                try {
-                    const dataUrl = reader.result as string;
-                    await uploadString(storageRef, dataUrl, 'data_url');
-                    const downloadURL = await getDownloadURL(storageRef);
+            const dataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
 
-                    const adDocRef = doc(db, 'config', 'advertisement');
-                    const adData = { imageUrl: downloadURL };
+            const adDocRef = doc(db, 'config', 'advertisement');
+            const adData = { imageUrl: dataUrl };
 
-                    setDoc(adDocRef, adData)
-                        .then(() => {
-                            setCurrentAdUrl(downloadURL);
-                            setNewAdPreview(null);
-                            setNewAdFile(null);
-                            toast({ title: 'Success', description: 'Advertisement updated successfully.' });
-                            setIsUploading(false);
-                        })
-                        .catch((serverError) => {
-                            const permissionError = new FirestorePermissionError({
-                                path: adDocRef.path,
-                                operation: 'write',
-                                requestResourceData: adData,
-                            });
-                            errorEmitter.emit('permission-error', permissionError);
-                            setIsUploading(false);
-                        });
-                } catch (error) {
-                     console.error("Error during upload/URL retrieval:", error);
-                     toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error processing the image.' });
-                     setIsUploading(false);
-                }
-            };
-            reader.onerror = (error) => {
-                 console.error('File Reader Error: ', error);
-                 toast({ variant: 'destructive', title: 'File Error', description: 'Failed to read file for upload.' });
-                 setIsUploading(false);
-            }
+            setDoc(adDocRef, adData)
+                .then(() => {
+                    setCurrentAdUrl(dataUrl);
+                    setNewAdPreview(null);
+                    setNewAdFile(null);
+                    toast({ title: 'Success', description: 'Advertisement updated successfully.' });
+                })
+                .catch((serverError) => {
+                    const permissionError = new FirestorePermissionError({
+                        path: adDocRef.path,
+                        operation: 'write',
+                        requestResourceData: adData,
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
+                })
+                .finally(() => {
+                    setIsUploading(false);
+                });
+
         } catch (error) {
-            console.error("Error compressing advertisement image:", error);
-            toast({ variant: 'destructive', title: 'Image Processing Failed', description: 'There was an error compressing the image.' });
+            console.error("Error processing advertisement image:", error);
+            toast({ variant: 'destructive', title: 'Image Processing Failed', description: 'There was an error processing the image.' });
             setIsUploading(false);
         }
     };
