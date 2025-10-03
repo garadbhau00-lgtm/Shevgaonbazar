@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Loader2, Upload, X as XIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { collection, addDoc, updateDoc, doc, serverTimestamp, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -24,13 +24,9 @@ import { useLanguage } from '@/contexts/language-context';
 import { talukaList } from '@/lib/talukas';
 import { Textarea } from '@/components/ui/textarea';
 
-type AdFormProps = {
-    existingAd?: Ad;
-};
-
 const MAX_FILES = 1;
 
-export default function AdForm({ existingAd }: AdFormProps) {
+export default function BusinessForm() {
   const { toast } = useToast();
   const { user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -41,58 +37,37 @@ export default function AdForm({ existingAd }: AdFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isEditMode = !!existingAd;
   
   const adFormDictionary = dictionary.adForm;
 
-  const adSchema = z.object({
-    category: z.enum(
-      [
-        'पशुधन',
-        'शेती उत्पादने',
-        'शेतीसाठी साधनं',
-        'शेती व गाव सेवा',
-        'गावातील गरज',
-        'व्यावसायिक सेवा',
-        'आर्थिक',
-      ],
-      {
-        required_error: adFormDictionary.validation.categoryRequired,
-      }
-    ),
-    subcategory: z.string().optional(),
+  const businessSchema = z.object({
+    subcategory: z.string({ required_error: "Please select a service type."}),
     description: z.string().optional(),
-    price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }),
+    price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }).optional().or(z.literal('')),
     taluka: z.string({ required_error: adFormDictionary.validation.talukaRequired }),
     location: z.string({ required_error: adFormDictionary.validation.locationRequired }),
     mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: adFormDictionary.validation.mobileInvalid }),
   });
   
-  type AdFormValues = z.infer<typeof adSchema>;
+  type BusinessFormValues = z.infer<typeof businessSchema>;
 
-  const form = useForm<AdFormValues>({
-    resolver: zodResolver(adSchema),
+  const form = useForm<BusinessFormValues>({
+    resolver: zodResolver(businessSchema),
     defaultValues: {
       price: undefined,
       taluka: undefined,
       location: undefined,
       mobileNumber: '',
-      category: undefined,
       subcategory: undefined,
       description: '',
     },
-  });
-
-  const selectedCategory = useWatch({
-    control: form.control,
-    name: 'category',
   });
 
   const selectedTaluka = useWatch({
     control: form.control,
     name: 'taluka',
   });
-  
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -102,26 +77,13 @@ export default function AdForm({ existingAd }: AdFormProps) {
   }, [user, authLoading, router, toast, adFormDictionary]);
 
   useEffect(() => {
-    if (isEditMode && existingAd) {
-      form.reset({
-        category: existingAd.category,
-        subcategory: existingAd.subcategory,
-        description: existingAd.description,
-        price: existingAd.price,
-        taluka: existingAd.taluka,
-        location: existingAd.location,
-        mobileNumber: existingAd.mobileNumber,
-      });
-      if (existingAd.photos && existingAd.photos.length > 0) {
-        setPhotoPreviews(existingAd.photos);
-      }
-    } else if (userProfile) {
+    if (userProfile) {
        form.setValue('mobileNumber', userProfile.mobileNumber || '');
     }
-  }, [isEditMode, existingAd, userProfile, form]);
+  }, [userProfile, form]);
   
   useEffect(() => {
-    if (!isEditMode && user) {
+    if (user) {
       const fetchLastAdLocation = async () => {
         try {
             const adsRef = collection(db, 'ads');
@@ -148,7 +110,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
       fetchLastAdLocation();
     }
-  }, [isEditMode, user, form]);
+  }, [user, form]);
 
   useEffect(() => {
     const generatePreviews = async () => {
@@ -161,22 +123,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
     generatePreviews();
   }, [newFiles]);
 
-
   useEffect(() => {
-    const subcategoriesForSelected = categories.find(c => c.name === selectedCategory)?.subcategories || [];
-    if (!subcategoriesForSelected.some(sc => sc.name === form.getValues('subcategory'))) {
-        form.setValue('subcategory', undefined);
-    }
-  }, [selectedCategory, form]);
-
-  useEffect(() => {
-    // Do not reset if we are in edit mode and the form is being populated
-    if (isEditMode && form.formState.isDirty) {
-      form.setValue('location', undefined);
-    } else if (!isEditMode) {
-      form.setValue('location', undefined);
-    }
-  }, [selectedTaluka, form, isEditMode]);
+    form.setValue('location', undefined);
+  }, [selectedTaluka, form]);
   
   const villageList = useMemo(() => {
     if (!selectedTaluka) return [];
@@ -207,7 +156,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
     }
   };
   
-  const onSubmit = async (data: AdFormValues) => {
+  const onSubmit = async (data: BusinessFormValues) => {
     setIsSubmitting(true);
     try {
         if (!user || !userProfile) {
@@ -217,7 +166,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         let finalPhotoDataUris: string[] = photoPreviews;
 
         if (newFiles.length > 0) {
-             const file = newFiles[0];
+            const file = newFiles[0];
             const compressedFile = await imageCompression(file, {
                 maxSizeMB: 0.5,
                 maxWidthOrHeight: 800,
@@ -228,102 +177,60 @@ export default function AdForm({ existingAd }: AdFormProps) {
             finalPhotoDataUris = [dataUri];
         }
         
-        if (finalPhotoDataUris.length === 0) {
-            toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: adFormDictionary.toast.photoRequiredDescription });
-            setIsSubmitting(false);
-            return;
-        }
-
-        const submissionData: Omit<Ad, 'id'> = {
+        const submissionData: Omit<Ad, 'id' | 'price'> & { price?: number } = {
+            category: 'व्यावसायिक सेवा',
             ...data,
-            price: Number(data.price),
+            price: data.price ? Number(data.price) : undefined,
             photos: finalPhotoDataUris,
             userId: user.uid,
             userName: userProfile.name || user.email!,
             status: 'pending',
-            createdAt: isEditMode && existingAd ? existingAd.createdAt : serverTimestamp(),
+            createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         };
 
-        if (isEditMode && existingAd) {
-            const adDocRef = doc(db, 'ads', existingAd.id);
-            await updateDoc(adDocRef, submissionData);
-            toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
-            router.push('/my-ads');
-        } else {
-            await addDoc(collection(db, 'ads'), submissionData);
-            toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
-            router.push('/my-ads');
-        }
+        await addDoc(collection(db, 'ads'), submissionData);
+        toast({ title: adFormDictionary.toast.successTitle, description: "तुमचा व्यवसाय यशस्वीरित्या नोंदवला गेला आहे." });
+        router.push('/my-ads');
+
     } catch (error) {
-        console.error("Error submitting ad:", error);
-        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: adFormDictionary.toast.submitError });
+        console.error("Error submitting business:", error);
+        toast({ variant: 'destructive', title: adFormDictionary.toast.errorTitle, description: "व्यवसाय नोंदवण्यात अयशस्वी." });
     } finally {
         setIsSubmitting(false);
     }
 };
 
-  const subcategories = categories.find(c => c.name === selectedCategory)?.subcategories || [];
+  const serviceSubcategories = categories.find(c => c.name === 'व्यावसायिक सेवा')?.subcategories || [];
   const isLoading = isSubmitting;
   
-  // Filter out 'व्यावसायिक सेवा' from categories
-  const filteredCategories = categories.filter(cat => cat.name !== 'व्यावसायिक सेवा');
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          
-           <div className="grid grid-cols-2 gap-4">
-              <FormField
+            <FormField
                 control={form.control}
-                name="category"
+                name="subcategory"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{adFormDictionary.category.label}</FormLabel>
+                <FormItem>
+                    <FormLabel>सेवा प्रकार</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                      <FormControl>
+                    <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={adFormDictionary.category.placeholder} />
+                        <SelectValue placeholder="तुमच्या सेवेचा प्रकार निवडा" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {filteredCategories.map(cat => (
-                          <SelectItem key={cat.name} value={cat.name}>{dictionary.categories[cat.name] || cat.name}</SelectItem>
+                    </FormControl>
+                    <SelectContent>
+                        {serviceSubcategories.map(subcat => (
+                        <SelectItem key={subcat.key} value={subcat.name}>
+                            {dictionary.subcategories[subcat.key] || subcat.name}
+                        </SelectItem>
                         ))}
-                      </SelectContent>
+                    </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
+                </FormItem>
                 )}
-              />
-
-              {subcategories.length > 0 ? (
-                <FormField
-                  control={form.control}
-                  name="subcategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{adFormDictionary.subcategory.label}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={adFormDictionary.subcategory.placeholder} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {subcategories.map(subcat => (
-                            <SelectItem key={subcat.key} value={subcat.name}>
-                                {dictionary.subcategories[subcat.key] || subcat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : <div />}
-            </div>
+            />
           
            <div className="grid grid-cols-2 gap-4">
                <FormField
@@ -379,11 +286,11 @@ export default function AdForm({ existingAd }: AdFormProps) {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{adFormDictionary.price.label} <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>तुमचा दर (₹, ऐच्छिक)</FormLabel>
                   <FormControl>
                     <Input 
                         type="number" 
-                        placeholder={adFormDictionary.price.placeholder}
+                        placeholder="उदा. ५०० प्रति तास"
                         {...field} 
                         onChange={e => field.onChange(e.target.value === '' ? '' : e.target.valueAsNumber)} 
                         value={field.value ?? ''} 
@@ -415,9 +322,9 @@ export default function AdForm({ existingAd }: AdFormProps) {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{adFormDictionary.description.label}</FormLabel>
+                <FormLabel>तुमच्या सेवेबद्दल अधिक माहिती</FormLabel>
                 <FormControl>
-                  <Textarea placeholder={adFormDictionary.description.placeholder} {...field} disabled={isLoading} />
+                  <Textarea placeholder="तुम्ही कोणत्या सेवा देता आणि तुमचा अनुभव याबद्दल लिहा..." {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -425,7 +332,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
           />
 
           <FormItem>
-            <FormLabel>{adFormDictionary.photo.label}</FormLabel>
+            <FormLabel>फोटो (ऐच्छिक)</FormLabel>
             <FormControl>
               <div>
                 <input
@@ -459,8 +366,8 @@ export default function AdForm({ existingAd }: AdFormProps) {
                     onClick={() => !isLoading && fileInputRef.current?.click()}
                   >
                     <Upload className="h-10 w-10 text-muted-foreground" />
-                    <p className="mt-2 text-sm font-semibold text-muted-foreground">{adFormDictionary.photo.uploadText}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{adFormDictionary.photo.limitText.replace('${maxFiles}', '1')}</p>
+                    <p className="mt-2 text-sm font-semibold text-muted-foreground">फोटो अपलोड करा</p>
+                    <p className="mt-1 text-xs text-muted-foreground">तुमचे व्हिजिटिंग कार्ड किंवा कामाचा फोटो</p>
                   </div>
                 )}
               </div>
@@ -470,7 +377,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
         
         <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton}
+            व्यवसाय नोंदवा
         </Button>
       </form>
     </Form>

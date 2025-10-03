@@ -4,9 +4,9 @@ import { useState } from 'react';
 import AdForm from './_components/ad-form';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
-import type { Ad } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Briefcase, FilePlus2 } from 'lucide-react';
+import BusinessForm from './_components/business-form';
 
 type ViewState = 'options' | 'adForm' | 'businessForm';
 
@@ -90,7 +90,7 @@ export default function PostAdPage() {
             </div>
         )}
         {view === 'adForm' && <AdForm key="ad" />}
-        {view === 'businessForm' && <AdForm key="business" defaultCategory="व्यावसायिक सेवा" />}
+        {view === 'businessForm' && <BusinessForm key="business" />}
       </main>
     </div>
   );
