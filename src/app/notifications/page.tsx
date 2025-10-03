@@ -70,17 +70,30 @@ export default function NotificationsPage() {
         return () => unsubscribe();
     }, [user, authLoading, router, toast, notificationDict]);
 
-    const handleMarkAsRead = async (notificationId: string) => {
-        const notifDoc = doc(db, 'notifications', notificationId);
-        updateDoc(notifDoc, { isRead: true })
-        .catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: notifDoc.path,
-                operation: 'update',
-                requestResourceData: { isRead: true }
+    const handleNotificationClick = async (notification: AppNotification) => {
+        if (userProfile?.role === 'Admin') {
+             if (!notification.isRead) {
+                const notifDoc = doc(db, 'notifications', notification.id);
+                updateDoc(notifDoc, { isRead: true }).catch((serverError) => {
+                    const permissionError = new FirestorePermissionError({
+                        path: notifDoc.path,
+                        operation: 'update',
+                        requestResourceData: { isRead: true }
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
+                });
+             }
+        } else {
+            // Regular users delete the notification on click
+            const notifDocRef = doc(db, 'notifications', notification.id);
+            deleteDoc(notifDocRef).catch((serverError) => {
+                 const permissionError = new FirestorePermissionError({
+                    path: notifDocRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
             });
-            errorEmitter.emit('permission-error', permissionError);
-        });
+        }
     };
     
     const handleMarkAllAsRead = async () => {
@@ -185,7 +198,7 @@ export default function NotificationsPage() {
                                             isOwnNotification && "hover:bg-secondary",
                                             isOwnNotification && !notif.isRead ? 'bg-secondary' : 'bg-card'
                                         )}
-                                        onClick={() => isOwnNotification && !notif.isRead && handleMarkAsRead(notif.id)}
+                                        onClick={() => isOwnNotification && handleNotificationClick(notif)}
                                     >
                                         <div className="flex items-start gap-4">
                                             <div className={cn(
@@ -216,7 +229,7 @@ export default function NotificationsPage() {
                                                         e.stopPropagation();
                                                         e.preventDefault();
                                                         setNotificationToDelete(notif);
-                                                    }}
+													}}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
