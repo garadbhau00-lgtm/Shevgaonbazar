@@ -162,7 +162,7 @@ export default function AdDetailPage() {
   const isOwner = user?.uid === ad.userId;
 
   return (
-    <div className="pb-24">
+    <div className="pb-24 relative">
       <header className="relative h-60 w-full">
         <Image
           src={ad.photos?.[0] || 'https://picsum.photos/seed/ad-placeholder/1200/800'}
@@ -176,6 +176,25 @@ export default function AdDetailPage() {
           <ArrowLeft />
         </Button>
       </header>
+
+      {!isOwner && (
+        <div className="absolute top-60 right-4 z-20 flex flex-col items-center gap-2">
+            <a href={`tel:${ad.mobileNumber}`} className="w-full">
+                <Button size="icon" className="rounded-full h-12 w-12 shadow-lg w-full">
+                    <Phone className="h-5 w-5" />
+                </Button>
+            </a>
+            <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg w-full" onClick={handleStartChat} disabled={isProcessingChat}>
+                {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin" /> : <MessageCircle className="h-5 w-5 text-primary" />}
+            </Button>
+            <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg w-full" onClick={handleShare}>
+              <Share2 className="h-5 w-5" />
+            </Button>
+             <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg text-destructive w-full" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
+              <Heart className="h-5 w-5" />
+            </Button>
+        </div>
+      )}
 
       <main className="p-4 space-y-4">
         <div className="space-y-2">
@@ -215,26 +234,6 @@ export default function AdDetailPage() {
 
       </main>
 
-      {!isOwner && (
-        <div className="fixed bottom-0 right-0 left-0 mx-auto max-w-lg p-4 bg-transparent z-20">
-          <div className="flex justify-end items-center gap-2">
-            <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg" onClick={handleShare}>
-              <Share2 className="h-5 w-5" />
-            </Button>
-             <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg text-destructive" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
-              <Heart className="h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg" onClick={handleStartChat} disabled={isProcessingChat}>
-                {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin" /> : <MessageCircle className="h-5 w-5 text-primary" />}
-            </Button>
-            <a href={`tel:${ad.mobileNumber}`}>
-                <Button size="icon" className="rounded-full h-12 w-12 shadow-lg">
-                    <Phone className="h-5 w-5" />
-                </Button>
-            </a>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
