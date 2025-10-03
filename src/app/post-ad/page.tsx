@@ -70,24 +70,24 @@ export default function PostAdPage() {
       <main className="flex-1 overflow-y-auto p-4">
         {view === 'options' && (
             <div className="flex flex-col items-center justify-center h-full gap-4">
-                <Button 
-                    className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
-                    onClick={() => setView('businessForm')}
-                >
-                    <Briefcase className="h-6 w-6"/>
-                    <span>तुमचा व्यवसाय नोंदवा</span>
-                </Button>
-                 <div className="relative w-full max-w-xs flex items-center justify-center my-2">
-                    <div className="w-full border-t border-border"></div>
-                    <span className="absolute bg-background px-2 text-muted-foreground text-sm">{dictionary.signup.or}</span>
-                </div>
-                <Button 
-                    variant="outline"
+                 <Button 
                     className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
                     onClick={() => setView('adForm')}
                 >
                      <FilePlus2 className="h-6 w-6"/>
                     <span>जाहिरात टाका</span>
+                </Button>
+                <div className="relative w-full max-w-xs flex items-center justify-center my-2">
+                    <div className="w-full border-t border-border"></div>
+                    <span className="absolute bg-background px-2 text-muted-foreground text-sm">{dictionary.signup.or}</span>
+                </div>
+                 <Button 
+                    variant="outline"
+                    className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
+                    onClick={() => setView('businessForm')}
+                >
+                    <Briefcase className="h-6 w-6"/>
+                    <span>तुमचा व्यवसाय नोंदवा</span>
                 </Button>
             </div>
         )}
