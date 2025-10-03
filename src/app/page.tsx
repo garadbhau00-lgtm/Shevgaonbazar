@@ -20,7 +20,7 @@ import { Slider } from '@/components/ui/slider';
 import { villageList } from '@/lib/villages';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import LanguageSwitcherIcon from '@/components/language-switcher-icon';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 
 function AdList({ ads, loading }: { ads: Ad[]; loading: boolean }) {
@@ -198,6 +198,10 @@ export default function Home() {
     <div className="flex flex-col h-full">
       <Dialog open={isAdOpen} onOpenChange={setIsAdOpen}>
         <DialogContent className="p-0 border-0 max-w-sm" hideCloseButton>
+            <DialogHeader className="sr-only">
+              <DialogTitle>Advertisement</DialogTitle>
+              <DialogDescription>An advertisement is being displayed.</DialogDescription>
+            </DialogHeader>
             {advertisementUrl && (
                 <div className="relative">
                     <Image src={advertisementUrl} alt="Advertisement" width={400} height={600} className="rounded-lg object-cover" />
