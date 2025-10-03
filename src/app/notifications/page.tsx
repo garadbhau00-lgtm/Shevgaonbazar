@@ -26,6 +26,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/errors';
 
 
 const locales: { [key: string]: Locale } = { en: enUS };
@@ -99,16 +101,23 @@ export default function NotificationsPage() {
     const handleDeleteNotification = async () => {
         if (!notificationToDelete) return;
         setIsDeleting(true);
-        try {
-            await deleteDoc(doc(db, 'notifications', notificationToDelete.id));
-            toast({ title: "Success", description: "Notification deleted successfully." });
-            setNotificationToDelete(null);
-        } catch (error) {
-            console.error("Error deleting notification:", error);
-            toast({ variant: 'destructive', title: "Error", description: "Failed to delete notification." });
-        } finally {
-            setIsDeleting(false);
-        }
+        const notifDocRef = doc(db, 'notifications', notificationToDelete.id);
+
+        deleteDoc(notifDocRef)
+            .then(() => {
+                toast({ title: "Success", description: "Notification deleted successfully." });
+                setNotificationToDelete(null);
+            })
+            .catch(async (serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: notifDocRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsDeleting(false);
+            });
     };
 
 

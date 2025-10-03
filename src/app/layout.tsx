@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/use-auth';
 import { LanguageProvider } from '@/contexts/language-context';
 import AppHeader from '@/components/layout/app-header';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
   title: 'शेवगाव बाजार',
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body className={cn('font-body antialiased')}>
         <LanguageProvider>
           <AuthProvider>
+            <FirebaseErrorListener />
             <div className="relative mx-auto flex min-h-screen max-w-lg flex-col border-x bg-background">
               <AppHeader />
               <main className="flex-1 pb-28">{children}</main>
