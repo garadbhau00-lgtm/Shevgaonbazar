@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import type { Ad, UserProfile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BadgeIndianRupee, MapPin, Phone, User, CalendarDays, MessageSquare } from 'lucide-react';
+import { Loader2, BadgeIndianRupee, MapPin, Phone, User, CalendarDays, MessageSquare, Share2, Heart } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -223,6 +223,12 @@ export default function AdDetailPage() {
             {user?.uid !== ad.userId && (
                  <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-sm border-t max-w-lg mx-auto">
                     <div className="flex justify-end items-center gap-2">
+                        <Button variant="outline" size="icon" className="shadow-lg">
+                            <Share2 className="h-5 w-5" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="shadow-lg">
+                            <Heart className="h-5 w-5" />
+                        </Button>
                          <Button 
                             variant="outline" 
                             size="lg"
@@ -249,5 +255,3 @@ export default function AdDetailPage() {
         </main>
     );
 }
-
-    
