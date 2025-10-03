@@ -60,7 +60,8 @@
         "broadcast": "Broadcast Message",
         "logout": "Logout",
         "language": "Language",
-        "issues": "Issues"
+        "issues": "Issues",
+        "myIssues": "Your Issues"
     },
     "login": {
         "title": "Login to Shevgaon Bazar",
@@ -502,6 +503,21 @@
             "successTitle": "Success",
             "updateSuccess": "Issue status has been updated.",
             "updateError": "Failed to update issue status."
+        }
+    },
+    "myIssues": {
+        "title": "Your Submitted Issues",
+        "description": "Track the status of the issues you have reported.",
+        "noIssuesTitle": "You haven't submitted any issues.",
+        "noIssuesDescription": "If you encounter a problem, you can report it from the Help Center.",
+        "accessDeniedTitle": "Login Required",
+        "accessDeniedDescription": "Please log in to view your submitted issues.",
+        "errorTitle": "Error",
+        "errorFetch": "Failed to fetch your issues.",
+        "status": {
+            "new": "New",
+            "in-progress": "In Progress",
+            "resolved": "Resolved"
         }
     }
 }

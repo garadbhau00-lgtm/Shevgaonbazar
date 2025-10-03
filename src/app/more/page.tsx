@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -77,6 +76,10 @@ export default function MorePage() {
         { label: dictionary.more.helpCenter, icon: HelpCircle, href: "/help-center" },
     ];
 
+    const userMenuItems = [
+        { label: dictionary.more.myIssues, icon: AlertCircle, href: "/my-issues" }
+    ];
+
     const adminMenuItems = [
         { label: dictionary.more.accessManagement, icon: ShieldCheck, href: "/access-management" },
         { label: dictionary.more.adManagement, icon: ListChecks, href: "/ad-management" },
@@ -85,7 +88,10 @@ export default function MorePage() {
     ];
     
     const getMenuItems = () => {
-        const menu = [...baseMenuItems];
+        let menu = [...baseMenuItems];
+        if (user) {
+            menu.push(...userMenuItems);
+        }
         if (userProfile?.role === 'Admin') {
             menu.push(...adminMenuItems);
         }
