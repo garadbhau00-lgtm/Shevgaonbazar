@@ -49,9 +49,10 @@ export default function NotificationsPage() {
             return;
         }
 
-        let q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
-        
-        if (userProfile?.role !== 'Admin') {
+        let q;
+        if (userProfile?.role === 'Admin') {
+            q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
+        } else {
             q = query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
         }
 
@@ -69,12 +70,16 @@ export default function NotificationsPage() {
     }, [user, userProfile, authLoading, router, toast, notificationDict]);
 
     const handleMarkAsRead = async (notificationId: string) => {
-        try {
-            const notifDoc = doc(db, 'notifications', notificationId);
-            await updateDoc(notifDoc, { isRead: true });
-        } catch (error) {
-            console.error("Error marking notification as read:", error);
-        }
+        const notifDoc = doc(db, 'notifications', notificationId);
+        updateDoc(notifDoc, { isRead: true })
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: notifDoc.path,
+                operation: 'update',
+                requestResourceData: { isRead: true }
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
     };
     
     const handleMarkAllAsRead = async () => {
@@ -123,7 +128,7 @@ export default function NotificationsPage() {
         try {
             return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: enUS });
         } catch (e) {
-            return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: enUS });
+            return formatDistanceToNow(timestamp, { addSuffix: true, locale: enUS });
         }
     };
 
@@ -160,7 +165,7 @@ export default function NotificationsPage() {
                  {notifications.length > 0 && hasUnread && userProfile?.role !== 'Admin' && (
                     <div className="mb-4 flex justify-end">
                         <Button variant="link" className="p-0 h-auto text-sm" onClick={handleMarkAllAsRead}>
-                            {dictionary.notifications.markAsRead}
+                            {dictionary.notifications.markAllAsRead || 'Mark all as read'}
                         </Button>
                     </div>
                 )}
@@ -258,5 +263,3 @@ export default function NotificationsPage() {
         </div>
     );
 }
-
-    

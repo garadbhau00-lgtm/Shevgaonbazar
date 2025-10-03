@@ -436,7 +436,7 @@
         "description": "View all your notifications here.",
         "noNotificationsTitle": "No notifications",
         "noNotificationsDescription": "When something happens, you'll be notified here.",
-        "markAsRead": "Mark as read",
+        "markAllAsRead": "Mark all as read",
         "errorTitle": "Error",
         "errorFetch": "Failed to fetch notifications."
     },

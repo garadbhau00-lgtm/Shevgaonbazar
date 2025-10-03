@@ -436,7 +436,7 @@
         "description": "तुमच्या सर्व सूचना येथे पहा.",
         "noNotificationsTitle": "कोणत्याही सूचना नाहीत",
         "noNotificationsDescription": "जेव्हा काही घडेल, तेव्हा तुम्हाला येथे सूचना मिळतील.",
-        "markAsRead": "वाचले म्हणून चिन्हांकित करा",
+        "markAllAsRead": "सर्व वाचले म्हणून चिन्हांकित करा",
         "errorTitle": "त्रुटि",
         "errorFetch": "सूचना आणण्यात अयशस्वी."
     },
