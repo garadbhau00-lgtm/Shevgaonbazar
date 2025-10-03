@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/language-context';
+import { Separator } from '@/components/ui/separator';
 
 
 export default function AdDetailPage() {
@@ -115,6 +116,17 @@ export default function AdDetailPage() {
                     <span>{ad.price.toLocaleString('en-IN')}</span>
                 </div>
                 
+                 {ad.description && (
+                    <>
+                        <Separator />
+                        <div>
+                            <h2 className="text-lg font-semibold mb-2">{dictionary.adForm.description.label}</h2>
+                            <p className="text-muted-foreground whitespace-pre-wrap">{ad.description}</p>
+                        </div>
+                        <Separator />
+                    </>
+                )}
+
                  <div className="flex items-center text-lg font-semibold">
                     <User className="h-5 w-5 mr-2" />
                     <span>{ad.userName}</span>

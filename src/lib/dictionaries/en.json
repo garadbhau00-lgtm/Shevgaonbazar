@@ -168,6 +168,10 @@
             "label": "Sub-category",
             "placeholder": "Select a sub-category"
         },
+        "description": {
+            "label": "More Information",
+            "placeholder": "Describe your product in detail..."
+        },
         "price": {
             "label": "Price (₹)",
             "placeholder": "e.g., 15000"

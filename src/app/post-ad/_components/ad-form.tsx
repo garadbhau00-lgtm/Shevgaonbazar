@@ -23,6 +23,7 @@ import { talukaVillageMap } from '@/lib/village-data';
 import { categories } from '@/lib/categories';
 import { useLanguage } from '@/contexts/language-context';
 import { talukaList } from '@/lib/talukas';
+import { Textarea } from '@/components/ui/textarea';
 
 type AdFormProps = {
     existingAd?: Ad;
@@ -61,6 +62,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
       }
     ),
     subcategory: z.string().optional(),
+    description: z.string().optional(),
     price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }),
     taluka: z.string({ required_error: adFormDictionary.validation.talukaRequired }),
     location: z.string({ required_error: adFormDictionary.validation.locationRequired }),
@@ -78,6 +80,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
       mobileNumber: '',
       category: undefined,
       subcategory: undefined,
+      description: '',
     },
   });
 
@@ -104,6 +107,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
       form.reset({
         category: existingAd.category,
         subcategory: existingAd.subcategory,
+        description: existingAd.description,
         price: existingAd.price,
         taluka: existingAd.taluka,
         location: existingAd.location,
@@ -319,6 +323,20 @@ export default function AdForm({ existingAd }: AdFormProps) {
 
           <FormField
             control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{adFormDictionary.description.label}</FormLabel>
+                <FormControl>
+                  <Textarea placeholder={adFormDictionary.description.placeholder} {...field} disabled={isLoading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="price"
             render={({ field }) => (
               <FormItem>
@@ -443,5 +461,3 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
-
-    
