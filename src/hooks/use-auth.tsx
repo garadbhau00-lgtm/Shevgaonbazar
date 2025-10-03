@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
@@ -49,7 +50,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         let activityInterval: NodeJS.Timeout | undefined;
 
         if (user) {
-            setLoading(true);
+            // We are now loading the profile
+            if (!userProfile) setLoading(true);
+
             const userDocRef = doc(db, 'users', user.uid);
 
             const updateLastSeen = async () => {
@@ -77,7 +80,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUserProfile(profileData);
                     }
                 } else {
-                    setUserProfile(null);
+                    // This case is handled by the Google Sign-in logic
+                    // For email/pass, the signup page creates the doc.
+                    setUserProfile(null); 
                 }
                 setLoading(false); 
             }, (error) => {
@@ -141,10 +146,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     });
                      toast({
                         title: authDict.accountCreatedTitle,
-                        description: authDict.accountCreatedDescription(userRole),
+                        description: authDict.accountCreatedDescription.replace('${role}', userRole),
                     });
                 } catch (dbError: any) {
-                    await signOut(auth);
+                    await signOut(auth); // Rollback auth state if profile creation fails
                     if (dbError.code === 'permission-denied' || dbError.code === 'PERMISSION_DENIED') {
                          toast({
                             variant: 'destructive',
@@ -166,7 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             let description = authDict.googleSignInFailedDescription;
 
             if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-                return;
+                return; // User cancelled, so we don't show an error.
             } else if (error.code === 'auth/popup-blocked') {
                 title = authDict.popupBlockedTitle;
                 description = authDict.popupBlockedDescription;
@@ -175,6 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 description = authDict.unauthorizedDomainDescription;
             }
             
+            console.error("Google Sign-In Error: ", error);
             toast({
                 variant: 'destructive',
                 title: title,

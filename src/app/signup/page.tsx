@@ -45,7 +45,7 @@ const GoogleIcon = () => (
 export default function SignupPage() {
     const { toast } = useToast();
     const router = useRouter();
-    const { user, loading, handleGoogleSignIn } = useAuth();
+    const { user, userProfile, loading, handleGoogleSignIn } = useAuth();
     const { dictionary } = useLanguage();
     
     const form = useForm<SignupFormValues>({
@@ -62,10 +62,10 @@ export default function SignupPage() {
     const { isSubmitting } = form.formState;
 
     useEffect(() => {
-        if (!loading && user) {
+        if (!loading && user && userProfile) {
             router.push('/');
         }
-    }, [user, loading, router]);
+    }, [user, userProfile, loading, router]);
 
 
     async function onSubmit(data: SignupFormValues) {
@@ -87,11 +87,12 @@ export default function SignupPage() {
             });
 
             toast({
-                title: "Sign in successfully.",
+                title: "Sign up successfully.",
             });
             
         } catch (error: any) {
             if (newUser) {
+                // If profile creation fails, sign out the newly created auth user
                 await signOut(auth);
             }
             
@@ -118,7 +119,7 @@ export default function SignupPage() {
         )
     }
 
-    if (user) {
+    if (user && userProfile) {
         return null; 
     }
 
