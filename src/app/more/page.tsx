@@ -93,22 +93,24 @@ export default function MorePage() {
 
 
     return (
-        <div>
-            <div className="relative h-28 w-full">
-                <Image
-                    src="https://picsum.photos/seed/more-page/1200/400"
-                    alt="More page background"
-                    fill
-                    className="object-cover"
-                    data-ai-hint="farm settings"
-                />
-                <div className="absolute inset-0 bg-black/50" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">{dictionary.more.title}</h1>
-                    <p className="mt-2 text-xs max-w-xl">{dictionary.more.description}</p>
+        <div className="flex flex-col h-full">
+            <header className="sticky top-0 z-10">
+                <div className="relative h-28 w-full">
+                    <Image
+                        src="https://picsum.photos/seed/more-page/1200/400"
+                        alt="More page background"
+                        fill
+                        className="object-cover"
+                        data-ai-hint="farm settings"
+                    />
+                    <div className="absolute inset-0 bg-black/50" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+                        <h1 className="text-lg font-bold">{dictionary.more.title}</h1>
+                        <p className="mt-2 text-xs max-w-xl">{dictionary.more.description}</p>
+                    </div>
                 </div>
-            </div>
-            <main className="p-4">
+            </header>
+            <main className="flex-1 overflow-y-auto p-4 pb-20">
                 {renderUserProfile()}
 
                 <div className="space-y-2">
