@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/language-context';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 
 const loginSchema = z.object({
@@ -49,6 +50,7 @@ export default function LoginPage() {
     const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
     const [resetEmail, setResetEmail] = useState('');
     const [isSendingReset, setIsSendingReset] = useState(false);
+    const [isGooglePromptOpen, setIsGooglePromptOpen] = useState(false);
     
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -63,6 +65,13 @@ export default function LoginPage() {
     useEffect(() => {
         if (!loading && user) {
             router.push('/');
+        } else if (!loading && !user) {
+            // Show the Google sign-in prompt only once per session
+            const hasSeenPrompt = sessionStorage.getItem('hasSeenGooglePrompt');
+            if (!hasSeenPrompt) {
+                setIsGooglePromptOpen(true);
+                sessionStorage.setItem('hasSeenGooglePrompt', 'true');
+            }
         }
     }, [user, loading, router]);
 
@@ -104,6 +113,11 @@ export default function LoginPage() {
             setIsSendingReset(false);
         }
     }
+    
+    const onGoogleSignInClick = () => {
+        setIsGooglePromptOpen(false);
+        handleGoogleSignIn();
+    }
 
     if (loading) {
         return (
@@ -119,6 +133,23 @@ export default function LoginPage() {
 
     return (
         <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-secondary/50 p-4">
+             <Dialog open={isGooglePromptOpen} onOpenChange={setIsGooglePromptOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{loginDict.loginWithGoogle}</DialogTitle>
+                        <DialogDescription>
+                            Quickly sign in or create an account using your Google account.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Button variant="outline" className="w-full" onClick={onGoogleSignInClick}>
+                            <GoogleIcon />
+                            {loginDict.loginWithGoogle}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
                     <div className="mb-4 flex justify-center">
@@ -227,6 +258,5 @@ export default function LoginPage() {
         </div>
     );
 }
-
 
     
