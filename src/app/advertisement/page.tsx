@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -23,7 +24,7 @@ export default function AdvertisementPage() {
     const [newAdPreview, setNewAdPreview] = useState<string | null>(null);
     const [newAdFile, setNewAdFile] = useState<File | null>(null);
     const [pageLoading, setPageLoading] = useState(true);
-    const [isUploading, setIsUploading]_useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
