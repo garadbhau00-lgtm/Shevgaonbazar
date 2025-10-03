@@ -199,7 +199,7 @@ export default function Home() {
                   </SheetTrigger>
                   <SheetContent>
                       <SheetHeader>
-                          <SheetTitle>{dictionary.home.filterSort.title}</SheetTitle>
+                          <SheetTitle className="text-base">{dictionary.home.filterSort.title}</SheetTitle>
                       </SheetHeader>
                       <div className="py-4 space-y-6 overflow-y-auto h-[calc(100vh-10rem)] pr-4">
                            <div>
@@ -306,3 +306,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
