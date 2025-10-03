@@ -27,11 +27,12 @@ import { Textarea } from '@/components/ui/textarea';
 
 type AdFormProps = {
     existingAd?: Ad;
+    defaultCategory?: Ad['category'];
 };
 
 const MAX_FILES = 1;
 
-export default function AdForm({ existingAd }: AdFormProps) {
+export default function AdForm({ existingAd, defaultCategory }: AdFormProps) {
   const { toast } = useToast();
   const { user, userProfile, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -78,7 +79,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
       taluka: undefined,
       location: undefined,
       mobileNumber: '',
-      category: undefined,
+      category: defaultCategory || undefined,
       subcategory: undefined,
       description: '',
     },
@@ -95,6 +96,12 @@ export default function AdForm({ existingAd }: AdFormProps) {
   });
   
   const isServiceCategory = selectedCategory === 'व्यावसायिक सेवा';
+
+  useEffect(() => {
+    if (defaultCategory) {
+        form.setValue('category', defaultCategory);
+    }
+  }, [defaultCategory, form]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -482,3 +489,5 @@ export default function AdForm({ existingAd }: AdFormProps) {
     </Form>
   );
 }
+
+    
