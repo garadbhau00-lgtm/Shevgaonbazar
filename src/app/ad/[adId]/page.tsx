@@ -175,30 +175,19 @@ export default function AdDetailPage() {
         <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-white bg-black/30 hover:bg-black/50 hover:text-white" onClick={() => router.back()}>
           <ArrowLeft />
         </Button>
-      </header>
-
-      {!isOwner && (
-        <div className="absolute top-60 right-4 z-20 flex flex-col items-stretch gap-2">
-            <a href={`tel:${ad.mobileNumber}`} className="w-full">
-                <Button size="lg" className="w-full justify-start px-4 shadow-lg">
-                    <Phone className="h-5 w-5 mr-2" />
-                    <span>Call</span>
-                </Button>
-            </a>
-            <Button variant="outline" size="lg" className="w-full justify-start px-4 bg-background/80 shadow-lg" onClick={handleStartChat} disabled={isProcessingChat}>
-                {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <MessageCircle className="h-5 w-5 mr-2 text-primary" />}
-                 <span>Chat</span>
-            </Button>
-            <Button variant="outline" size="lg" className="w-full justify-start px-4 bg-background/80 shadow-lg" onClick={handleShare}>
-              <Share2 className="h-5 w-5 mr-2" />
-               <span>Share</span>
-            </Button>
-             <Button variant="outline" size="lg" className="w-full justify-start px-4 bg-background/80 shadow-lg text-destructive" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
-              <Heart className="h-5 w-5 mr-2" />
-               <span>Save</span>
-            </Button>
+        <div className="absolute bottom-4 left-4 text-white">
+             {ad.price && (
+                <div className="flex items-center gap-2 text-2xl font-bold">
+                    <BadgeIndianRupee className="h-6 w-6" />
+                    <span>{ad.price.toLocaleString('en-IN')}</span>
+                </div>
+            )}
+             <div className="flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4" />
+                <span>{ad.location}</span>
+            </div>
         </div>
-      )}
+      </header>
 
       <main className="p-4 space-y-4">
         <div className="space-y-2">
@@ -213,18 +202,6 @@ export default function AdDetailPage() {
                     </>
                 )}
             </div>
-
-             {ad.price && (
-                <div className="flex items-center gap-2 text-2xl font-bold text-primary">
-                    <BadgeIndianRupee className="h-6 w-6" />
-                    <span>{ad.price.toLocaleString('en-IN')}</span>
-                </div>
-            )}
-            
-             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                <span>{ad.location}</span>
-            </div>
         </div>
 
         <div>
@@ -238,6 +215,30 @@ export default function AdDetailPage() {
 
       </main>
 
+      {!isOwner && (
+        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-2 bg-background border-t">
+          <div className="flex justify-between items-center gap-2">
+            <Button variant="ghost" className="flex-col h-auto" onClick={handleShare}>
+              <Share2 className="h-5 w-5 mb-1 text-primary"/>
+              <span className="text-xs">Share</span>
+            </Button>
+            <Button variant="ghost" className="flex-col h-auto text-destructive" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
+              <Heart className="h-5 w-5 mb-1"/>
+              <span className="text-xs">Save</span>
+            </Button>
+            <Button className="flex-1" onClick={handleStartChat} disabled={isProcessingChat}>
+                {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <MessageCircle className="h-5 w-5 mr-2" />}
+                 <span>Chat</span>
+            </Button>
+            <a href={`tel:${ad.mobileNumber}`} className="flex-1">
+                <Button className="w-full">
+                    <Phone className="h-5 w-5 mr-2" />
+                    <span>Call</span>
+                </Button>
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
