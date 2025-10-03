@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import type { Ad, UserProfile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BadgeIndianRupee, MapPin, Phone, User, CalendarDays, MessageSquare, Share2, Heart } from 'lucide-react';
+import { Loader2, BadgeIndianRupee, MapPin, Phone, User, CalendarDays, MessageSquare, Share2, Heart, ArrowLeft } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -151,6 +151,15 @@ export default function AdDetailPage() {
 
     return (
         <main className="pb-24">
+             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-card px-4">
+                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                    <ArrowLeft />
+                </Button>
+                <div className="flex-1 overflow-hidden">
+                    <h2 className="font-semibold truncate">{dictionary.categories[ad.category] || ad.category}</h2>
+                </div>
+            </header>
+
             <div className="p-4 bg-card">
                <Carousel className="w-full">
                     <CarouselContent>

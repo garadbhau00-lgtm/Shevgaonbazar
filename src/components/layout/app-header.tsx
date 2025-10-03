@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
-import { LogOut, Bell } from 'lucide-react';
+import { LogOut, Bell, ArrowLeft } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter, usePathname } from 'next/navigation';
@@ -48,6 +48,12 @@ export default function AppHeader() {
   };
 
   const isTransparentPage = ['/', '/post-ad', '/my-ads', '/more', '/search', '/ad-management', '/access-management', '/help-center', '/settings', '/notifications', '/broadcast'].includes(pathname);
+  const isAdDetailPage = /^\/ad\//.test(pathname);
+  
+  if (isAdDetailPage) {
+    return null; // The ad detail page has its own header
+  }
+
 
   const renderUserOptions = () => {
     if (!isClient || authLoading) {
