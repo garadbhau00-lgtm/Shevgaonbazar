@@ -181,7 +181,7 @@ export default function Home() {
               priority
           />
           <div className="absolute inset-0 bg-black/50" />
-          <div className="absolute top-2 left-2">
+          <div className="absolute top-2 left-2 z-10">
             <LanguageSwitcherIcon />
           </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
@@ -310,5 +310,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
