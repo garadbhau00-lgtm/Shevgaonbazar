@@ -51,15 +51,13 @@ export default function NotificationsPage() {
             return;
         }
 
-        let q;
-        if (userProfile?.role === 'Admin') {
-            q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
-        } else {
-            q = query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-        }
+        const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
+            let notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
+            if (userProfile?.role !== 'Admin') {
+                notifs = notifs.filter(n => n.userId === user.uid);
+            }
             setNotifications(notifs);
             setPageLoading(false);
         }, (error) => {
@@ -108,7 +106,7 @@ export default function NotificationsPage() {
                 toast({ title: "Success", description: "Notification deleted successfully." });
                 setNotificationToDelete(null);
             })
-            .catch(async (serverError) => {
+            .catch((serverError) => {
                 const permissionError = new FirestorePermissionError({
                     path: notifDocRef.path,
                     operation: 'delete',
@@ -263,5 +261,3 @@ export default function NotificationsPage() {
         </div>
     );
 }
-
-    
