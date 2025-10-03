@@ -127,19 +127,19 @@ export default function SignupPage() {
         <div className="flex min-h-screen items-center justify-center bg-secondary/50 p-4">
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
-                    <div className="mb-4 flex justify-center">
+                    <div className="mb-2 flex justify-center">
                         <div className="rounded-full bg-primary/10 p-3">
                             <Leaf className="h-8 w-8 text-primary" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl">{dictionary.signup.title}</CardTitle>
+                    <CardTitle className="text-xl">{dictionary.signup.title}</CardTitle>
                     <CardDescription>
                         {dictionary.signup.description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
                             <FormField
                                 control={form.control}
                                 name="name"
@@ -212,7 +212,7 @@ export default function SignupPage() {
                         </form>
                     </Form>
 
-                    <div className="relative my-6">
+                    <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">
                             <span className="w-full border-t" />
                         </div>
@@ -228,7 +228,7 @@ export default function SignupPage() {
                         {dictionary.signup.signupWithGoogle}
                     </Button>
 
-                    <div className="mt-6 text-center text-sm">
+                    <div className="mt-4 text-center text-xs">
                         {dictionary.signup.haveAccount}{' '}
                         <Link href="/login" className="font-medium text-primary hover:underline">
                             {dictionary.signup.loginLink}
@@ -239,3 +239,5 @@ export default function SignupPage() {
         </div>
     );
 }
+
+    

@@ -66,7 +66,6 @@ export default function LoginPage() {
         if (!loading && user) {
             router.push('/');
         } else if (!loading && !user) {
-            // Show the Google sign-in prompt only once per session
             const hasSeenPrompt = sessionStorage.getItem('hasSeenGooglePrompt');
             if (!hasSeenPrompt) {
                 setIsGooglePromptOpen(true);
@@ -152,19 +151,19 @@ export default function LoginPage() {
 
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
-                    <div className="mb-4 flex justify-center">
+                    <div className="mb-2 flex justify-center">
                         <div className="rounded-full bg-primary/10 p-3">
                             <Leaf className="h-8 w-8 text-primary" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl">{loginDict.title}</CardTitle>
+                    <CardTitle className="text-xl">{loginDict.title}</CardTitle>
                     <CardDescription>
                         {loginDict.description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
                             <FormField
                                 control={form.control}
                                 name="email"
@@ -187,7 +186,7 @@ export default function LoginPage() {
                                             <FormLabel>{loginDict.passwordLabel}</FormLabel>
                                             <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
                                                 <AlertDialogTrigger asChild>
-                                                    <Button variant="link" type="button" className="p-0 h-auto text-sm font-medium text-primary hover:underline">
+                                                    <Button variant="link" type="button" className="p-0 h-auto text-xs font-medium text-primary hover:underline">
                                                         {loginDict.forgotPassword}
                                                     </Button>
                                                 </AlertDialogTrigger>
@@ -232,7 +231,7 @@ export default function LoginPage() {
                             </Button>
                         </form>
                     </Form>
-                     <div className="relative my-6">
+                     <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">
                             <span className="w-full border-t" />
                         </div>
@@ -247,7 +246,7 @@ export default function LoginPage() {
                         <GoogleIcon />
                         {loginDict.loginWithGoogle}
                     </Button>
-                    <div className="mt-6 text-center text-sm">
+                    <div className="mt-4 text-center text-xs">
                         {loginDict.noAccount}{' '}
                         <Link href="/signup" className="font-medium text-primary hover:underline">
                             {loginDict.signupLink}
