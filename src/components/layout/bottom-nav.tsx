@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, Star, MoreHorizontal, Home, User, Plus, MessageCircle, List } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, Home, User, Plus, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
@@ -18,7 +18,7 @@ export default function BottomNav() {
 
   const baseNavItems = [
     { href: '/', label: dictionary.bottomNav.home, icon: Home },
-    { href: '/search', label: dictionary.bottomNav.search, icon: Search },
+    { href: '/inbox', label: dictionary.bottomNav.inbox, icon: MessageCircle, requiresAuth: true },
     { href: '/post-ad', label: dictionary.bottomNav.postAd, icon: Plus, requiresAuth: true },
     { href: '/my-ads', label: dictionary.bottomNav.myAds, icon: List, requiresAuth: true },
     { href: '/more', label: dictionary.bottomNav.more, icon: MoreHorizontal },
