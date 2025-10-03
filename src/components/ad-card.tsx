@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -8,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import type { Ad } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, Eye } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +52,7 @@ export default function AdCard({ ad }: AdCardProps) {
       console.error("Error deleting ad: ", error);
       toast({
         variant: 'destructive',
-        title: 'त्रुटी',
+        title: 'त्रुटि',
         description: 'जाहिरात हटवण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
       });
     } finally {
@@ -104,6 +103,11 @@ export default function AdCard({ ad }: AdCardProps) {
                   </p>
                 ) : null}
               </div>
+            </div>
+             <div className="flex justify-end mt-1">
+                <Button size="sm" className="h-6 px-2 text-xs bg-accent hover:bg-accent/90">
+                    पहा
+                </Button>
             </div>
           </CardContent>
         </Card>
