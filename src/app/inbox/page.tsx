@@ -81,70 +81,73 @@ export default function InboxPage() {
     };
 
     return (
-        <main className="flex-1">
-             <div className="relative h-28 w-full">
-                <Image
-                    src="https://picsum.photos/seed/inbox/1200/400"
-                    alt="Inbox background"
-                    fill
-                    className="object-cover"
-                    data-ai-hint="speech bubbles"
-                />
-                <div className="absolute inset-0 bg-black/50" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-                    <h1 className="text-lg font-bold">{dictionary.inbox.title}</h1>
-                    <p className="mt-2 text-xs max-w-xl">{dictionary.inbox.description}</p>
+        <div className="flex flex-col h-full">
+            <header className="sticky top-0 z-10">
+                 <div className="relative h-28 w-full">
+                    <Image
+                        src="https://picsum.photos/seed/inbox/1200/400"
+                        alt="Inbox background"
+                        fill
+                        className="object-cover"
+                        data-ai-hint="speech bubbles"
+                    />
+                    <div className="absolute inset-0 bg-black/50" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+                        <h1 className="text-lg font-bold">{dictionary.inbox.title}</h1>
+                        <p className="mt-2 text-xs max-w-xl">{dictionary.inbox.description}</p>
+                    </div>
                 </div>
-            </div>
-            
-            {conversations.length > 0 ? (
-                <div className="divide-y">
-                    {conversations.map(convo => {
-                        const otherParticipant = getOtherParticipant(convo);
-                        const isUnread = user && convo.unreadBy && convo.unreadBy[user.uid];
-                        const lastMessagePrefix = user && convo.lastMessageSenderId === user.uid ? `${dictionary.inbox.you}: ` : "";
+            </header>
+            <main className="flex-1 overflow-y-auto">
+                {conversations.length > 0 ? (
+                    <div className="divide-y">
+                        {conversations.map(convo => {
+                            const otherParticipant = getOtherParticipant(convo);
+                            const isUnread = user && convo.unreadBy && convo.unreadBy[user.uid];
+                            const lastMessagePrefix = user && convo.lastMessageSenderId === user.uid ? `${dictionary.inbox.you}: ` : "";
 
-                        return (
-                            <Link href={`/inbox/${convo.id}`} key={convo.id}>
-                                <div className={`p-4 flex items-start gap-4 transition-colors hover:bg-secondary ${isUnread ? 'bg-secondary' : 'bg-card'}`}>
-                                    <div className="relative h-16 w-16 flex-shrink-0">
-                                        <Image src={convo.adPhoto} alt={convo.adTitle} fill className="rounded-md object-cover" />
-                                    </div>
-                                    <div className="flex-grow overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="font-semibold truncate">{convo.adTitle}</h3>
-                                            {convo.lastMessageTimestamp && (
-                                                <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                                                    {formatTimestamp(convo.lastMessageTimestamp)}
-                                                </p>
-                                            )}
+                            return (
+                                <Link href={`/inbox/${convo.id}`} key={convo.id}>
+                                    <div className={`p-4 flex items-start gap-4 transition-colors hover:bg-secondary ${isUnread ? 'bg-secondary' : 'bg-card'}`}>
+                                        <div className="relative h-16 w-16 flex-shrink-0">
+                                            <Image src={convo.adPhoto} alt={convo.adTitle} fill className="rounded-md object-cover" />
                                         </div>
-                                        <p className="text-sm text-muted-foreground">{dictionary.inbox.with}: {otherParticipant?.name || dictionary.inbox.unknownUser}</p>
-                                        <p className={`text-sm truncate ${isUnread ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
-                                            {lastMessagePrefix}{convo.lastMessage || dictionary.inbox.noMessages}
-                                        </p>
+                                        <div className="flex-grow overflow-hidden">
+                                            <div className="flex justify-between items-start">
+                                                <h3 className="font-semibold truncate">{convo.adTitle}</h3>
+                                                {convo.lastMessageTimestamp && (
+                                                    <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                                                        {formatTimestamp(convo.lastMessageTimestamp)}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">{dictionary.inbox.with}: {otherParticipant?.name || dictionary.inbox.unknownUser}</p>
+                                            <p className={`text-sm truncate ${isUnread ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
+                                                {lastMessagePrefix}{convo.lastMessage || dictionary.inbox.noMessages}
+                                            </p>
+                                        </div>
+                                        {isUnread && <div className="h-3 w-3 rounded-full bg-primary flex-shrink-0 mt-1"></div>}
                                     </div>
-                                    {isUnread && <div className="h-3 w-3 rounded-full bg-primary flex-shrink-0 mt-1"></div>}
-                                </div>
-                            </Link>
-                        )
-                    })}
-                </div>
-            ) : (
-                <div className="flex h-[calc(100vh-14rem)] flex-col items-center justify-center text-center p-4">
-                    <MessageSquarePlus className="h-16 w-16 text-muted-foreground/50" />
-                    <p className="mt-4 text-lg font-semibold text-muted-foreground">
-                        {dictionary.inbox.emptyTitle}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        {dictionary.inbox.emptyDescription}
-                    </p>
-                    <Button className="mt-6" onClick={() => router.push('/')}>
-                        {dictionary.inbox.browseAdsButton}
-                    </Button>
-                </div>
-            )}
-        </main>
+                                </Link>
+                            )
+                        })}
+                    </div>
+                ) : (
+                    <div className="flex h-[calc(100vh-14rem)] flex-col items-center justify-center text-center p-4">
+                        <MessageSquarePlus className="h-16 w-16 text-muted-foreground/50" />
+                        <p className="mt-4 text-lg font-semibold text-muted-foreground">
+                            {dictionary.inbox.emptyTitle}
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {dictionary.inbox.emptyDescription}
+                        </p>
+                        <Button className="mt-6" onClick={() => router.push('/')}>
+                            {dictionary.inbox.browseAdsButton}
+                        </Button>
+                    </div>
+                )}
+            </main>
+        </div>
     );
 }
     
