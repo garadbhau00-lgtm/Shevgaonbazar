@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Languages } from 'lucide-react';
@@ -17,8 +16,33 @@ const languages = [
     { value: 'en', label: 'English' },
 ];
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({ asGridItem = false }: { asGridItem?: boolean }) {
   const { language, setLanguage, dictionary } = useLanguage();
+
+  if (asGridItem) {
+    return (
+       <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button className="flex flex-col items-center justify-center gap-2 rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary text-center w-full">
+                    <Languages className="h-6 w-6 text-primary" />
+                    <span className="text-xs font-medium">{dictionary.more.language}</span>
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuRadioGroup
+                    value={language}
+                    onValueChange={(value) => setLanguage(value as 'en' | 'hi' | 'mr')}
+                >
+                    {languages.map((lang) => (
+                        <DropdownMenuRadioItem key={lang.value} value={lang.value}>
+                            {lang.label}
+                        </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+  }
 
   return (
     <div className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary">

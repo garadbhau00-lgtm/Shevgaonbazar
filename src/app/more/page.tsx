@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, HelpCircle, LogOut, Settings, ShieldCheck, ListChecks, Megaphone } from "lucide-react";
+import { ChevronRight, HelpCircle, LogOut, Settings, ShieldCheck, ListChecks, Megaphone, Languages } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,29 +22,10 @@ export default function MorePage() {
         setIsClient(true);
     }, []);
 
-    const baseMenuItems = [
-        { label: dictionary.more.settings, icon: Settings, href: "/settings" },
-        { label: dictionary.more.helpCenter, icon: HelpCircle, href: "/help-center" },
-    ];
-
-    const adminMenuItems = [
-        { label: dictionary.more.accessManagement, icon: ShieldCheck, href: "/access-management" },
-        { label: dictionary.more.adManagement, icon: ListChecks, href: "/ad-management" },
-        { label: dictionary.more.broadcast, icon: Megaphone, href: "/broadcast" },
-    ];
-
     const onLogout = async () => {
         await handleLogout();
         router.push('/login');
     }
-
-    const getMenuItems = () => {
-        const menu = [...baseMenuItems];
-        if (userProfile?.role === 'Admin') {
-            menu.push(...adminMenuItems);
-        }
-        return menu;
-    };
 
     const renderUserProfile = () => {
         if (!isClient || loading) {
@@ -89,6 +70,25 @@ export default function MorePage() {
             </div>
         );
     }
+    
+    const baseMenuItems = [
+        { label: dictionary.more.settings, icon: Settings, href: "/settings" },
+        { label: dictionary.more.helpCenter, icon: HelpCircle, href: "/help-center" },
+    ];
+
+    const adminMenuItems = [
+        { label: dictionary.more.accessManagement, icon: ShieldCheck, href: "/access-management" },
+        { label: dictionary.more.adManagement, icon: ListChecks, href: "/ad-management" },
+        { label: dictionary.more.broadcast, icon: Megaphone, href: "/broadcast" },
+    ];
+    
+    const getMenuItems = () => {
+        const menu = [...baseMenuItems];
+        if (userProfile?.role === 'Admin') {
+            menu.push(...adminMenuItems);
+        }
+        return menu;
+    };
 
 
     return (
@@ -112,32 +112,27 @@ export default function MorePage() {
             <main className="flex-1 overflow-y-auto p-4 pb-20">
                 {renderUserProfile()}
 
-                <div className="space-y-2">
-                    <LanguageSwitcher />
-
-                    <div className="grid grid-cols-2 gap-2">
-                        {getMenuItems().map((item) => (
-                            <Link
-                                href={item.href}
-                                key={item.label}
-                                className="flex flex-col items-center justify-center gap-2 rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary text-center"
-                            >
-                                <item.icon className="h-6 w-6 text-primary" />
-                                <span className="text-xs font-medium">{item.label}</span>
-                            </Link>
-                        ))}
-                    </div>
+                <div className="grid grid-cols-2 gap-2">
+                    {getMenuItems().map((item) => (
+                        <Link
+                            href={item.href}
+                            key={item.label}
+                            className="flex flex-col items-center justify-center gap-2 rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary text-center"
+                        >
+                            <item.icon className="h-6 w-6 text-primary" />
+                            <span className="text-xs font-medium">{item.label}</span>
+                        </Link>
+                    ))}
+                    
+                    <LanguageSwitcher asGridItem={true} />
 
                     {user && (
-                        <div
-                            className="flex items-center justify-between rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary cursor-pointer mt-2"
+                         <div
+                            className="flex flex-col items-center justify-center gap-2 rounded-lg bg-card p-4 shadow-sm transition-colors hover:bg-secondary text-center cursor-pointer"
                             onClick={onLogout}
                         >
-                            <div className="flex items-center gap-4">
-                                <LogOut className="h-5 w-5 text-destructive" />
-                                <span className="font-medium text-destructive">{dictionary.more.logout}</span>
-                            </div>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            <LogOut className="h-6 w-6 text-destructive" />
+                            <span className="text-xs font-medium text-destructive">{dictionary.more.logout}</span>
                         </div>
                     )}
                 </div>
