@@ -271,7 +271,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-6">
           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="category"
@@ -337,7 +337,7 @@ export default function AdForm({ existingAd }: AdFormProps) {
             )}
           />
           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <div className="grid grid-cols-2 gap-4">
                <FormField
                 control={form.control}
                 name="taluka"
@@ -412,52 +412,52 @@ export default function AdForm({ existingAd }: AdFormProps) {
               </FormItem>
             )}
           />
+
+          <FormItem>
+            <FormLabel>{adFormDictionary.photo.label}</FormLabel>
+            <FormControl>
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={isLoading}
+                />
+                {photoPreviews.length > 0 ? (
+                  <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                    <Image src={photoPreviews[0]} alt="Preview" fill className="object-cover" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                      onClick={removePhoto}
+                      disabled={isLoading}
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "flex aspect-video w-full flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+                      isLoading ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
+                    )}
+                    onClick={() => !isLoading && fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-10 w-10 text-muted-foreground" />
+                    <p className="mt-2 text-sm font-semibold text-muted-foreground">{adFormDictionary.photo.uploadText}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{adFormDictionary.photo.limitText.replace('${maxFiles}', '1')}</p>
+                  </div>
+                )}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         </div>
         
-        <FormItem>
-          <FormLabel>{adFormDictionary.photo.label}</FormLabel>
-          <FormControl>
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileChange}
-                disabled={isLoading}
-              />
-              {photoPreviews.length > 0 ? (
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                  <Image src={photoPreviews[0]} alt="Preview" fill className="object-cover" />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                    onClick={removePhoto}
-                    disabled={isLoading}
-                  >
-                    <XIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div
-                  className={cn(
-                    "flex aspect-video w-full flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
-                    isLoading ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:border-primary hover:bg-secondary"
-                  )}
-                  onClick={() => !isLoading && fileInputRef.current?.click()}
-                >
-                  <Upload className="h-10 w-10 text-muted-foreground" />
-                  <p className="mt-2 text-sm font-semibold text-muted-foreground">{adFormDictionary.photo.uploadText}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{adFormDictionary.photo.limitText.replace('${maxFiles}', '1')}</p>
-                </div>
-              )}
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-
         <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {isEditMode ? adFormDictionary.updateAdButton : adFormDictionary.postAdButton}
@@ -467,3 +467,4 @@ export default function AdForm({ existingAd }: AdFormProps) {
   );
 }
 
+    
