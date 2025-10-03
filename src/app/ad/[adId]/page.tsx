@@ -213,32 +213,32 @@ export default function AdDetailPage() {
           {`Posted on ${format(ad.createdAt.toDate(), 'dd MMM yyyy', { locale: enUS })}`}
         </div>
 
-      </main>
-
-      {!isOwner && (
-        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-2 bg-background border-t">
-          <div className="flex justify-between items-center gap-2">
-            <Button variant="ghost" className="flex-col h-auto" onClick={handleShare}>
-              <Share2 className="h-5 w-5 mb-1 text-primary"/>
-              <span className="text-xs">Share</span>
-            </Button>
-            <Button variant="ghost" className="flex-col h-auto text-destructive" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
-              <Heart className="h-5 w-5 mb-1"/>
-              <span className="text-xs">Save</span>
-            </Button>
-            <Button className="flex-1" onClick={handleStartChat} disabled={isProcessingChat}>
-                {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <MessageCircle className="h-5 w-5 mr-2" />}
-                 <span>Chat</span>
-            </Button>
-            <a href={`tel:${ad.mobileNumber}`} className="flex-1">
-                <Button className="w-full">
-                    <Phone className="h-5 w-5 mr-2" />
-                    <span>Call</span>
+        {!isOwner && (
+          <div className="pt-4 border-t">
+            <div className="flex justify-between items-center gap-2">
+                <Button variant="ghost" className="flex-col h-auto" onClick={handleShare}>
+                  <Share2 className="h-5 w-5 mb-1 text-primary"/>
+                  <span className="text-xs">Share</span>
                 </Button>
-            </a>
+                <Button variant="ghost" className="flex-col h-auto text-destructive" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
+                  <Heart className="h-5 w-5 mb-1"/>
+                  <span className="text-xs">Save</span>
+                </Button>
+                <Button className="flex-1" onClick={handleStartChat} disabled={isProcessingChat}>
+                    {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <MessageCircle className="h-5 w-5 mr-2" />}
+                     <span>Chat</span>
+                </Button>
+                <a href={`tel:${ad.mobileNumber}`} className="flex-1">
+                    <Button className="w-full">
+                        <Phone className="h-5 w-5 mr-2" />
+                        <span>Call</span>
+                    </Button>
+                </a>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </main>
     </div>
   );
 }
