@@ -13,12 +13,11 @@ import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { formatDistanceToNow } from 'date-fns';
 import { hi, enUS } from 'date-fns/locale';
-import { mr } from 'date-fns/locale/mr';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-const locales: { [key: string]: Locale } = { hi, en: enUS, mr };
+const locales: { [key: string]: Locale } = { hi, en: enUS };
 
 export default function NotificationsPage() {
     const { user, loading: authLoading } = useAuth();
@@ -86,7 +85,7 @@ export default function NotificationsPage() {
 
     const formatTimestamp = (timestamp: any) => {
         if (!timestamp) return '';
-        const locale = locales[language] || mr;
+        const locale = locales[language] || enUS;
         return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale });
     };
 

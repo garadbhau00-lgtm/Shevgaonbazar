@@ -13,11 +13,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageSquarePlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { hi, enUS, mr } from 'date-fns/locale';
+import { hi, enUS } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 
-const locales: { [key: string]: Locale } = { hi, en: enUS, mr };
+const locales: { [key: string]: Locale } = { hi, en: enUS };
 
 export default function InboxPage() {
     const { user, loading: authLoading } = useAuth();

@@ -17,9 +17,9 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
-import { hi, enUS, mr } from 'date-fns/locale';
+import { hi, enUS } from 'date-fns/locale';
 
-const locales: { [key: string]: Locale } = { hi, en: enUS, mr };
+const locales: { [key: string]: Locale } = { hi, en: enUS };
 
 const UserStatus = ({ user, dictionary, language }: { user: UserProfile, dictionary: any, language: string }) => {
     const isOnline = user.lastSeen && (new Date().getTime() - user.lastSeen.toDate().getTime()) < 5 * 60 * 1000;
@@ -302,7 +302,3 @@ export default function AccessManagementPage() {
         </div>
     );
 }
-
-    
-
-    
