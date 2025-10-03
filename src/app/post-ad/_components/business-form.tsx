@@ -43,7 +43,6 @@ export default function BusinessForm() {
   const businessSchema = z.object({
     subcategory: z.string({ required_error: "Please select a service type."}),
     description: z.string().optional(),
-    price: z.coerce.number().positive({ message: adFormDictionary.validation.pricePositive }).optional().or(z.literal('')),
     taluka: z.string({ required_error: adFormDictionary.validation.talukaRequired }),
     location: z.string({ required_error: adFormDictionary.validation.locationRequired }),
     mobileNumber: z.string().regex(/^[6-9]\d{9}$/, { message: adFormDictionary.validation.mobileInvalid }),
@@ -54,7 +53,6 @@ export default function BusinessForm() {
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(businessSchema),
     defaultValues: {
-      price: undefined,
       taluka: undefined,
       location: undefined,
       mobileNumber: '',
@@ -163,7 +161,13 @@ export default function BusinessForm() {
             throw new Error(adFormDictionary.toast.loginRequired);
         }
 
-        let finalPhotoDataUris: string[] = photoPreviews;
+        if (newFiles.length === 0) {
+            toast({ variant: 'destructive', title: adFormDictionary.toast.photoRequiredTitle, description: "कृपया तुमच्या व्यवसायासाठी एक फोटो अपलोड करा." });
+            setIsSubmitting(false);
+            return;
+        }
+
+        let finalPhotoDataUris: string[] = [];
 
         if (newFiles.length > 0) {
             const file = newFiles[0];
@@ -180,7 +184,6 @@ export default function BusinessForm() {
         const submissionData: Omit<Ad, 'id' | 'price'> & { price?: number } = {
             category: 'व्यावसायिक सेवा',
             ...data,
-            price: data.price ? Number(data.price) : undefined,
             photos: finalPhotoDataUris,
             userId: user.uid,
             userName: userProfile.name || user.email!,
@@ -280,29 +283,7 @@ export default function BusinessForm() {
               />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>तुमचा दर (₹, ऐच्छिक)</FormLabel>
-                  <FormControl>
-                    <Input 
-                        type="number" 
-                        placeholder="उदा. ५०० प्रति तास"
-                        {...field} 
-                        onChange={e => field.onChange(e.target.value === '' ? '' : e.target.valueAsNumber)} 
-                        value={field.value ?? ''} 
-                        disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
+          <FormField
               control={form.control}
               name="mobileNumber"
               render={({ field }) => (
@@ -315,7 +296,6 @@ export default function BusinessForm() {
                 </FormItem>
               )}
             />
-          </div>
 
           <FormField
             control={form.control}
@@ -332,7 +312,7 @@ export default function BusinessForm() {
           />
 
           <FormItem>
-            <FormLabel>फोटो (ऐच्छिक)</FormLabel>
+            <FormLabel>फोटो <span className="text-destructive">*</span></FormLabel>
             <FormControl>
               <div>
                 <input
