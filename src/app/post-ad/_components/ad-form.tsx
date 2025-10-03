@@ -245,14 +245,40 @@ export default function AdForm({ existingAd }: AdFormProps) {
             updatedAt: serverTimestamp(),
         };
 
+        const notifyAdmins = async (adId: string) => {
+            try {
+                const adminsQuery = query(collection(db, 'users'), where('role', '==', 'Admin'));
+                const adminSnapshot = await getDocs(adminsQuery);
+                const adCategory = dictionary.categories[data.category] || data.category;
+                
+                const notificationPromises = adminSnapshot.docs.map(adminDoc => {
+                    const admin = adminDoc.data();
+                    return addDoc(collection(db, 'notifications'), {
+                        userId: admin.uid,
+                        title: 'नवीन जाहिरात पुनरावलोकनासाठी',
+                        message: `${userProfile.name} यांनी "${adCategory}" साठी एक नवीन जाहिरात पोस्ट केली आहे.`,
+                        link: `/ad-management`,
+                        isRead: false,
+                        createdAt: serverTimestamp(),
+                        type: 'ad_status',
+                    });
+                });
+                await Promise.all(notificationPromises);
+            } catch (error) {
+                console.error("Error notifying admins:", error);
+            }
+        };
+
         if (isEditMode && existingAd) {
             const adDocRef = doc(db, 'ads', existingAd.id);
             await updateDoc(adDocRef, submissionData);
             toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.updateSuccess });
+            await notifyAdmins(existingAd.id);
             router.push('/my-ads');
         } else {
-            await addDoc(collection(db, 'ads'), submissionData);
+            const docRef = await addDoc(collection(db, 'ads'), submissionData);
             toast({ title: adFormDictionary.toast.successTitle, description: adFormDictionary.toast.submitSuccess });
+            await notifyAdmins(docRef.id);
             router.push('/my-ads');
         }
     } catch (error) {

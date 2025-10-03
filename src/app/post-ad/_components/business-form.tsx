@@ -192,8 +192,33 @@ export default function BusinessForm() {
             updatedAt: serverTimestamp(),
         };
 
-        await addDoc(collection(db, 'ads'), submissionData);
+        const notifyAdmins = async (adId: string) => {
+            try {
+                const adminsQuery = query(collection(db, 'users'), where('role', '==', 'Admin'));
+                const adminSnapshot = await getDocs(adminsQuery);
+                const adCategory = dictionary.categories[submissionData.category] || submissionData.category;
+                
+                const notificationPromises = adminSnapshot.docs.map(adminDoc => {
+                    const admin = adminDoc.data();
+                    return addDoc(collection(db, 'notifications'), {
+                        userId: admin.uid,
+                        title: 'नवीन व्यवसाय नोंदणी पुनरावलोकनासाठी',
+                        message: `${userProfile.name} यांनी "${adCategory}" साठी एक नवीन व्यवसाय नोंदवला आहे.`,
+                        link: `/ad-management`,
+                        isRead: false,
+                        createdAt: serverTimestamp(),
+                        type: 'ad_status',
+                    });
+                });
+                await Promise.all(notificationPromises);
+            } catch (error) {
+                console.error("Error notifying admins:", error);
+            }
+        };
+
+        const docRef = await addDoc(collection(db, 'ads'), submissionData);
         toast({ title: adFormDictionary.toast.successTitle, description: "तुमचा व्यवसाय यशस्वीरित्या नोंदवला गेला आहे." });
+        await notifyAdmins(docRef.id);
         router.push('/my-ads');
 
     } catch (error) {
