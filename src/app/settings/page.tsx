@@ -139,7 +139,7 @@ export default function SettingsPage() {
                 <Card className="mb-6">
                     <CardHeader className="flex flex-col items-center text-center">
                         <Avatar className="h-24 w-24 mb-4">
-                            <AvatarImage src={userProfile.photoURL || `https://picsum.photos/seed/${user.uid}/100`} />
+                            <AvatarImage src={userProfile.photoURL || undefined} />
                             <AvatarFallback>{userProfile.name ? userProfile.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <CardTitle>{userProfile.name}</CardTitle>
