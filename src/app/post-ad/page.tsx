@@ -7,16 +7,36 @@ import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import type { Ad } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Briefcase } from 'lucide-react';
+import { ArrowLeft, Briefcase, FilePlus2 } from 'lucide-react';
+
+type ViewState = 'options' | 'adForm' | 'businessForm';
 
 export default function PostAdPage() {
   const { dictionary } = useLanguage();
-  const [defaultCategory, setDefaultCategory] = useState<Ad['category'] | undefined>();
-  const [formKey, setFormKey] = useState(Date.now());
+  const [view, setView] = useState<ViewState>('options');
 
-  const handleRegisterBusinessClick = () => {
-    setDefaultCategory('व्यावसायिक सेवा');
-    setFormKey(Date.now()); // Re-mount the form with the new default prop
+  const getTitle = () => {
+    switch(view) {
+        case 'adForm':
+            return dictionary.postAd.title;
+        case 'businessForm':
+            return 'तुमचा व्यवसाय नोंदवा';
+        case 'options':
+        default:
+             return dictionary.postAd.title;
+    }
+  }
+
+  const getDescription = () => {
+     switch(view) {
+        case 'adForm':
+            return dictionary.postAd.description;
+        case 'businessForm':
+            return 'तुमच्या सेवेची माहिती भरा आणि अधिक ग्राहकांपर्यंत पोहोचा.';
+        case 'options':
+        default:
+             return dictionary.postAd.description;
+    }
   }
 
   return (
@@ -31,23 +51,49 @@ export default function PostAdPage() {
             data-ai-hint="farm produce"
           />
           <div className="absolute inset-0 bg-black/50" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-              <h1 className="text-lg font-bold">{dictionary.postAd.title}</h1>
-              <p className="mt-2 text-xs max-w-xl">{dictionary.postAd.description}</p>
-          </div>
-           <div className="absolute bottom-[-1.2rem] w-full flex justify-center">
-              <Button onClick={handleRegisterBusinessClick} className="shadow-lg">
-                <Briefcase className="mr-2 h-4 w-4"/>
-                तुमचा व्यवसाय नोंदवा
-              </Button>
+           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
+               {view !== 'options' && (
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-2 left-2 text-white hover:bg-white/20 hover:text-white"
+                    onClick={() => setView('options')}
+                >
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+              )}
+              <h1 className="text-lg font-bold">{getTitle()}</h1>
+              <p className="mt-2 text-xs max-w-xl">{getDescription()}</p>
           </div>
         </div>
       </header>
-      <main className="flex-1 overflow-y-auto p-4 pt-10">
-        <AdForm key={formKey} defaultCategory={defaultCategory} />
+      <main className="flex-1 overflow-y-auto p-4">
+        {view === 'options' && (
+            <div className="flex flex-col items-center justify-center h-full gap-4 -mt-10">
+                <Button 
+                    className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
+                    onClick={() => setView('businessForm')}
+                >
+                    <Briefcase className="h-6 w-6"/>
+                    <span>तुमचा व्यवसाय नोंदवा</span>
+                </Button>
+                 <div className="relative w-full max-w-xs flex items-center justify-center my-2">
+                    <div className="w-full border-t border-border"></div>
+                    <span className="absolute bg-background px-2 text-muted-foreground text-sm">{dictionary.signup.or}</span>
+                </div>
+                <Button 
+                    variant="outline"
+                    className="w-full max-w-xs h-24 flex flex-col items-center justify-center gap-2 text-base"
+                    onClick={() => setView('adForm')}
+                >
+                     <FilePlus2 className="h-6 w-6"/>
+                    <span>जाहिरात टाका</span>
+                </Button>
+            </div>
+        )}
+        {view === 'adForm' && <AdForm key="ad" />}
+        {view === 'businessForm' && <AdForm key="business" defaultCategory="व्यावसायिक सेवा" />}
       </main>
     </div>
   );
 }
-
-    
