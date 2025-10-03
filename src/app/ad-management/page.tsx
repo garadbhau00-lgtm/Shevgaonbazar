@@ -174,48 +174,49 @@ export default function AdManagementPage() {
             <main className="p-4">
                 <div className="space-y-4">
                     {ads.length > 0 ? ads.map((ad) => (
-                        <Card key={ad.id} className="overflow-hidden">
-                            <div className="relative h-40 w-full">
-                                {ad.photos && ad.photos.length > 0 && (
-                                    <Image src={ad.photos[0]} alt={ad.category || ''} fill className="object-cover" />
-                                )}
-                                <Badge variant={getStatusVariant(ad.status)} className="absolute top-2 right-2">
-                                    {statusTranslations[ad.status]}
-                                </Badge>
-                            </div>
-                            <CardHeader>
-                                <CardTitle>{dictionary.categories[ad.category] || ad.category}</CardTitle>
-                                <CardDescription>{ad.location}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {ad.price != null && (
-                                    <div className="mt-2 flex items-center font-semibold text-primary">
-                                        <BadgeIndianRupee className="h-5 w-5 mr-1" />
-                                        <span>{ad.price.toLocaleString('en-IN')}</span>
-                                    </div>
-                                )}
-                                <div className="mt-2 flex items-center text-sm font-semibold text-muted-foreground">
-                                    <Phone className="h-4 w-4 mr-2" />
-                                    <span>{ad.mobileNumber}</span>
+                         <Card key={ad.id} className="overflow-hidden">
+                            <div className="flex">
+                                <div className="relative h-28 w-28 flex-shrink-0">
+                                     {ad.photos && ad.photos.length > 0 && (
+                                        <Image src={ad.photos[0]} alt={ad.category || ''} fill className="object-cover" />
+                                    )}
                                 </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-end gap-2 bg-secondary/50 p-3">
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleOpenRejectDialog(ad)}
-                                >
-                                    <X className="mr-1 h-4 w-4" /> {dictionary.adManagement.rejectButton}
-                                </Button>
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={() => handleUpdateStatus(ad, 'approved')}
-                                >
-                                    <Check className="mr-1 h-4 w-4" /> {dictionary.adManagement.approveButton}
-                                </Button>
-                            </CardFooter>
-                        </Card>
+                                <div className="p-3 flex flex-col justify-between flex-grow">
+                                    <div>
+                                        <CardTitle className="text-base">{dictionary.categories[ad.category] || ad.category}</CardTitle>
+                                        <CardDescription>{ad.location}</CardDescription>
+                                        {ad.price != null && (
+                                            <div className="mt-1 flex items-center text-sm font-semibold text-primary">
+                                                <BadgeIndianRupee className="h-4 w-4 mr-1" />
+                                                <span>{ad.price.toLocaleString('en-IN')}</span>
+                                            </div>
+                                        )}
+                                        <div className="mt-1 flex items-center text-xs font-semibold text-muted-foreground">
+                                            <Phone className="h-3 w-3 mr-1" />
+                                            <span>{ad.mobileNumber}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end gap-2 mt-2">
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleOpenRejectDialog(ad)}
+                                            className="h-8"
+                                        >
+                                            <X className="mr-1 h-4 w-4" /> {dictionary.adManagement.rejectButton}
+                                        </Button>
+                                        <Button
+                                            variant="default"
+                                            size="sm"
+                                            onClick={() => handleUpdateStatus(ad, 'approved')}
+                                            className="h-8"
+                                        >
+                                            <Check className="mr-1 h-4 w-4" /> {dictionary.adManagement.approveButton}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                         </Card>
                     )) : (
                         <div className="text-center text-muted-foreground mt-8 rounded-lg border-2 border-dashed py-12">
                             <p className="text-lg font-semibold">{dictionary.adManagement.noPendingAdsTitle}</p>
