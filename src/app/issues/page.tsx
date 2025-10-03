@@ -119,7 +119,7 @@ export default function IssuesPage() {
                 <div className="space-y-4">
                     {issues.length > 0 ? issues.map((issue) => (
                          <Card key={issue.id} className="overflow-hidden">
-                            <CardHeader>
+                            <CardHeader className="p-4">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4"/> {issue.name}</CardTitle>
@@ -128,8 +128,8 @@ export default function IssuesPage() {
                                     <Badge variant={getStatusVariant(issue.status)}>{issuesDict.status[issue.status]}</Badge>
                                 </div>
                             </CardHeader>
-                            <CardContent>
-                                <p className="whitespace-pre-wrap">{issue.description}</p>
+                            <CardContent className="p-4 pt-0">
+                                <p className="whitespace-pre-wrap text-sm">{issue.description}</p>
                                  <p className="text-xs text-muted-foreground mt-4 flex items-center gap-2">
                                     <Calendar className="h-4 w-4" />
                                     {format(issue.createdAt.toDate(), 'dd MMM yyyy, hh:mm a', { locale: enUS })}
