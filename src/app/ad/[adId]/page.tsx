@@ -178,20 +178,24 @@ export default function AdDetailPage() {
       </header>
 
       {!isOwner && (
-        <div className="absolute top-60 right-4 z-20 flex flex-col items-center gap-2">
+        <div className="absolute top-60 right-4 z-20 flex flex-col items-stretch gap-2">
             <a href={`tel:${ad.mobileNumber}`} className="w-full">
-                <Button size="icon" className="rounded-full h-12 w-12 shadow-lg w-full">
-                    <Phone className="h-5 w-5" />
+                <Button size="lg" className="w-full justify-start px-4 shadow-lg">
+                    <Phone className="h-5 w-5 mr-2" />
+                    <span>Call</span>
                 </Button>
             </a>
-            <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg w-full" onClick={handleStartChat} disabled={isProcessingChat}>
-                {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin" /> : <MessageCircle className="h-5 w-5 text-primary" />}
+            <Button variant="outline" size="lg" className="w-full justify-start px-4 bg-background/80 shadow-lg" onClick={handleStartChat} disabled={isProcessingChat}>
+                {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <MessageCircle className="h-5 w-5 mr-2 text-primary" />}
+                 <span>Chat</span>
             </Button>
-            <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg w-full" onClick={handleShare}>
-              <Share2 className="h-5 w-5" />
+            <Button variant="outline" size="lg" className="w-full justify-start px-4 bg-background/80 shadow-lg" onClick={handleShare}>
+              <Share2 className="h-5 w-5 mr-2" />
+               <span>Share</span>
             </Button>
-             <Button variant="outline" size="icon" className="bg-background/80 rounded-full h-12 w-12 shadow-lg text-destructive w-full" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
-              <Heart className="h-5 w-5" />
+             <Button variant="outline" size="lg" className="w-full justify-start px-4 bg-background/80 shadow-lg text-destructive" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
+              <Heart className="h-5 w-5 mr-2" />
+               <span>Save</span>
             </Button>
         </div>
       )}
