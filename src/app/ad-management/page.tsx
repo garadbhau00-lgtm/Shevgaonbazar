@@ -188,10 +188,12 @@ export default function AdManagementPage() {
                                 <CardDescription>{ad.location}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="mt-2 flex items-center font-semibold text-primary">
-                                    <BadgeIndianRupee className="h-5 w-5 mr-1" />
-                                    <span>{ad.price.toLocaleString('en-IN')}</span>
-                                </div>
+                                {ad.price != null && (
+                                    <div className="mt-2 flex items-center font-semibold text-primary">
+                                        <BadgeIndianRupee className="h-5 w-5 mr-1" />
+                                        <span>{ad.price.toLocaleString('en-IN')}</span>
+                                    </div>
+                                )}
                                 <div className="mt-2 flex items-center text-sm font-semibold text-muted-foreground">
                                     <Phone className="h-4 w-4 mr-2" />
                                     <span>{ad.mobileNumber}</span>
