@@ -1,33 +1,61 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper functions
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
+
+    // USERS
+    // All users can read all profiles
+    // Only the owner can write to their own profile
+    // Admins can write to any user profile
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isOwner(userId) || isAdmin();
     }
+    
+    // ADS
+    // All users can read approved ads
+    // Owners can read their own unapproved ads
+    // Admins can read all ads
+    // Authenticated users can create ads
+    // Owners and Admins can update/delete ads
     match /ads/{adId} {
-      allow read: if request.auth != null;
+      allow read: if resource.data.status == 'approved' 
+                    || isOwner(resource.data.userId) 
+                    || isAdmin();
       allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
     }
+    
+    // CONVERSATIONS & MESSAGES
+    // Participants can read/write to their own conversations and messages
     match /conversations/{conversationId} {
-      allow read, create: if request.auth != null && request.auth.uid in resource.data.participants;
+      allow read, write: if request.auth.uid in resource.data.participants;
+      
+      // Allow creating a new conversation
+      allow create: if request.auth != null && request.resource.data.participants.hasAny([request.auth.uid]);
+      
       match /messages/{messageId} {
-        allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        allow read, write, create: if get( /databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
       }
     }
+    
+    // NOTIFICATIONS
+    // Users can read/update their own notifications
+    // Admins can delete any notification
     match /notifications/{notificationId} {
-      function isOwner() {
-        return request.auth != null && request.auth.uid == resource.data.userId;
-      }
-
-      function isAdmin() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
-      }
-
-      allow read, update: if isOwner();
-      allow delete: if isOwner() || isAdmin();
-      allow create: if request.auth != null;
+        allow read, update: if isOwner(resource.data.userId);
+        allow create: if request.auth != null; // Admins create broadcasts, server creates status updates
+        allow delete: if isOwner(resource.data.userId) || isAdmin();
     }
   }
 }

@@ -3,13 +3,13 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
 import { db } from '@/lib/firebase';
-import type { Ad } from '@/lib/types';
+import type { Ad, UserProfile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BadgeIndianRupee, MapPin, Phone, User, CalendarDays } from 'lucide-react';
+import { Loader2, BadgeIndianRupee, MapPin, Phone, User, CalendarDays, MessageSquare } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -22,10 +22,11 @@ export default function AdDetailPage() {
     const { adId } = useParams();
     const router = useRouter();
     const { toast } = useToast();
-    const { user, loading: authLoading } = useAuth();
+    const { user, userProfile, loading: authLoading } = useAuth();
     const { dictionary } = useLanguage();
     const [ad, setAd] = useState<Ad | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isCreatingChat, setIsCreatingChat] = useState(false);
 
     useEffect(() => {
         if (authLoading) return;
@@ -64,6 +65,74 @@ export default function AdDetailPage() {
 
         fetchAd();
     }, [adId, router, toast, user, authLoading, dictionary]);
+    
+    const handleStartChat = async () => {
+        if (!user || !userProfile || !ad) return;
+
+        if (user.uid === ad.userId) {
+            toast({
+                description: "You cannot start a chat about your own ad.",
+            });
+            return;
+        }
+
+        setIsCreatingChat(true);
+        try {
+            // Check if a conversation already exists
+            const q = query(
+                collection(db, 'conversations'),
+                where('adId', '==', ad.id),
+                where('participants', 'array-contains', user.uid)
+            );
+            
+            const querySnapshot = await getDocs(q);
+            const existingConvo = querySnapshot.docs.find(doc => doc.data().participants.includes(ad.userId));
+
+            if (existingConvo) {
+                router.push(`/inbox/${existingConvo.id}`);
+            } else {
+                // Fetch ad owner's profile
+                const ownerProfileSnap = await getDoc(doc(db, 'users', ad.userId));
+                if (!ownerProfileSnap.exists()) {
+                    throw new Error("Ad owner profile not found.");
+                }
+                const ownerProfile = ownerProfileSnap.data() as UserProfile;
+
+                // Create a new conversation
+                const newConversationRef = await addDoc(collection(db, 'conversations'), {
+                    adId: ad.id,
+                    adPhoto: ad.photos[0] || '',
+                    adTitle: dictionary.categories[ad.category] || ad.category,
+                    participants: [user.uid, ad.userId],
+                    participantProfiles: {
+                        [user.uid]: {
+                            name: userProfile.name || user.email,
+                            photoURL: userProfile.photoURL || '',
+                        },
+                        [ownerProfile.uid]: {
+                            name: ownerProfile.name || ownerProfile.email,
+                            photoURL: ownerProfile.photoURL || '',
+                        }
+                    },
+                    lastMessageTimestamp: serverTimestamp(),
+                    unreadBy: {
+                        [user.uid]: false,
+                        [ad.userId]: true,
+                    },
+                    lastMessage: `${userProfile.name} started a conversation.`,
+                    lastMessageSenderId: user.uid,
+                });
+                router.push(`/inbox/${newConversationRef.id}`);
+            }
+
+        } catch (error) {
+            console.error("Error starting chat:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Failed to start chat." });
+        } finally {
+            setIsCreatingChat(false);
+        }
+    };
+
 
     if (loading || authLoading) {
         return (
@@ -150,14 +219,32 @@ export default function AdDetailPage() {
                 </div>
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-background border-t">
-                <Link href={`tel:${ad.mobileNumber}`} className="w-full">
-                    <Button className="w-full bg-green-600 hover:bg-green-700" size="lg">
-                        <Phone className="mr-2 h-5 w-5" />
-                        {dictionary.adDetail.callButton}
-                    </Button>
-                </Link>
-            </div>
+            {user?.uid !== ad.userId && (
+                <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-2 bg-background border-t">
+                   <div className="flex gap-2">
+                        <Button 
+                            variant="outline" 
+                            className="w-full" 
+                            size="lg"
+                            onClick={handleStartChat}
+                            disabled={isCreatingChat}
+                        >
+                             {isCreatingChat ? (
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                             ) : (
+                                <MessageSquare className="mr-2 h-5 w-5" />
+                             )}
+                            चॅट करा
+                        </Button>
+                        <Link href={`tel:${ad.mobileNumber}`} className="w-full">
+                            <Button className="w-full bg-green-600 hover:bg-green-700" size="lg">
+                                <Phone className="mr-2 h-5 w-5" />
+                                {dictionary.adDetail.callButton}
+                            </Button>
+                        </Link>
+                   </div>
+                </div>
+            )}
         </main>
     );
 }
