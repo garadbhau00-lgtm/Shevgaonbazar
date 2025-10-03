@@ -203,7 +203,7 @@ export default function Home() {
                       </SheetHeader>
                       <div className="py-4 space-y-6 overflow-y-auto h-[calc(100vh-10rem)] pr-4">
                            <div>
-                              <Label className="font-semibold">{dictionary.home.filterSort.sortBy}</Label>
+                              <Label className="font-semibold text-xs">{dictionary.home.filterSort.sortBy}</Label>
                               <RadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)} className="mt-2 space-y-1">
                                 {sortOptions.map(option => (
                                   <div key={option.value} className="flex items-center space-x-2">
@@ -216,7 +216,7 @@ export default function Home() {
                           
                           {subcategoriesForSelectedCategory.length > 0 && (
                             <div>
-                                <Label htmlFor="subcategory-filter" className="font-semibold">{dictionary.home.filterSort.subcategory}</Label>
+                                <Label htmlFor="subcategory-filter" className="font-semibold text-xs">{dictionary.home.filterSort.subcategory}</Label>
                                 <DropdownSelect value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
                                     <SelectTrigger id="subcategory-filter" className="mt-2">
                                         <SelectValue placeholder={dictionary.home.filterSort.selectSubcategory} />
@@ -234,7 +234,7 @@ export default function Home() {
                           )}
 
                            <div>
-                                <Label htmlFor="village-filter" className="font-semibold">{dictionary.home.filterSort.village}</Label>
+                                <Label htmlFor="village-filter" className="font-semibold text-xs">{dictionary.home.filterSort.village}</Label>
                                 <DropdownSelect value={selectedVillage} onValueChange={setSelectedVillage}>
                                     <SelectTrigger id="village-filter" className="mt-2">
                                         <SelectValue placeholder={dictionary.home.filterSort.selectVillage} />
@@ -250,7 +250,7 @@ export default function Home() {
 
                            <div>
                                 <div className="flex justify-between items-center mb-2">
-                                     <Label className="font-semibold">{dictionary.home.filterSort.maxPrice}</Label>
+                                     <Label className="font-semibold text-xs">{dictionary.home.filterSort.maxPrice}</Label>
                                      <span className="text-sm font-medium text-primary">
                                         ₹{maxPrice.toLocaleString('en-IN')}
                                      </span>
