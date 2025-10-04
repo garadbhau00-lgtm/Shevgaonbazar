@@ -89,19 +89,20 @@ export default function AdDetailPage() {
 
     try {
       const conversationsRef = collection(db, 'conversations');
+      // This query finds conversations where both the current user and the ad owner are participants.
       const q = query(
         conversationsRef,
-        where('adId', '==', ad.id),
         where('participants', 'array-contains', user.uid)
       );
 
       const querySnapshot = await getDocs(q);
       
-      let existingConvo: Conversation | null = null;
+      let existingConvo: (Conversation & {id: string}) | null = null;
+      // We need to filter client-side because Firestore doesn't support two 'array-contains' on the same field.
       querySnapshot.forEach(doc => {
-        const convo = doc.data() as Conversation;
-        if (convo.participants.includes(ad!.userId)) {
-          existingConvo = { id: doc.id, ...convo };
+        const convo = { id: doc.id, ...doc.data() } as Conversation & {id: string};
+        if (convo.participants.includes(ad.userId) && convo.adId === ad.id) {
+          existingConvo = convo;
         }
       });
 
@@ -109,7 +110,8 @@ export default function AdDetailPage() {
         router.push(`/inbox/${existingConvo.id}`);
         return;
       }
-
+      
+      // If no existing conversation is found, create a new one.
       const sellerDocRef = doc(db, 'users', ad.userId);
       const buyerDocRef = doc(db, 'users', user.uid);
 
@@ -127,9 +129,11 @@ export default function AdDetailPage() {
       const sellerProfile = sellerDoc.data();
       const buyerProfile = buyerDoc.data();
 
+      const adTitle = ad.category ? (dictionary.categories[ad.category] || ad.category) : 'Ad';
+
       const newConversationData = {
         adId: ad.id,
-        adTitle: dictionary.categories[ad.category] || ad.category,
+        adTitle: adTitle,
         adPhoto: ad.photos?.[0] || '',
         participants: [user.uid, ad.userId],
         participantProfiles: {
@@ -171,9 +175,14 @@ export default function AdDetailPage() {
   const handleShare = async () => {
     if (navigator.share && ad) {
         try {
+            const adCategory = ad.category ? (dictionary.categories[ad.category] || ad.category) : 'Ad';
+            const shareText = ad.price 
+              ? `Check out this ${adCategory} for ₹${ad.price.toLocaleString('en-IN')} in ${ad.location} on Shevgaon Bazar`
+              : `Check out this ${adCategory} in ${ad.location} on Shevgaon Bazar`;
+            
             await navigator.share({
-                title: `${dictionary.categories[ad.category]} in ${ad.location}`,
-                text: `Check out this ad on Shevgaon Bazar: ${ad.price ? `₹${ad.price.toLocaleString('en-IN')}` : ''}`,
+                title: `${adCategory} in ${ad.location}`,
+                text: shareText,
                 url: window.location.href
             });
         } catch (error: any) {
@@ -206,7 +215,7 @@ export default function AdDetailPage() {
       <header className="relative h-60 w-full">
         <Image
           src={ad.photos?.[0] || 'https://picsum.photos/seed/ad-placeholder/1200/800'}
-          alt={ad.category}
+          alt={ad.category || 'Ad image'}
           fill
           className="object-cover"
           priority
