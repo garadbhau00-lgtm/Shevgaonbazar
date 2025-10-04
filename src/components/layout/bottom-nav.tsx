@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, MoreHorizontal, Home, User, Plus, List } from 'lucide-react';
+import { MoreHorizontal, Home, User, Plus, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
@@ -18,7 +18,6 @@ export default function BottomNav() {
 
   const baseNavItems = [
     { href: '/', label: dictionary.bottomNav.home, icon: Home },
-    { href: '/inbox', label: dictionary.bottomNav.inbox, icon: MessageCircle, requiresAuth: true },
     { href: '/post-ad', label: dictionary.bottomNav.postAd, icon: Plus, requiresAuth: true },
     { href: '/my-ads', label: dictionary.bottomNav.myAds, icon: List, requiresAuth: true },
     { href: '/more', label: dictionary.bottomNav.more, icon: MoreHorizontal },
@@ -37,20 +36,15 @@ export default function BottomNav() {
   return (
     <div className="fixed bottom-0 z-10 w-full max-w-lg">
       <div className="relative h-16 bg-card border-t">
-        <nav className="grid h-full grid-cols-5 items-center">
+        <nav className="grid h-full grid-cols-4 items-center">
           {baseNavItems.map((item) => {
             const isActive = pathname === item.href;
             const isAuthProtected = item.requiresAuth && !user;
             const finalHref = isAuthProtected && !loading ? '/login' : item.href;
 
-            // Hide the /inbox nav item if it's the current page
             if (pathname.startsWith('/inbox/')) {
                  if (item.href === '/inbox') return null;
-
-                 // Adjust grid if inbox is hidden
                  const remainingItems = baseNavItems.filter(i => i.href !== '/inbox');
-                 const newGridCols = `grid-cols-${remainingItems.length}`;
-                 
                  return (
                      <Link
                         key={item.href}
@@ -110,4 +104,3 @@ export default function BottomNav() {
     </div>
   );
 }
-

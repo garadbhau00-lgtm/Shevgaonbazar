@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Ad, Conversation } from '@/lib/types';
+import type { Ad } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/language-context';
@@ -13,7 +13,6 @@ import {
   Loader2,
   ArrowLeft,
   Phone,
-  MessageCircle,
   Share2,
   BadgeIndianRupee,
   MapPin,
@@ -36,7 +35,6 @@ export default function AdDetailPage() {
   const { dictionary } = useLanguage();
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isProcessingChat, setIsProcessingChat] = useState(false);
 
   useEffect(() => {
     const fetchAd = async () => {
@@ -82,96 +80,6 @@ export default function AdDetailPage() {
     }
   }, [adId, authLoading, user, router, toast, dictionary]);
   
-
- const handleStartChat = async () => {
-    if (!user || !ad || user.uid === ad.userId) return;
-    setIsProcessingChat(true);
-
-    try {
-      const conversationsRef = collection(db, 'conversations');
-      // This query finds conversations where both the current user and the ad owner are participants for this specific ad.
-      const q = query(
-        conversationsRef,
-        where('adId', '==', ad.id),
-        where('participants', 'array-contains', user.uid)
-      );
-
-      const querySnapshot = await getDocs(q);
-      
-      let existingConvo: (Conversation & {id: string}) | null = null;
-      // We still need to filter client-side because Firestore doesn't support two 'array-contains' on the same field for different values.
-      querySnapshot.forEach(doc => {
-        const convo = { id: doc.id, ...doc.data() } as Conversation & {id: string};
-        if (convo.participants.includes(ad.userId)) {
-          existingConvo = convo;
-        }
-      });
-
-      if (existingConvo) {
-        router.push(`/inbox/${existingConvo.id}`);
-        return;
-      }
-      
-      // If no existing conversation is found, create a new one.
-      const sellerDocRef = doc(db, 'users', ad.userId);
-      const buyerDocRef = doc(db, 'users', user.uid);
-
-      const [sellerDoc, buyerDoc] = await Promise.all([
-        getDoc(sellerDocRef),
-        getDoc(buyerDocRef),
-      ]);
-      
-      if (!sellerDoc.exists() || !buyerDoc.exists()) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profiles.' });
-        setIsProcessingChat(false);
-        return;
-      }
-
-      const sellerProfile = sellerDoc.data();
-      const buyerProfile = buyerDoc.data();
-
-      const adTitle = ad.category ? (dictionary.categories[ad.category] || ad.category) : 'Ad';
-
-      const newConversationData = {
-        adId: ad.id,
-        adTitle: adTitle,
-        adPhoto: ad.photos?.[0] || '',
-        participants: [user.uid, ad.userId],
-        participantProfiles: {
-          [user.uid]: { name: buyerProfile.name, photoURL: buyerProfile.photoURL || '' },
-          [ad.userId]: { name: sellerProfile.name, photoURL: sellerProfile.photoURL || '' },
-        },
-        lastMessage: '',
-        lastMessageTimestamp: serverTimestamp(),
-        lastMessageSenderId: '',
-        unreadBy: { [user.uid]: false, [ad.userId]: true },
-      };
-      
-      const newConversationRef = await addDoc(conversationsRef, newConversationData);
-      router.push(`/inbox/${newConversationRef.id}`);
-
-    } catch (error: any) {
-        let permError = null;
-        if (error.code === 'permission-denied') {
-            permError = new FirestorePermissionError({
-                path: 'conversations',
-                operation: 'create',
-                requestResourceData: { adId: ad.id },
-            });
-        } else if (error.name === 'FirestorePermissionError') {
-            permError = error;
-        }
-
-        if (permError) {
-            errorEmitter.emit('permission-error', permError);
-        } else {
-            console.error("Error starting chat:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not start chat.' });
-        }
-    } finally {
-        setIsProcessingChat(false);
-    }
-  };
   
   const handleShare = async () => {
     if (navigator.share && ad) {
@@ -272,12 +180,8 @@ export default function AdDetailPage() {
                   <Share2 className="h-5 w-5 mb-1 text-primary"/>
                   <span className="text-xs">Share</span>
                 </Button>
-                <Button className="flex-1" onClick={handleStartChat} disabled={isProcessingChat}>
-                    {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <MessageCircle className="h-5 w-5 mr-2" />}
-                     <span>Chat</span>
-                </Button>
                 <a href={`tel:${ad.mobileNumber}`} className="flex-1">
-                    <Button className="w-full">
+                    <Button className="w-full" size="lg">
                         <Phone className="h-5 w-5 mr-2" />
                         <span>Call</span>
                     </Button>

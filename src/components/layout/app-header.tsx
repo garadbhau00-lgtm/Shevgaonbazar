@@ -86,9 +86,6 @@ export default function AppHeader() {
               <DropdownMenuItem onClick={() => router.push('/my-ads')}>
                 माझ्या जाहिराती
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/inbox')}>
-                Inbox
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/more')}>
                 More Options
               </DropdownMenuItem>
@@ -119,4 +116,3 @@ export default function AppHeader() {
     </header>
   );
 }
-
