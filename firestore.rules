@@ -3,55 +3,43 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only read and write to their own profile.
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
     }
 
     match /ads/{adId} {
-      // Anyone can read an approved ad. The ad owner can read their own unapproved ads.
       allow read: if resource.data.status == 'approved' || (request.auth != null && request.auth.uid == resource.data.userId);
-      // Logged-in users can create ads.
-      allow create: if request.auth != null;
-      // Only the ad owner can update or delete their ad.
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create, update: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && (resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin');
+    }
+
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
     match /conversations/{conversationId} {
-      // Only participants can read, update or delete a conversation.
-      allow read, update, delete: if request.auth != null && request.auth.uid in resource.data.participants;
-
-      // A user can create a conversation if:
-      // 1. They are logged in.
-      // 2. Their UID is in the new conversation's participants list.
-      // 3. The conversation only has 2 participants.
-      // 4. The other participant is the actual owner of the ad being discussed.
-      allow create: if request.auth != null &&
-                       request.auth.uid in request.resource.data.participants &&
-                       request.resource.data.participants.size() == 2 &&
-                       (request.resource.data.participants[0] == get(/databases/$(database)/documents/ads/$(request.resource.data.adId)).data.userId ||
-                        request.resource.data.participants[1] == get(/databases/$(database)/documents/ads/$(request.resource.data.adId)).data.userId);
-                        
-      match /messages/{messageId} {
-        // Only participants can read or create messages in a conversation.
-        allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-      }
+      allow read, write, update: if request.auth != null && request.auth.uid in resource.data.participants;
+      allow create: if request.auth != null && 
+                    request.auth.uid in request.resource.data.participants &&
+                    request.resource.data.participants.size() == 2 &&
+                    exists(/databases/$(database)/documents/ads/$(request.resource.data.adId)) &&
+                    get(/databases/$(database)/documents/ads/$(request.resource.data.adId)).data.userId in request.resource.data.participants;
     }
 
+    match /conversations/{conversationId}/messages/{messageId} {
+      allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+    }
+    
     match /notifications/{notificationId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null; // Admins create notifications for users
+      allow read, write, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
     }
-
+    
     match /issues/{issueId} {
-       allow create: if request.auth != null; // Users can create issues
-       allow read, update: if request.auth != null && request.auth.uid == resource.data.userId || request.auth.token.role == 'Admin';
-       allow delete: if request.auth != null && request.auth.token.role == 'Admin';
-    }
-
-    match /config/advertisement {
-        allow read: if true;
-        allow write: if request.auth != null && request.auth.token.role == 'Admin';
+      allow create: if true;
+      allow read, update: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
   }
 }
