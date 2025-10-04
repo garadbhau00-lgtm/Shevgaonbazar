@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Ad, Conversation } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
@@ -27,6 +27,8 @@ import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
+import { cn } from '@/lib/utils';
+
 
 export default function AdDetailPage() {
   const { adId } = useParams();
@@ -37,6 +39,8 @@ export default function AdDetailPage() {
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessingChat, setIsProcessingChat] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchAd = async () => {
@@ -74,6 +78,17 @@ export default function AdDetailPage() {
       fetchAd();
     }
   }, [adId, authLoading, user, router, toast, dictionary]);
+  
+  useEffect(() => {
+      if (user && ad) {
+        const checkSavedStatus = async () => {
+            const savedAdRef = doc(db, 'users', user.uid, 'savedAds', ad.id);
+            const docSnap = await getDoc(savedAdRef);
+            setIsSaved(docSnap.exists());
+        };
+        checkSavedStatus();
+      }
+  }, [user, ad]);
 
   const handleStartChat = async () => {
     if (!user || !ad || user.uid === ad.userId) return;
@@ -116,6 +131,7 @@ export default function AdDetailPage() {
             sellerProfile = sellerDoc.data();
         } catch (error) {
             errorEmitter.emit('permission-error', new FirestorePermissionError({ path: sellerDocRef.path, operation: 'get' }));
+            setIsProcessingChat(false);
             return;
         }
         
@@ -128,6 +144,7 @@ export default function AdDetailPage() {
             buyerProfile = buyerDoc.data();
         } catch (error) {
             errorEmitter.emit('permission-error', new FirestorePermissionError({ path: buyerDocRef.path, operation: 'get' }));
+            setIsProcessingChat(false);
             return;
         }
 
@@ -146,18 +163,23 @@ export default function AdDetailPage() {
             unreadBy: { [user.uid]: false, [ad.userId]: true }
         };
 
-        const newConversationRef = await addDoc(conversationsRef, newConversationData);
-        router.push(`/inbox/${newConversationRef.id}`);
+       try {
+            const newConversationRef = await addDoc(conversationsRef, newConversationData);
+            router.push(`/inbox/${newConversationRef.id}`);
+       } catch (error) {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: conversationsRef.path,
+                operation: 'create',
+                requestResourceData: newConversationData
+            }));
+       }
 
     } catch (error: any) {
         if(error.name === 'FirestorePermissionError') {
              errorEmitter.emit('permission-error', error);
         } else {
-             const permissionError = new FirestorePermissionError({
-                path: conversationsRef.path,
-                operation: 'list',
-             });
-             errorEmitter.emit('permission-error', permissionError);
+             console.error("Error starting chat:", error);
+             toast({ variant: 'destructive', title: 'Error', description: 'Could not start chat.' });
         }
     } finally {
         setIsProcessingChat(false);
@@ -173,7 +195,6 @@ export default function AdDetailPage() {
                 url: window.location.href
             });
         } catch (error: any) {
-            // Silently fail if the user cancels the share action (AbortError or NotAllowedError)
             if (error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
                 console.error('Error sharing:', error);
             }
@@ -182,6 +203,37 @@ export default function AdDetailPage() {
         toast({ title: 'Not Supported', description: 'Share feature is not supported on your browser.' });
     }
   };
+
+  const handleToggleSave = async () => {
+    if (!user || !ad) {
+        toast({ variant: 'destructive', title: 'Login Required', description: 'You must be logged in to save ads.' });
+        return;
+    }
+    setIsSaving(true);
+    const savedAdRef = doc(db, 'users', user.uid, 'savedAds', ad.id);
+
+    try {
+        if (isSaved) {
+            // Unsave the ad
+            await deleteDoc(savedAdRef);
+            setIsSaved(false);
+            toast({ title: 'Removed', description: 'Ad removed from your saved list.' });
+        } else {
+            // Save the ad
+            await setDoc(savedAdRef, {
+                savedAt: serverTimestamp()
+            });
+            setIsSaved(true);
+            toast({ title: 'Saved!', description: 'Ad added to your saved list.' });
+        }
+    } catch (error) {
+        console.error('Error toggling save status:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not update saved status.' });
+    } finally {
+        setIsSaving(false);
+    }
+  };
+
 
   if (loading || authLoading) {
     return (
@@ -256,8 +308,8 @@ export default function AdDetailPage() {
                   <Share2 className="h-5 w-5 mb-1 text-primary"/>
                   <span className="text-xs">Share</span>
                 </Button>
-                <Button variant="ghost" className="flex-col h-auto text-destructive" onClick={() => toast({title: "Coming Soon!", description: "This feature is not yet implemented."})}>
-                  <Heart className="h-5 w-5 mb-1"/>
+                <Button variant="ghost" className="flex-col h-auto text-destructive" onClick={handleToggleSave} disabled={isSaving}>
+                  <Heart className={cn("h-5 w-5 mb-1", isSaved && "fill-current")} />
                   <span className="text-xs">Save</span>
                 </Button>
                 <Button className="flex-1" onClick={handleStartChat} disabled={isProcessingChat}>
