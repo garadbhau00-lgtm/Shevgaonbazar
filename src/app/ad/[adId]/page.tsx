@@ -103,87 +103,90 @@ export default function AdDetailPage() {
     );
 
     try {
-        const querySnapshot = await getDocs(q);
-        let existingConvo: Conversation | null = null;
-        querySnapshot.forEach(doc => {
-            const convo = doc.data() as Conversation;
-            if(convo.participants.includes(ad!.userId)) {
-                existingConvo = { id: doc.id, ...convo };
-            }
-        });
-
-        if (existingConvo) {
-            router.push(`/inbox/${existingConvo.id}`);
-            return;
+      const querySnapshot = await getDocs(q);
+      let existingConvo: Conversation | null = null;
+      querySnapshot.forEach(doc => {
+        const convo = doc.data() as Conversation;
+        if (convo.participants.includes(ad!.userId)) {
+          existingConvo = { id: doc.id, ...convo };
         }
+      });
 
-        // Create a new conversation
-        const sellerDocRef = doc(db, 'users', ad.userId);
-        const buyerDocRef = doc(db, 'users', user.uid);
-        
-        let sellerProfile, buyerProfile;
+      if (existingConvo) {
+        router.push(`/inbox/${existingConvo.id}`);
+        return;
+      }
 
-        try {
-            const sellerDoc = await getDoc(sellerDocRef);
-            if (!sellerDoc.exists()) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Could not find seller profile.' });
-                return;
-            }
-            sellerProfile = sellerDoc.data();
-        } catch (error) {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({ path: sellerDocRef.path, operation: 'get' }));
-            setIsProcessingChat(false);
-            return;
+      // Create a new conversation
+      const sellerDocRef = doc(db, 'users', ad.userId);
+      const buyerDocRef = doc(db, 'users', user.uid);
+
+      let sellerProfile;
+      try {
+        const sellerDoc = await getDoc(sellerDocRef);
+        if (!sellerDoc.exists()) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not find seller profile.' });
+          setIsProcessingChat(false);
+          return;
         }
-        
-        try {
-            const buyerDoc = await getDoc(buyerDocRef);
-            if (!buyerDoc.exists()) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Could not find your user profile.' });
-                return;
-            }
-            buyerProfile = buyerDoc.data();
-        } catch (error) {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({ path: buyerDocRef.path, operation: 'get' }));
-            setIsProcessingChat(false);
-            return;
+        sellerProfile = sellerDoc.data();
+      } catch (error) {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: sellerDocRef.path, operation: 'get' }));
+        setIsProcessingChat(false);
+        return;
+      }
+
+      let buyerProfile;
+      try {
+        const buyerDoc = await getDoc(buyerDocRef);
+        if (!buyerDoc.exists()) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not find your user profile.' });
+          setIsProcessingChat(false);
+          return;
         }
+        buyerProfile = buyerDoc.data();
+      } catch (error) {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: buyerDocRef.path, operation: 'get' }));
+        setIsProcessingChat(false);
+        return;
+      }
 
-        const newConversationData = {
-            adId: ad.id,
-            adTitle: dictionary.categories[ad.category] || ad.category,
-            adPhoto: ad.photos?.[0] || '',
-            participants: [user.uid, ad.userId],
-            participantProfiles: {
-                [user.uid]: { name: buyerProfile.name, photoURL: buyerProfile.photoURL || '' },
-                [ad.userId]: { name: sellerProfile.name, photoURL: sellerProfile.photoURL || '' }
-            },
-            lastMessage: '',
-            lastMessageTimestamp: serverTimestamp(),
-            lastMessageSenderId: '',
-            unreadBy: { [user.uid]: false, [ad.userId]: true }
-        };
 
-       try {
-            const newConversationRef = await addDoc(conversationsRef, newConversationData);
-            router.push(`/inbox/${newConversationRef.id}`);
-       } catch (error) {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: conversationsRef.path,
-                operation: 'create',
-                requestResourceData: newConversationData
-            }));
-       }
+      const newConversationData = {
+        adId: ad.id,
+        adTitle: dictionary.categories[ad.category] || ad.category,
+        adPhoto: ad.photos?.[0] || '',
+        participants: [user.uid, ad.userId],
+        participantProfiles: {
+          [user.uid]: { name: buyerProfile.name, photoURL: buyerProfile.photoURL || '' },
+          [ad.userId]: { name: sellerProfile.name, photoURL: sellerProfile.photoURL || '' }
+        },
+        lastMessage: '',
+        lastMessageTimestamp: serverTimestamp(),
+        lastMessageSenderId: '',
+        unreadBy: { [user.uid]: false, [ad.userId]: true }
+      };
+
+      try {
+        const newConversationRef = await addDoc(conversationsRef, newConversationData);
+        router.push(`/inbox/${newConversationRef.id}`);
+      } catch (error) {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: conversationsRef.path,
+          operation: 'create',
+          requestResourceData: newConversationData
+        }));
+      }
 
     } catch (error: any) {
-        if(error.name === 'FirestorePermissionError') {
-             errorEmitter.emit('permission-error', error);
-        } else {
-             console.error("Error starting chat:", error);
-             toast({ variant: 'destructive', title: 'Error', description: 'Could not start chat.' });
-        }
+      if (error.name === 'FirestorePermissionError') {
+        errorEmitter.emit('permission-error', error);
+      } else {
+        console.error("Error starting chat:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not start chat.' });
+      }
     } finally {
-        setIsProcessingChat(false);
+      setIsProcessingChat(false);
     }
   };
   
@@ -335,3 +338,5 @@ export default function AdDetailPage() {
     </div>
   );
 }
+
+    
