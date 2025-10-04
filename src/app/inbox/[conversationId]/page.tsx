@@ -144,7 +144,7 @@ export default function ChatPage() {
     const otherParticipantProfile = otherParticipantId ? conversation.participantProfiles[otherParticipantId] : null;
 
     return (
-        <div className="flex flex-col h-[calc(100vh-4rem)] bg-muted/20">
+        <div className="flex flex-1 flex-col bg-muted/20">
             <header className="sticky top-0 z-10 flex h-16 flex-shrink-0 items-center gap-4 border-b bg-card px-4 shadow-sm">
                 <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => router.push('/inbox')}>
                     <ArrowLeft className="h-5 w-5" />
