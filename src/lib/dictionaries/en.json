@@ -4,7 +4,7 @@
         "loadingAds": "Loading ads...",
         "noAdsFound": "No ads found.",
         "noAdsInCategory": "There are currently no ads in this category.",
-        "welcomeTitle": "Welcome to Shevgaon Bazar",
+        "welcomeTitle": "Welcome to Shetkari Bazar",
         "welcomeDescription": "The heart of your local farming community. Buy and sell produce, livestock, and equipment in your taluka.",
         "all": "All",
         "adCard": {
@@ -51,7 +51,7 @@
         "title": "More Options",
         "description": "Manage your account, settings, and more.",
         "user": "User",
-        "joinShevgaonBazar": "Join Shevgaon Bazar",
+        "joinShevgaonBazar": "Join Shetkari Bazar",
         "connectWithCommunity": "Connect with your local farming community.",
         "settings": "Settings",
         "helpCenter": "Help Center",
@@ -64,7 +64,7 @@
         "myIssues": "Your Issues"
     },
     "login": {
-        "title": "Login to Shevgaon Bazar",
+        "title": "Login to Shetkari Bazar",
         "description": "Enter your credentials to access your account",
         "emailLabel": "Email",
         "emailPlaceholder": "Your email address",
@@ -85,7 +85,7 @@
         },
         "toast": {
             "loginSuccessTitle": "Login Successful!",
-            "welcome": "Welcome to Shevgaon Bazar.",
+            "welcome": "Welcome to Shetkari Bazar.",
             "loginFailedTitle": "Login Failed",
             "loginFailedDescription": "Please check your email and password.",
             "errorTitle": "Error",
@@ -267,9 +267,9 @@
         "logoutFailedTitle": "Logout Failed",
         "logoutFailedDescription": "Please try again.",
         "accountCreatedTitle": "Account Created!",
-        "accountCreatedDescription": "Welcome to Shevgaon Bazar. Your role: ${role}",
+        "accountCreatedDescription": "Welcome to Shetkari Bazar. Your role: ${role}",
         "loginSuccessTitle": "Login Successful!",
-        "welcomeBack": "Welcome back to Shevgaon Bazar.",
+        "welcomeBack": "Welcome back to Shetkari Bazar.",
         "googleSignInFailedTitle": "Google Sign-In Failed",
         "googleSignInFailedDescription": "An unexpected error occurred. Please try again.",
         "popupBlockedTitle": "Popup Blocked",
@@ -521,3 +521,5 @@
         }
     }
 }
+
+    

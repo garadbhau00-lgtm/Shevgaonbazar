@@ -10,7 +10,7 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { AdvertisementProvider } from '@/contexts/advertisement-context';
 
 export const metadata: Metadata = {
-  title: 'शेवगाव बाजार',
+  title: 'शेतकरी बाजार',
   description: 'तुमच्या स्थानिक शेतकरी समुदायाचे ह्रदय...',
 };
 
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="mr">
       <head>
-        <title>शेवगाव बाजार</title>
+        <title>शेतकरी बाजार</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -48,3 +48,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    

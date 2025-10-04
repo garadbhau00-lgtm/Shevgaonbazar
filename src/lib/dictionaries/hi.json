@@ -4,7 +4,7 @@
         "loadingAds": "विज्ञापन लोड हो रहे हैं...",
         "noAdsFound": "कोई विज्ञापन नहीं मिला।",
         "noAdsInCategory": "इस श्रेणी में वर्तमान में कोई विज्ञापन नहीं हैं।",
-        "welcomeTitle": "शेवगांव बाजार में आपका स्वागत है",
+        "welcomeTitle": "शेतकरी बाजार में आपका स्वागत है",
         "welcomeDescription": "आपके स्थानीय किसान समुदाय का दिल। अपने तालुका में उपज, पशुधन और उपकरण खरीदें और बेचें।",
         "all": "सभी",
         "adCard": {
@@ -51,7 +51,7 @@
         "title": "अधिक विकल्प",
         "description": "अपना खाता, सेटिंग्स और बहुत कुछ प्रबंधित करें।",
         "user": "उपयोगकर्ता",
-        "joinShevgaonBazar": "शेवगांव बाजार से जुड़ें",
+        "joinShevgaonBazar": "शेतकरी बाजार से जुड़ें",
         "connectWithCommunity": "अपने स्थानीय किसान समुदाय से जुड़ें।",
         "settings": "सेटिंग्स",
         "helpCenter": "सहायता केंद्र",
@@ -64,7 +64,7 @@
         "myIssues": "आपकी समस्याएं"
     },
     "login": {
-        "title": "शेवगांव बाजार में लॉगिन करें",
+        "title": "शेतकरी बाजार में लॉगिन करें",
         "description": "अपने खाते तक पहुंचने के लिए अपनी क्रेडेंशियल दर्ज करें",
         "emailLabel": "ईमेल",
         "emailPlaceholder": "आपका ईमेल पता",
@@ -85,7 +85,7 @@
         },
         "toast": {
             "loginSuccessTitle": "लॉगिन सफल!",
-            "welcome": "शेवगांव बाजार में आपका स्वागत है।",
+            "welcome": "शेतकरी बाजार में आपका स्वागत है।",
             "loginFailedTitle": "लॉगिन विफल",
             "loginFailedDescription": "कृपया अपना ईमेल और पासवर्ड जांचें।",
             "errorTitle": "त्रुटि",
@@ -267,9 +267,9 @@
         "logoutFailedTitle": "लॉगआउट विफल",
         "logoutFailedDescription": "कृपया पुन: प्रयास करें।",
         "accountCreatedTitle": "खाता बन गया!",
-        "accountCreatedDescription": "शेवगांव बाजार में आपका स्वागत है। आपकी भूमिका: ${role}",
+        "accountCreatedDescription": "शेतकरी बाजार में आपका स्वागत है। आपकी भूमिका: ${role}",
         "loginSuccessTitle": "लॉगिन सफल!",
-        "welcomeBack": "शेवगांव बाजार में वापस स्वागत है।",
+        "welcomeBack": "शेतकरी बाजार में वापस स्वागत है।",
         "googleSignInFailedTitle": "Google साइन-इन विफल",
         "googleSignInFailedDescription": "एक अप्रत्याशित त्रुटि हुई। कृपया पुन: प्रयास करें।",
         "popupBlockedTitle": "पॉप-अप अवरुद्ध",
@@ -521,3 +521,5 @@
         }
     }
 }
+
+    

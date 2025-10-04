@@ -4,7 +4,7 @@
         "loadingAds": "जाहिराती लोड होत आहेत...",
         "noAdsFound": "कोणत्याही जाहिराती आढळल्या नाहीत.",
         "noAdsInCategory": "या वर्गात सध्या कोणत्याही जाहिराती नाहीत.",
-        "welcomeTitle": "शेवगाव बाजार मध्ये आपले स्वागत आहे",
+        "welcomeTitle": "शेतकरी बाजार मध्ये आपले स्वागत आहे",
         "welcomeDescription": "तुमच्या स्थानिक शेतकरी समुदायाचे हृदय. तुमच्या तालुक्यात उत्पादन, पशुधन आणि उपकरणे खरेदी आणि विक्री करा.",
         "all": "सर्व",
         "adCard": {
@@ -51,7 +51,7 @@
         "title": "अधिक पर्याय",
         "description": "तुमचे खाते, सेटिंग्ज आणि बरेच काही व्यवस्थापित करा.",
         "user": "वापरकर्ता",
-        "joinShevgaonBazar": "शेवगाव बाजारमध्ये सामील व्हा",
+        "joinShevgaonBazar": "शेतकरी बाजारमध्ये सामील व्हा",
         "connectWithCommunity": "तुमच्या स्थानिक शेतकरी समुदायाशी कनेक्ट व्हा.",
         "settings": "सेटिंग्ज",
         "helpCenter": "मदत केंद्र",
@@ -64,7 +64,7 @@
         "myIssues": "तुमच्या समस्या"
     },
     "login": {
-        "title": "शेवगाव बाजारमध्ये लॉगिन करा",
+        "title": "शेतकरी बाजारमध्ये लॉगिन करा",
         "description": "तुमच्या खात्यात प्रवेश करण्यासाठी तुमची क्रेडेन्शियल्स प्रविष्ट करा",
         "emailLabel": "ईमेल",
         "emailPlaceholder": "तुमचा ईमेल पत्ता",
@@ -85,7 +85,7 @@
         },
         "toast": {
             "loginSuccessTitle": "लॉगिन यशस्वी!",
-            "welcome": "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+            "welcome": "शेतकरी बाजारमध्ये तुमचे स्वागत आहे.",
             "loginFailedTitle": "लॉगिन अयशस्वी",
             "loginFailedDescription": "कृपया तुमचा ईमेल आणि पासवर्ड तपासा.",
             "errorTitle": "त्रुटि",
@@ -267,9 +267,9 @@
         "logoutFailedTitle": "लॉगआउट अयशस्वी",
         "logoutFailedDescription": "कृपया पुन्हा प्रयत्न करा.",
         "accountCreatedTitle": "खाते तयार झाले!",
-        "accountCreatedDescription": "शेवगाव बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${role}",
+        "accountCreatedDescription": "शेतकरी बाजारमध्ये तुमचे स्वागत आहे. तुमची भूमिका: ${role}",
         "loginSuccessTitle": "लॉगिन यशस्वी!",
-        "welcomeBack": "शेवगाव बाजारमध्ये तुमचे स्वागत आहे.",
+        "welcomeBack": "शेतकरी बाजारमध्ये तुमचे स्वागत आहे.",
         "googleSignInFailedTitle": "Google साइन-इन अयशस्वी",
         "googleSignInFailedDescription": "एक अनपेक्षित त्रुटी आली. कृपया पुन्हा प्रयत्न करा.",
         "popupBlockedTitle": "पॉप-अप ब्लॉक केला",
@@ -419,7 +419,7 @@
         "description": "तुम्हाला जे हवे आहे ते शोधा, जलद आणि सहज.",
         "placeholder": "जाहिराती शोधा...",
         "initialStateTitle": "तुमच्या गरजेनुसार काहीही शोधा",
-        "initialStateDescription": "उदा. 'ट्रॅक्टर', 'कांदा', किंवा 'शेवगाव'",
+        "initialStateDescription": "उदा. 'ट्रॅक्टर', 'कांदा', किंवा 'शेवगांव'",
         "loading": "जाहिराती लोड होत आहेत...",
         "noResultsTitle": "कोणतेही परिणाम आढळले नाहीत.",
         "noResultsDescription": "वेगळा शोध शब्द वापरून पहा.",
@@ -521,3 +521,5 @@
         }
     }
 }
+
+    
