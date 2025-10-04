@@ -146,9 +146,9 @@ export default function ChatPage() {
     return (
         <div className="fixed inset-0 z-20 flex max-w-lg mx-auto flex-col bg-background">
             <header className="flex h-16 flex-shrink-0 items-center gap-4 border-b bg-card px-4 shadow-sm">
-                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => router.push('/inbox')}>
+                 <Link href="/inbox" className="p-2">
                     <ArrowLeft className="h-5 w-5" />
-                </Button>
+                </Link>
                 <Avatar className="h-9 w-9">
                     <AvatarImage src={otherParticipantProfile?.photoURL} />
                     <AvatarFallback>{otherParticipantProfile?.name.charAt(0) || '?'}</AvatarFallback>
