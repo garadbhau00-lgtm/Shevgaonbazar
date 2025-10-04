@@ -88,97 +88,75 @@ export default function AdDetailPage() {
     if (!user || !ad || user.uid === ad.userId) return;
     setIsProcessingChat(true);
 
-    const conversationsRef = collection(db, 'conversations');
-    const q = query(
-      conversationsRef,
-      where('adId', '==', ad.id),
-      where('participants', 'array-contains', user.uid)
-    );
-
     try {
-      const querySnapshot = await getDocs(q);
-      let existingConvo: Conversation | null = null;
-      querySnapshot.forEach(doc => {
-        const convo = doc.data() as Conversation;
-        if (convo.participants.includes(ad!.userId)) {
-          existingConvo = { id: doc.id, ...convo };
+        const conversationsRef = collection(db, 'conversations');
+        const q = query(
+            conversationsRef,
+            where('adId', '==', ad.id),
+            where('participants', 'array-contains', user.uid)
+        );
+
+        const querySnapshot = await getDocs(q);
+        let existingConvo: Conversation | null = null;
+        querySnapshot.forEach(doc => {
+            const convo = doc.data() as Conversation;
+            if (convo.participants.includes(ad!.userId)) {
+                existingConvo = { id: doc.id, ...convo };
+            }
+        });
+
+        if (existingConvo) {
+            router.push(`/inbox/${existingConvo.id}`);
+            return;
         }
-      });
 
-      if (existingConvo) {
-        router.push(`/inbox/${existingConvo.id}`);
-        return;
-      }
+        const sellerDocRef = doc(db, 'users', ad.userId);
+        const buyerDocRef = doc(db, 'users', user.uid);
 
-      // Create a new conversation
-      const sellerDocRef = doc(db, 'users', ad.userId);
-      const buyerDocRef = doc(db, 'users', user.uid);
+        const [sellerDoc, buyerDoc] = await Promise.all([
+            getDoc(sellerDocRef),
+            getDoc(buyerDocRef)
+        ]);
 
-      let sellerProfile;
-      try {
-        const sellerDoc = await getDoc(sellerDocRef);
-        if (!sellerDoc.exists()) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Could not find seller profile.' });
-          setIsProcessingChat(false);
-          return;
+        if (!sellerDoc.exists() || !buyerDoc.exists()) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profiles.' });
+            setIsProcessingChat(false);
+            return;
         }
-        sellerProfile = sellerDoc.data();
-      } catch (error) {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: sellerDocRef.path, operation: 'get' }));
-        setIsProcessingChat(false);
-        return;
-      }
+        
+        const sellerProfile = sellerDoc.data();
+        const buyerProfile = buyerDoc.data();
+        
+        const newConversationData = {
+            adId: ad.id,
+            adTitle: dictionary.categories[ad.category] || ad.category,
+            adPhoto: ad.photos?.[0] || '',
+            participants: [user.uid, ad.userId],
+            participantProfiles: {
+                [user.uid]: { name: buyerProfile.name, photoURL: buyerProfile.photoURL || '' },
+                [ad.userId]: { name: sellerProfile.name, photoURL: sellerProfile.photoURL || '' }
+            },
+            lastMessage: '',
+            lastMessageTimestamp: serverTimestamp(),
+            lastMessageSenderId: '',
+            unreadBy: { [user.uid]: false, [ad.userId]: true }
+        };
 
-      let buyerProfile;
-      try {
-        const buyerDoc = await getDoc(buyerDocRef);
-        if (!buyerDoc.exists()) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Could not find your user profile.' });
-          setIsProcessingChat(false);
-          return;
-        }
-        buyerProfile = buyerDoc.data();
-      } catch (error) {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: buyerDocRef.path, operation: 'get' }));
-        setIsProcessingChat(false);
-        return;
-      }
-
-
-      const newConversationData = {
-        adId: ad.id,
-        adTitle: dictionary.categories[ad.category] || ad.category,
-        adPhoto: ad.photos?.[0] || '',
-        participants: [user.uid, ad.userId],
-        participantProfiles: {
-          [user.uid]: { name: buyerProfile.name, photoURL: buyerProfile.photoURL || '' },
-          [ad.userId]: { name: sellerProfile.name, photoURL: sellerProfile.photoURL || '' }
-        },
-        lastMessage: '',
-        lastMessageTimestamp: serverTimestamp(),
-        lastMessageSenderId: '',
-        unreadBy: { [user.uid]: false, [ad.userId]: true }
-      };
-
-      try {
         const newConversationRef = await addDoc(conversationsRef, newConversationData);
         router.push(`/inbox/${newConversationRef.id}`);
-      } catch (error) {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: conversationsRef.path,
-          operation: 'create',
-          requestResourceData: newConversationData
-        }));
-      }
 
     } catch (error: any) {
       if (error.name === 'FirestorePermissionError') {
-        errorEmitter.emit('permission-error', error);
+          errorEmitter.emit('permission-error', error);
+      } else if (error.code === 'permission-denied') {
+           errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: 'conversations',
+                operation: 'create',
+            }));
       } else {
-        console.error("Error starting chat:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not start chat.' });
+          console.error("Error starting chat:", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not start chat.' });
       }
-    } finally {
       setIsProcessingChat(false);
     }
   };
@@ -295,5 +273,6 @@ export default function AdDetailPage() {
     </div>
   );
 }
+
 
 
