@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/language-context';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/errors';
 
 export default function ChatPage() {
     const { conversationId } = useParams();
@@ -52,8 +54,15 @@ export default function ChatPage() {
                 setConversation(convoData);
                 
                 if (convoData.unreadBy && convoData.unreadBy[user.uid]) {
-                    await updateDoc(conversationRef, {
+                     updateDoc(conversationRef, {
                         [`unreadBy.${user.uid}`]: false
+                    }).catch(serverError => {
+                        const permissionError = new FirestorePermissionError({
+                            path: conversationRef.path,
+                            operation: 'update',
+                            requestResourceData: { [`unreadBy.${user.uid}`]: false }
+                        });
+                        errorEmitter.emit('permission-error', permissionError);
                     });
                 }
             } else {
@@ -61,9 +70,12 @@ export default function ChatPage() {
                 router.push('/inbox');
             }
             setLoading(false);
-        }, (error) => {
-            console.error("Error fetching conversation:", error);
-            toast({ variant: 'destructive', title: dictionary.chat.errorTitle, description: dictionary.chat.errorLoad });
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: conversationRef.path,
+                operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
             router.push('/inbox');
         });
 
@@ -73,6 +85,12 @@ export default function ChatPage() {
         const unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
             const msgs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChatMessage));
             setMessages(msgs);
+        }, (serverError) => {
+             const permissionError = new FirestorePermissionError({
+                path: messagesRef.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
 
         return () => {
@@ -92,32 +110,44 @@ export default function ChatPage() {
 
         setIsSending(true);
         const messageText = newMessage.trim();
-        try {
-            setNewMessage('');
-            
-            const messagesRef = collection(db, 'conversations', conversationId as string, 'messages');
-            await addDoc(messagesRef, {
-                text: messageText,
-                senderId: user.uid,
-                timestamp: serverTimestamp(),
-            });
+        setNewMessage('');
+        
+        const messagesRef = collection(db, 'conversations', conversationId as string, 'messages');
+        const messageData = {
+            text: messageText,
+            senderId: user.uid,
+            timestamp: serverTimestamp(),
+        };
 
-            const conversationRef = doc(db, 'conversations', conversationId as string);
-            const otherParticipantId = conversation.participants.find(p => p !== user.uid);
-            await updateDoc(conversationRef, {
-                lastMessage: messageText,
-                lastMessageSenderId: user.uid,
-                lastMessageTimestamp: serverTimestamp(),
-                [`unreadBy.${otherParticipantId}`]: true,
+        addDoc(messagesRef, messageData).catch(serverError => {
+            const permissionError = new FirestorePermissionError({
+                path: messagesRef.path,
+                operation: 'create',
+                requestResourceData: messageData,
             });
+            errorEmitter.emit('permission-error', permissionError);
+            setNewMessage(messageText); // Restore message on error
+        });
 
-        } catch (error) {
-            console.error('Error sending message:', error);
-            setNewMessage(messageText); 
-            toast({ variant: 'destructive', title: dictionary.chat.errorTitle, description: dictionary.chat.errorSend });
-        } finally {
-            setIsSending(false);
-        }
+        const conversationRef = doc(db, 'conversations', conversationId as string);
+        const otherParticipantId = conversation.participants.find(p => p !== user.uid);
+        const conversationUpdateData = {
+            lastMessage: messageText,
+            lastMessageSenderId: user.uid,
+            lastMessageTimestamp: serverTimestamp(),
+            [`unreadBy.${otherParticipantId}`]: true,
+        };
+
+        updateDoc(conversationRef, conversationUpdateData).catch(serverError => {
+             const permissionError = new FirestorePermissionError({
+                path: conversationRef.path,
+                operation: 'update',
+                requestResourceData: conversationUpdateData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+
+        setIsSending(false);
     };
     
     if (loading || authLoading) {
@@ -192,4 +222,6 @@ export default function ChatPage() {
         </div>
     )
 }
+    
+
     
