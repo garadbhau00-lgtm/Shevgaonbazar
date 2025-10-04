@@ -37,7 +37,7 @@ export default function RootLayout({
               <FirebaseErrorListener />
               <div className="relative mx-auto flex min-h-screen max-w-lg flex-col border-x bg-background">
                 <AppHeader />
-                <main className="flex-1 pb-28">{children}</main>
+                <main className="flex-1 flex flex-col">{children}</main>
                 <BottomNav />
               </div>
               <Toaster />

@@ -122,7 +122,7 @@ export default function ChatPage() {
     
     if (loading || authLoading) {
         return (
-            <div className="flex h-[calc(100vh-4rem)] flex-col">
+            <div className="flex h-screen flex-col">
                  <header className="flex h-16 items-center gap-4 border-b bg-card px-4">
                     <Button variant="ghost" size="icon" onClick={() => router.push('/inbox')}>
                         <ArrowLeft />
@@ -144,8 +144,8 @@ export default function ChatPage() {
     const otherParticipantProfile = otherParticipantId ? conversation.participantProfiles[otherParticipantId] : null;
 
     return (
-        <div className="flex flex-1 flex-col bg-muted/20">
-            <header className="sticky top-0 z-10 flex h-16 flex-shrink-0 items-center gap-4 border-b bg-card px-4 shadow-sm">
+        <div className="fixed inset-0 z-20 flex max-w-lg mx-auto flex-col bg-background">
+            <header className="flex h-16 flex-shrink-0 items-center gap-4 border-b bg-card px-4 shadow-sm">
                 <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => router.push('/inbox')}>
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
@@ -161,7 +161,7 @@ export default function ChatPage() {
                 </div>
             </header>
             
-            <main className="flex-1 overflow-y-auto p-4 space-y-6">
+            <main className="flex-1 overflow-y-auto p-4 space-y-6 bg-muted/20">
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -181,7 +181,7 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
             </main>
 
-            <footer className="sticky bottom-0 border-t bg-background p-2 flex-shrink-0">
+            <footer className="border-t bg-background p-2 flex-shrink-0">
                 <form onSubmit={handleSendMessage} className="relative flex items-center">
                     <Input 
                         placeholder={dictionary.chat.messagePlaceholder}
