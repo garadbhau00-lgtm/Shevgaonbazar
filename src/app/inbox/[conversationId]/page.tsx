@@ -83,7 +83,7 @@ export default function ChatPage() {
     }, [conversationId, user, authLoading, router, toast, dictionary]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }, [messages]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
@@ -122,7 +122,7 @@ export default function ChatPage() {
     
     if (loading || authLoading) {
         return (
-            <div className="flex h-screen flex-col">
+            <div className="flex h-[calc(100vh-4rem)] flex-col">
                  <header className="flex h-16 items-center gap-4 border-b bg-card px-4">
                     <Button variant="ghost" size="icon" onClick={() => router.push('/inbox')}>
                         <ArrowLeft />
@@ -144,8 +144,8 @@ export default function ChatPage() {
     const otherParticipantProfile = otherParticipantId ? conversation.participantProfiles[otherParticipantId] : null;
 
     return (
-        <div className="flex h-screen flex-col bg-muted/20">
-            <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-card px-4 shadow-sm">
+        <div className="flex flex-col h-[calc(100vh-4rem)] bg-muted/20">
+            <header className="sticky top-0 z-10 flex h-16 flex-shrink-0 items-center gap-4 border-b bg-card px-4 shadow-sm">
                 <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => router.push('/inbox')}>
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
@@ -181,7 +181,7 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
             </main>
 
-            <footer className="sticky bottom-0 border-t bg-background p-2">
+            <footer className="sticky bottom-0 border-t bg-background p-2 flex-shrink-0">
                 <form onSubmit={handleSendMessage} className="relative flex items-center">
                     <Input 
                         placeholder={dictionary.chat.messagePlaceholder}
