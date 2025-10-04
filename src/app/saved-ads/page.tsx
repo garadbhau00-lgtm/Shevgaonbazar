@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { collection, query, onSnapshot, getDocs, doc } from 'firebase/firestore';
+import { collection, query, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { Ad } from '@/lib/types';
@@ -12,6 +12,8 @@ import { Loader2, HeartOff } from 'lucide-react';
 import Image from 'next/image';
 import AdCard from '@/components/ad-card';
 import { Button } from '@/components/ui/button';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/errors';
 
 export default function SavedAdsPage() {
     const { user, loading: authLoading } = useAuth();
@@ -43,20 +45,39 @@ export default function SavedAdsPage() {
                 setLoading(false);
                 return;
             }
-
-            const adPromises = adIds.map(id => getDoc(doc(db, 'ads', id)));
-            const adDocs = await Promise.all(adPromises);
             
-            const adsData = adDocs
-                .filter(docSnap => docSnap.exists())
-                .map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Ad));
-            
-            setSavedAds(adsData);
-            setLoading(false);
+            try {
+                const adPromises = adIds.map(id => getDoc(doc(db, 'ads', id)));
+                const adDocs = await Promise.all(adPromises);
+                
+                const adsData = adDocs
+                    .filter(docSnap => docSnap.exists())
+                    .map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Ad));
+                
+                setSavedAds(adsData);
+            } catch (serverError: any) {
+                 // Check if it's a permission error and create a contextual error
+                if (serverError.code === 'permission-denied') {
+                    const permissionError = new FirestorePermissionError({
+                        path: 'ads/{adId}', // Generic path as we don't know which one failed
+                        operation: 'get',
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
+                } else {
+                    console.error("Error fetching ad details:", serverError);
+                    toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch details for saved ads.' });
+                }
+            } finally {
+                setLoading(false);
+            }
 
-        }, (error) => {
-            console.error("Error fetching saved ads:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch saved ads.' });
+        }, (serverError) => {
+            console.error("Error fetching saved ad IDs:", serverError);
+            const permissionError = new FirestorePermissionError({
+                path: savedAdsQuery.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
             setLoading(false);
         });
 
