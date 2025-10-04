@@ -89,19 +89,20 @@ export default function AdDetailPage() {
 
     try {
       const conversationsRef = collection(db, 'conversations');
-      // This query finds conversations where both the current user and the ad owner are participants.
+      // This query finds conversations where both the current user and the ad owner are participants for this specific ad.
       const q = query(
         conversationsRef,
+        where('adId', '==', ad.id),
         where('participants', 'array-contains', user.uid)
       );
 
       const querySnapshot = await getDocs(q);
       
       let existingConvo: (Conversation & {id: string}) | null = null;
-      // We need to filter client-side because Firestore doesn't support two 'array-contains' on the same field.
+      // We still need to filter client-side because Firestore doesn't support two 'array-contains' on the same field for different values.
       querySnapshot.forEach(doc => {
         const convo = { id: doc.id, ...doc.data() } as Conversation & {id: string};
-        if (convo.participants.includes(ad.userId) && convo.adId === ad.id) {
+        if (convo.participants.includes(ad.userId)) {
           existingConvo = convo;
         }
       });
