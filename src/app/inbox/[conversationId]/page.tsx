@@ -144,10 +144,10 @@ export default function ChatPage() {
     const otherParticipantProfile = otherParticipantId ? conversation.participantProfiles[otherParticipantId] : null;
 
     return (
-        <div className="flex h-screen flex-col">
-            <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-card px-4">
-                <Button variant="ghost" size="icon" onClick={() => router.push('/inbox')}>
-                    <ArrowLeft />
+        <div className="flex h-screen flex-col bg-muted/20">
+            <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-card px-4 shadow-sm">
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => router.push('/inbox')}>
+                    <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <Avatar className="h-9 w-9">
                     <AvatarImage src={otherParticipantProfile?.photoURL} />
@@ -161,11 +161,11 @@ export default function ChatPage() {
                 </div>
             </header>
             
-            <main className="flex-1 overflow-y-auto p-4 space-y-4 bg-secondary/30">
+            <main className="flex-1 overflow-y-auto p-4 space-y-6">
                 {messages.map((message) => (
                     <div
                         key={message.id}
-                        className={`flex items-end gap-2 ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
+                        className={`flex items-end gap-2.5 ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
                     >
                          {message.senderId !== user?.uid && (
                              <Avatar className="h-8 w-8">
@@ -173,24 +173,24 @@ export default function ChatPage() {
                                 <AvatarFallback>{otherParticipantProfile?.name.charAt(0) || '?'}</AvatarFallback>
                             </Avatar>
                          )}
-                        <p className={`max-w-[70%] rounded-lg px-4 py-2 ${message.senderId === user?.uid ? 'bg-primary text-primary-foreground' : 'bg-card'}`}>
-                            {message.text}
-                        </p>
+                        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm ${message.senderId === user?.uid ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-card rounded-bl-none'}`}>
+                            <p className="text-sm">{message.text}</p>
+                        </div>
                     </div>
                 ))}
                 <div ref={messagesEndRef} />
             </main>
 
-            <footer className="sticky bottom-0 border-t bg-card p-2">
+            <footer className="sticky bottom-0 border-t bg-background p-2">
                 <form onSubmit={handleSendMessage} className="relative flex items-center">
                     <Input 
                         placeholder={dictionary.chat.messagePlaceholder}
-                        className="pr-12" 
+                        className="pr-12 h-11 rounded-full" 
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         disabled={isSending}
                     />
-                    <Button type="submit" size="icon" className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2" disabled={isSending || !newMessage.trim()}>
+                    <Button type="submit" size="icon" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-primary hover:bg-primary/90" disabled={isSending || !newMessage.trim()}>
                         {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>
                 </form>
