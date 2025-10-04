@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Ad, Conversation } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
@@ -16,7 +16,6 @@ import {
   Phone,
   MessageCircle,
   Share2,
-  Heart,
   BadgeIndianRupee,
   MapPin,
   Tag,
@@ -27,7 +26,6 @@ import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
-import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 
@@ -40,8 +38,6 @@ export default function AdDetailPage() {
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessingChat, setIsProcessingChat] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchAd = async () => {
@@ -87,24 +83,6 @@ export default function AdDetailPage() {
     }
   }, [adId, authLoading, user, router, toast, dictionary]);
   
-  useEffect(() => {
-      if (user && ad) {
-        const checkSavedStatus = async () => {
-            const savedAdRef = doc(db, 'users', user.uid, 'savedAds', ad.id);
-            try {
-                const docSnap = await getDoc(savedAdRef);
-                setIsSaved(docSnap.exists());
-            } catch (error: any) {
-                // This might fail if rules for the subcollection don't exist, which is fine on initial load.
-                // The main save/unsave action will handle the permission error more directly.
-                if (error.code === 'permission-denied') {
-                    console.warn('Could not check saved status due to permissions, this may be expected.');
-                }
-            }
-        };
-        checkSavedStatus();
-      }
-  }, [user, ad]);
 
   const handleStartChat = async () => {
     if (!user || !ad || user.uid === ad.userId) return;
@@ -223,38 +201,6 @@ export default function AdDetailPage() {
     }
   };
 
-  const handleToggleSave = async () => {
-    if (!user || !ad) {
-        toast({ variant: 'destructive', title: 'Login Required', description: 'You must be logged in to save ads.' });
-        return;
-    }
-    setIsSaving(true);
-    const savedAdRef = doc(db, 'users', user.uid, 'savedAds', ad.id);
-
-    try {
-        if (isSaved) {
-            await deleteDoc(savedAdRef);
-            setIsSaved(false);
-            toast({ title: 'Removed', description: 'Ad removed from your saved list.' });
-        } else {
-            const saveData = { savedAt: serverTimestamp() };
-            await setDoc(savedAdRef, saveData);
-            setIsSaved(true);
-            toast({ title: 'Saved!', description: 'Ad added to your saved list.' });
-        }
-    } catch (serverError) {
-        const operation = isSaved ? 'delete' : 'create';
-        const error = new FirestorePermissionError({
-            path: savedAdRef.path,
-            operation: operation,
-            requestResourceData: operation === 'create' ? { savedAt: 'serverTimestamp' } : undefined,
-        });
-        errorEmitter.emit('permission-error', error);
-    } finally {
-        setIsSaving(false);
-    }
-  };
-
 
   if (loading || authLoading) {
     return (
@@ -330,10 +276,6 @@ export default function AdDetailPage() {
                 <Button variant="ghost" className="flex-col h-auto" onClick={handleShare}>
                   <Share2 className="h-5 w-5 mb-1 text-primary"/>
                   <span className="text-xs">Share</span>
-                </Button>
-                <Button variant="ghost" className="flex-col h-auto text-destructive" onClick={handleToggleSave} disabled={isSaving}>
-                  <Heart className={cn("h-5 w-5 mb-1", isSaved && "fill-current")} />
-                  <span className="text-xs">Save</span>
                 </Button>
                 <Button className="flex-1" onClick={handleStartChat} disabled={isProcessingChat}>
                     {isProcessingChat ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <MessageCircle className="h-5 w-5 mr-2" />}
