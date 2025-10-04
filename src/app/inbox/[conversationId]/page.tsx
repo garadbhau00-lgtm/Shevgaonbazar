@@ -154,6 +154,9 @@ export default function ChatPage() {
         return (
             <div className="fixed inset-0 z-20 flex max-w-lg mx-auto flex-col bg-background">
                  <header className="flex h-16 items-center gap-4 border-b bg-card px-4 flex-shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                        <ArrowLeft />
+                    </Button>
                     <div className="h-8 w-32 rounded-md bg-muted animate-pulse"></div>
                 </header>
                 <div className="flex-1 flex justify-center items-center">
@@ -173,6 +176,9 @@ export default function ChatPage() {
     return (
         <div className="fixed inset-0 z-20 flex max-w-lg mx-auto flex-col bg-background">
             <header className="flex h-16 flex-shrink-0 items-center gap-4 border-b bg-card px-4 shadow-sm">
+                 <Button variant="ghost" size="icon" onClick={() => router.push('/inbox')}>
+                    <ArrowLeft />
+                </Button>
                 <Avatar className="h-9 w-9">
                     <AvatarImage src={otherParticipantProfile?.photoURL} />
                     <AvatarFallback>{otherParticipantProfile?.name.charAt(0) || '?'}</AvatarFallback>
@@ -224,4 +230,3 @@ export default function ChatPage() {
 }
     
 
-    

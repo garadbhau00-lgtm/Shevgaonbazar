@@ -48,11 +48,12 @@ export default function AppHeader() {
     router.push('/login');
   };
 
-  const isTransparentPage = ['/', '/post-ad', '/my-ads', '/more', '/search', '/ad-management', '/access-management', '/help-center', '/settings', '/notifications', '/broadcast'].includes(pathname);
+  const isTransparentPage = ['/', '/post-ad', '/my-ads', '/more', '/search', '/ad-management', '/access-management', '/help-center', '/settings', '/notifications', '/broadcast', '/inbox', '/my-issues', '/saved-ads', '/advertisement', '/issues'].includes(pathname);
   const isAdDetailPage = /^\/ad\//.test(pathname);
+  const isChatPage = /^\/inbox\//.test(pathname);
   
-  if (isAdDetailPage) {
-    return null; // The ad detail page has its own header
+  if (isAdDetailPage || isChatPage) {
+    return null; // These pages have their own headers
   }
 
 
@@ -118,3 +119,4 @@ export default function AppHeader() {
     </header>
   );
 }
+

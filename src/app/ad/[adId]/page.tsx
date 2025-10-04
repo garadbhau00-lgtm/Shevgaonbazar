@@ -281,7 +281,7 @@ export default function AdDetailPage() {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        <Link href="/inbox">
+        <Link href="/">
             <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-white bg-black/30 hover:bg-black/50 hover:text-white">
                 <ArrowLeft />
             </Button>
@@ -354,4 +354,3 @@ export default function AdDetailPage() {
   );
 }
 
-    

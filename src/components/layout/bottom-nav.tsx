@@ -28,7 +28,7 @@ export default function BottomNav() {
     setIsClient(true);
   }, []);
 
-  const showNav = isClient && !pathname.startsWith('/login') && !pathname.startsWith('/signup') && !pathname.startsWith('/inbox/');
+  const showNav = isClient && !pathname.startsWith('/login') && !pathname.startsWith('/signup');
 
   if (!showNav) {
     return null;
@@ -42,6 +42,42 @@ export default function BottomNav() {
             const isActive = pathname === item.href;
             const isAuthProtected = item.requiresAuth && !user;
             const finalHref = isAuthProtected && !loading ? '/login' : item.href;
+
+            // Hide the /inbox nav item if it's the current page
+            if (pathname.startsWith('/inbox/')) {
+                 if (item.href === '/inbox') return null;
+
+                 // Adjust grid if inbox is hidden
+                 const remainingItems = baseNavItems.filter(i => i.href !== '/inbox');
+                 const newGridCols = `grid-cols-${remainingItems.length}`;
+                 
+                 return (
+                     <Link
+                        key={item.href}
+                        href={finalHref}
+                        className={cn(
+                        'group inline-flex h-full flex-col items-center justify-center text-center transition-colors',
+                        isActive ? 'text-primary font-bold' : 'text-muted-foreground font-medium',
+                        isAuthProtected && !loading && 'opacity-60',
+                        `first:col-start-1 last:col-start-${remainingItems.length}`
+                        )}
+                    >
+                         {item.href === '/' ? (
+                            <div className={cn("relative flex h-8 w-8 items-center justify-center rounded-full")}>
+                                    <Avatar className={cn("h-7 w-7", isActive && 'ring-2 ring-primary')}>
+                                        <AvatarImage src={userProfile?.photoURL || undefined} />
+                                        <AvatarFallback>
+                                        {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : <User className="h-4 w-4"/>}
+                                        </AvatarFallback>
+                                    </Avatar>
+                            </div>
+                            ) : (
+                                <item.icon className="h-5 w-5" />
+                            )}
+                            <span className="text-[11px] mt-1">{item.label}</span>
+                    </Link>
+                 );
+            }
 
             return (
               <Link
@@ -74,3 +110,4 @@ export default function BottomNav() {
     </div>
   );
 }
+
