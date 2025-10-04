@@ -77,7 +77,6 @@ export default function AdDetailPage() {
 
   const handleStartChat = async () => {
     if (!user || !ad || user.uid === ad.userId) return;
-
     setIsProcessingChat(true);
 
     const conversationsRef = collection(db, 'conversations');
@@ -87,42 +86,50 @@ export default function AdDetailPage() {
       where('participants', 'array-contains', user.uid)
     );
 
-    getDocs(q).then(async (querySnapshot) => {
-      let existingConvo: Conversation | null = null;
-      querySnapshot.forEach(doc => {
-        const convo = doc.data() as Conversation;
-        if(convo.participants.includes(ad!.userId)) {
-            existingConvo = { id: doc.id, ...convo };
-        }
-      });
+    try {
+        const querySnapshot = await getDocs(q);
+        let existingConvo: Conversation | null = null;
+        querySnapshot.forEach(doc => {
+            const convo = doc.data() as Conversation;
+            if(convo.participants.includes(ad!.userId)) {
+                existingConvo = { id: doc.id, ...convo };
+            }
+        });
 
-      if (existingConvo) {
-        router.push(`/inbox/${existingConvo.id}`);
-        setIsProcessingChat(false);
-      } else {
+        if (existingConvo) {
+            router.push(`/inbox/${existingConvo.id}`);
+            return;
+        }
+
         // Create a new conversation
         const sellerDocRef = doc(db, 'users', ad.userId);
         const buyerDocRef = doc(db, 'users', user.uid);
+        
+        let sellerProfile, buyerProfile;
 
-        const [sellerDoc, buyerDoc] = await Promise.all([
-            getDoc(sellerDocRef),
-            getDoc(buyerDocRef)
-        ]).catch(serverError => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: 'users collection',
-                operation: 'get',
-            }));
-            return [null, null];
-        });
-
-        if (!sellerDoc?.exists() || !buyerDoc?.exists()) {
-             toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profiles.' });
-             setIsProcessingChat(false);
-             return;
+        try {
+            const sellerDoc = await getDoc(sellerDocRef);
+            if (!sellerDoc.exists()) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not find seller profile.' });
+                return;
+            }
+            sellerProfile = sellerDoc.data();
+        } catch (error) {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({ path: sellerDocRef.path, operation: 'get' }));
+            return;
         }
-
-        const sellerProfile = sellerDoc.data();
-        const buyerProfile = buyerDoc.data();
+        
+        try {
+            const buyerDoc = await getDoc(buyerDocRef);
+            if (!buyerDoc.exists()) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not find your user profile.' });
+                return;
+            }
+            buyerProfile = buyerDoc.data();
+        } catch (error) {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({ path: buyerDocRef.path, operation: 'get' }));
+            return;
+        }
 
         const newConversationData = {
             adId: ad.id,
@@ -139,30 +146,22 @@ export default function AdDetailPage() {
             unreadBy: { [user.uid]: false, [ad.userId]: true }
         };
 
-        addDoc(conversationsRef, newConversationData)
-          .then(newConversationRef => {
-              router.push(`/inbox/${newConversationRef.id}`);
-          })
-          .catch(serverError => {
-              const permissionError = new FirestorePermissionError({
-                  path: conversationsRef.path,
-                  operation: 'create',
-                  requestResourceData: newConversationData
-              });
-              errorEmitter.emit('permission-error', permissionError);
-          })
-          .finally(() => {
-              setIsProcessingChat(false);
-          });
-      }
-    }).catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: conversationsRef.path,
-            operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        const newConversationRef = await addDoc(conversationsRef, newConversationData);
+        router.push(`/inbox/${newConversationRef.id}`);
+
+    } catch (error: any) {
+        if(error.name === 'FirestorePermissionError') {
+             errorEmitter.emit('permission-error', error);
+        } else {
+             const permissionError = new FirestorePermissionError({
+                path: conversationsRef.path,
+                operation: 'list',
+             });
+             errorEmitter.emit('permission-error', permissionError);
+        }
+    } finally {
         setIsProcessingChat(false);
-    });
+    }
   };
   
   const handleShare = async () => {
@@ -279,5 +278,3 @@ export default function AdDetailPage() {
     </div>
   );
 }
-
-  
