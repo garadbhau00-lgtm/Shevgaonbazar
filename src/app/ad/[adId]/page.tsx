@@ -267,7 +267,7 @@ export default function AdDetailPage() {
         </div>
         
         <div className="text-xs text-muted-foreground pt-4 border-t">
-          {`Posted on ${format(ad.createdAt.toDate(), 'dd MMM yyyy', { locale: enUS })}`}
+          {ad.createdAt && `Posted on ${format(ad.createdAt.toDate(), 'dd MMM yyyy', { locale: enUS })}`}
         </div>
 
         {!isOwner && (
@@ -295,4 +295,5 @@ export default function AdDetailPage() {
     </div>
   );
 }
+
 

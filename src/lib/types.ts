@@ -103,3 +103,4 @@ export type Advertisement = {
     lastUpdated: any; // Firestore timestamp
     enabled: boolean;
 }
+
