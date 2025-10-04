@@ -45,13 +45,13 @@ export default function AdDetailPage() {
 
   useEffect(() => {
     const fetchAd = async () => {
-      try {
-        if (!adId) {
-          router.push('/');
-          return;
-        }
+      if (!adId) {
+        router.push('/');
+        return;
+      }
+      const docRef = doc(db, 'ads', adId as string);
 
-        const docRef = doc(db, 'ads', adId as string);
+      try {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -67,9 +67,16 @@ export default function AdDetailPage() {
           toast({ variant: 'destructive', title: dictionary.adDetail.notFoundTitle, description: dictionary.adDetail.notFoundDescription });
           router.push('/');
         }
-      } catch (error) {
-        console.error("Error fetching ad:", error);
-        toast({ variant: 'destructive', title: dictionary.adDetail.errorTitle, description: dictionary.adDetail.errorDescription });
+      } catch (error: any) {
+        if (error.code === 'permission-denied') {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'get'
+          }));
+        } else {
+          console.error("Error fetching ad:", error);
+          toast({ variant: 'destructive', title: dictionary.adDetail.errorTitle, description: dictionary.adDetail.errorDescription });
+        }
       } finally {
         setLoading(false);
       }
@@ -84,8 +91,16 @@ export default function AdDetailPage() {
       if (user && ad) {
         const checkSavedStatus = async () => {
             const savedAdRef = doc(db, 'users', user.uid, 'savedAds', ad.id);
-            const docSnap = await getDoc(savedAdRef);
-            setIsSaved(docSnap.exists());
+            try {
+                const docSnap = await getDoc(savedAdRef);
+                setIsSaved(docSnap.exists());
+            } catch (error: any) {
+                // This might fail if rules for the subcollection don't exist, which is fine on initial load.
+                // The main save/unsave action will handle the permission error more directly.
+                if (error.code === 'permission-denied') {
+                    console.warn('Could not check saved status due to permissions, this may be expected.');
+                }
+            }
         };
         checkSavedStatus();
       }
