@@ -25,6 +25,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/errors';
 
 export default function AdDetailPage() {
   const { adId } = useParams();
@@ -77,37 +79,52 @@ export default function AdDetailPage() {
     if (!user || !ad || user.uid === ad.userId) return;
 
     setIsProcessingChat(true);
-    try {
-      // Check if a conversation already exists
-      const conversationsRef = collection(db, 'conversations');
-      const q = query(
-        conversationsRef,
-        where('adId', '==', ad.id),
-        where('participants', 'array-contains', user.uid)
-      );
-      
-      const querySnapshot = await getDocs(q);
+
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('adId', '==', ad.id),
+      where('participants', 'array-contains', user.uid)
+    );
+
+    getDocs(q).then(async (querySnapshot) => {
       let existingConvo: Conversation | null = null;
       querySnapshot.forEach(doc => {
-          const convo = doc.data() as Conversation;
-          if(convo.participants.includes(ad.userId)) {
-              existingConvo = { id: doc.id, ...convo };
-          }
+        const convo = doc.data() as Conversation;
+        if(convo.participants.includes(ad!.userId)) {
+            existingConvo = { id: doc.id, ...convo };
+        }
       });
 
       if (existingConvo) {
         router.push(`/inbox/${existingConvo.id}`);
+        setIsProcessingChat(false);
       } else {
         // Create a new conversation
-        const sellerDoc = await getDoc(doc(db, 'users', ad.userId));
-        const sellerProfile = sellerDoc.data();
-        const buyerProfile = (await getDoc(doc(db, 'users', user.uid))).data();
-        
-        if (!sellerProfile || !buyerProfile) {
-            throw new Error("Could not find user profiles.");
+        const sellerDocRef = doc(db, 'users', ad.userId);
+        const buyerDocRef = doc(db, 'users', user.uid);
+
+        const [sellerDoc, buyerDoc] = await Promise.all([
+            getDoc(sellerDocRef),
+            getDoc(buyerDocRef)
+        ]).catch(serverError => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: 'users collection',
+                operation: 'get',
+            }));
+            return [null, null];
+        });
+
+        if (!sellerDoc?.exists() || !buyerDoc?.exists()) {
+             toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profiles.' });
+             setIsProcessingChat(false);
+             return;
         }
 
-        const newConversationRef = await addDoc(conversationsRef, {
+        const sellerProfile = sellerDoc.data();
+        const buyerProfile = buyerDoc.data();
+
+        const newConversationData = {
             adId: ad.id,
             adTitle: dictionary.categories[ad.category] || ad.category,
             adPhoto: ad.photos?.[0] || '',
@@ -120,15 +137,32 @@ export default function AdDetailPage() {
             lastMessageTimestamp: serverTimestamp(),
             lastMessageSenderId: '',
             unreadBy: { [user.uid]: false, [ad.userId]: true }
-        });
-        router.push(`/inbox/${newConversationRef.id}`);
+        };
+
+        addDoc(conversationsRef, newConversationData)
+          .then(newConversationRef => {
+              router.push(`/inbox/${newConversationRef.id}`);
+          })
+          .catch(serverError => {
+              const permissionError = new FirestorePermissionError({
+                  path: conversationsRef.path,
+                  operation: 'create',
+                  requestResourceData: newConversationData
+              });
+              errorEmitter.emit('permission-error', permissionError);
+          })
+          .finally(() => {
+              setIsProcessingChat(false);
+          });
       }
-    } catch (error) {
-      console.error('Error starting chat:', error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to start chat.' });
-    } finally {
-      setIsProcessingChat(false);
-    }
+    }).catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+            path: conversationsRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setIsProcessingChat(false);
+    });
   };
   
   const handleShare = async () => {
@@ -245,3 +279,5 @@ export default function AdDetailPage() {
     </div>
   );
 }
+
+  
