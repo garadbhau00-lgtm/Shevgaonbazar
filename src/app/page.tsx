@@ -225,7 +225,7 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-black/50" />
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-white">
-              <h1 className="text-lg font-bold">{dictionary.home.welcomeTitle}</h1>
+              <h1 className="text-base font-bold">{dictionary.home.welcomeTitle}</h1>
               <p className="mt-2 text-xs max-w-xl">{dictionary.home.welcomeDescription}</p>
           </div>
           <div className="absolute bottom-0 right-0 mr-2 mb-2">
