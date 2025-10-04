@@ -28,6 +28,7 @@ import { enUS } from 'date-fns/locale';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 
 export default function AdDetailPage() {
@@ -214,21 +215,23 @@ export default function AdDetailPage() {
 
     try {
         if (isSaved) {
-            // Unsave the ad
             await deleteDoc(savedAdRef);
             setIsSaved(false);
             toast({ title: 'Removed', description: 'Ad removed from your saved list.' });
         } else {
-            // Save the ad
-            await setDoc(savedAdRef, {
-                savedAt: serverTimestamp()
-            });
+            const saveData = { savedAt: serverTimestamp() };
+            await setDoc(savedAdRef, saveData);
             setIsSaved(true);
             toast({ title: 'Saved!', description: 'Ad added to your saved list.' });
         }
-    } catch (error) {
-        console.error('Error toggling save status:', error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not update saved status.' });
+    } catch (serverError) {
+        const operation = isSaved ? 'delete' : 'create';
+        const error = new FirestorePermissionError({
+            path: savedAdRef.path,
+            operation: operation,
+            requestResourceData: operation === 'create' ? { savedAt: 'serverTimestamp' } : undefined,
+        });
+        errorEmitter.emit('permission-error', error);
     } finally {
         setIsSaving(false);
     }
@@ -260,9 +263,11 @@ export default function AdDetailPage() {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-white bg-black/30 hover:bg-black/50 hover:text-white" onClick={() => router.back()}>
-          <ArrowLeft />
-        </Button>
+        <Link href="/inbox">
+            <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-white bg-black/30 hover:bg-black/50 hover:text-white">
+                <ArrowLeft />
+            </Button>
+        </Link>
         <div className="absolute bottom-4 left-4 text-white">
              {ad.price && (
                 <div className="flex items-center gap-2 text-2xl font-bold">
