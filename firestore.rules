@@ -1,75 +1,69 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAuthOwner(uid) {
-      return request.auth.uid == uid;
-    }
-
+    // Helper function to check for Admin role
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
-    // Ads can be read by anyone if approved.
-    // Owners can read their own ads regardless of status.
-    // Owners can create, update, and delete their own ads.
-    // Admins can read, update, and delete any ad.
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is the owner of a document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Ads: Public read for approved, owner can write, admin can do anything
     match /ads/{adId} {
-      allow read: if resource.data.status == 'approved' || isAuthOwner(resource.data.userId) || isAdmin();
-      allow create: if isAuthOwner(request.resource.data.userId);
-      allow update: if isAuthOwner(resource.data.userId) || isAdmin();
-      allow delete: if isAuth-owner(resource.data.userId) || isAdmin();
+      allow read: if resource.data.status == 'approved' || (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if (isAuthenticated() && request.resource.data.userId == request.auth.uid) || isAdmin();
     }
 
-    // Users can read/update their own profile.
-    // Admins can read/write/delete any user profile.
-    // Any authenticated user can read public profile info (name, photo).
+    // Users: Can read/write their own profile. Admins can read any profile.
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if isAuthOwner(userId);
-      allow update: if isAuthOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
-
-      // Saved ads can only be managed by the user themselves.
-      match /savedAds/{adId} {
-        allow read, write, delete: if isAuthOwner(userId);
-      }
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId);
     }
     
-    // Conversations can be read or updated by participants.
-    // Conversations can be created by a user if they are a participant.
-    match /conversations/{conversationId} {
-      allow read, update: if request.auth.uid in resource.data.participants;
-      allow create: if request.auth.uid in request.resource.data.participants;
-      
-      // Messages can be read by conversation participants.
-      // Messages can be created by a sender who is a participant.
-      match /messages/{messageId} {
-        allow read: if get(parent).data.participants.hasAny([request.auth.uid]);
-        allow create: if request.resource.data.senderId == request.auth.uid && get(parent).data.participants.hasAny([request.auth.uid]);
-      }
+    // Config: Only Admins can write
+    match /config/{docId} {
+        allow read: if true;
+        allow write: if isAdmin();
     }
-
-    // Users can manage their own notifications.
-    // Admins can read/delete any notification.
+    
+    // Notifications: User can only access their own. Admins can create/delete for anyone.
     match /notifications/{notificationId} {
-        allow read, update, delete: if isAuthOwner(resource.data.userId);
-        allow create: if isAdmin(); // Only admins can create broadcast notifications
-        allow read, delete: if isAdmin();
+        allow read, update, delete: if isOwner(resource.data.userId);
+        allow create: if isAdmin();
     }
     
-    // Any authenticated user can submit an issue.
-    // Admins can read and update any issue.
+    // Issues: Users can create. Admins can do anything.
     match /issues/{issueId} {
-        allow create: if request.auth != null;
-        allow read, update: if isAdmin() || isAuthOwner(resource.data.userId);
+        allow create: if isAuthenticated();
+        allow read, write, delete: if isAdmin();
     }
 
-    // Config can only be modified by Admins.
-    // Any authenticated user can read the config (for advertisement).
-    match /config/{configId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
+    // Conversations & Messages
+    match /conversations/{conversationId} {
+      // Allow read/write if the user is one of the participants in the conversation
+      allow read, write, update: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      // Allow creation if the user is one of the participants in the new document
+      allow create: if isAuthenticated() && request.auth.uid in request.resource.data.participants;
+      
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Allow read if user is a participant in the parent conversation
+        allow read: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        // Allow create if user is the sender and is a participant in the conversation
+        allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+      }
     }
   }
 }
