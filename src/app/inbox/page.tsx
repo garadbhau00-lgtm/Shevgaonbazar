@@ -16,6 +16,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/errors';
 
 
 export default function InboxPage() {
@@ -49,13 +51,12 @@ export default function InboxPage() {
             const convos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Conversation));
             setConversations(convos);
             setPageLoading(false);
-        }, (error) => {
-            console.error("Error fetching conversations:", error);
-            if (error.message.includes("requires an index")) {
-                 toast({ variant: 'destructive', title: dictionary.inbox.errorTitle, description: dictionary.inbox.errorIndex });
-            } else {
-                 toast({ variant: 'destructive', title: dictionary.inbox.errorTitle, description: dictionary.inbox.errorFetch });
-            }
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: 'conversations',
+                operation: 'list'
+            });
+            errorEmitter.emit('permission-error', permissionError);
             setPageLoading(false);
         });
 
