@@ -23,9 +23,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
+import Link from 'next/link';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/errors';
-import Link from 'next/link';
 
 
 export default function AdDetailPage() {
@@ -83,80 +83,88 @@ export default function AdDetailPage() {
   }, [adId, authLoading, user, router, toast, dictionary]);
   
 
-  const handleStartChat = async () => {
+ const handleStartChat = async () => {
     if (!user || !ad || user.uid === ad.userId) return;
     setIsProcessingChat(true);
 
     try {
-        const conversationsRef = collection(db, 'conversations');
-        const q = query(
-            conversationsRef,
-            where('adId', '==', ad.id),
-            where('participants', 'array-contains', user.uid)
-        );
+      const conversationsRef = collection(db, 'conversations');
+      const q = query(
+        conversationsRef,
+        where('adId', '==', ad.id),
+        where('participants', 'array-contains', user.uid)
+      );
 
-        const querySnapshot = await getDocs(q);
-        let existingConvo: Conversation | null = null;
-        querySnapshot.forEach(doc => {
-            const convo = doc.data() as Conversation;
-            if (convo.participants.includes(ad!.userId)) {
-                existingConvo = { id: doc.id, ...convo };
-            }
-        });
-
-        if (existingConvo) {
-            router.push(`/inbox/${existingConvo.id}`);
-            return;
+      const querySnapshot = await getDocs(q);
+      
+      let existingConvo: Conversation | null = null;
+      querySnapshot.forEach(doc => {
+        const convo = doc.data() as Conversation;
+        if (convo.participants.includes(ad!.userId)) {
+          existingConvo = { id: doc.id, ...convo };
         }
+      });
 
-        const sellerDocRef = doc(db, 'users', ad.userId);
-        const buyerDocRef = doc(db, 'users', user.uid);
+      if (existingConvo) {
+        router.push(`/inbox/${existingConvo.id}`);
+        return;
+      }
 
-        const [sellerDoc, buyerDoc] = await Promise.all([
-            getDoc(sellerDocRef),
-            getDoc(buyerDocRef)
-        ]);
+      const sellerDocRef = doc(db, 'users', ad.userId);
+      const buyerDocRef = doc(db, 'users', user.uid);
 
-        if (!sellerDoc.exists() || !buyerDoc.exists()) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profiles.' });
-            setIsProcessingChat(false);
-            return;
-        }
-        
-        const sellerProfile = sellerDoc.data();
-        const buyerProfile = buyerDoc.data();
-        
-        const newConversationData = {
-            adId: ad.id,
-            adTitle: dictionary.categories[ad.category] || ad.category,
-            adPhoto: ad.photos?.[0] || '',
-            participants: [user.uid, ad.userId],
-            participantProfiles: {
-                [user.uid]: { name: buyerProfile.name, photoURL: buyerProfile.photoURL || '' },
-                [ad.userId]: { name: sellerProfile.name, photoURL: sellerProfile.photoURL || '' }
-            },
-            lastMessage: '',
-            lastMessageTimestamp: serverTimestamp(),
-            lastMessageSenderId: '',
-            unreadBy: { [user.uid]: false, [ad.userId]: true }
-        };
+      const [sellerDoc, buyerDoc] = await Promise.all([
+        getDoc(sellerDocRef),
+        getDoc(buyerDocRef),
+      ]);
+      
+      if (!sellerDoc.exists() || !buyerDoc.exists()) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profiles.' });
+        setIsProcessingChat(false);
+        return;
+      }
 
-        const newConversationRef = await addDoc(conversationsRef, newConversationData);
-        router.push(`/inbox/${newConversationRef.id}`);
+      const sellerProfile = sellerDoc.data();
+      const buyerProfile = buyerDoc.data();
+
+      const newConversationData = {
+        adId: ad.id,
+        adTitle: dictionary.categories[ad.category] || ad.category,
+        adPhoto: ad.photos?.[0] || '',
+        participants: [user.uid, ad.userId],
+        participantProfiles: {
+          [user.uid]: { name: buyerProfile.name, photoURL: buyerProfile.photoURL || '' },
+          [ad.userId]: { name: sellerProfile.name, photoURL: sellerProfile.photoURL || '' },
+        },
+        lastMessage: '',
+        lastMessageTimestamp: serverTimestamp(),
+        lastMessageSenderId: '',
+        unreadBy: { [user.uid]: false, [ad.userId]: true },
+      };
+      
+      const newConversationRef = await addDoc(conversationsRef, newConversationData);
+      router.push(`/inbox/${newConversationRef.id}`);
 
     } catch (error: any) {
-      if (error.name === 'FirestorePermissionError') {
-          errorEmitter.emit('permission-error', error);
-      } else if (error.code === 'permission-denied') {
-           errorEmitter.emit('permission-error', new FirestorePermissionError({
+        let permError = null;
+        if (error.code === 'permission-denied') {
+            permError = new FirestorePermissionError({
                 path: 'conversations',
                 operation: 'create',
-            }));
-      } else {
-          console.error("Error starting chat:", error);
-          toast({ variant: 'destructive', title: 'Error', description: 'Could not start chat.' });
-      }
-      setIsProcessingChat(false);
+                requestResourceData: { adId: ad.id },
+            });
+        } else if (error.name === 'FirestorePermissionError') {
+            permError = error;
+        }
+
+        if (permError) {
+            errorEmitter.emit('permission-error', permError);
+        } else {
+            console.error("Error starting chat:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not start chat.' });
+        }
+    } finally {
+        setIsProcessingChat(false);
     }
   };
   
@@ -210,7 +218,7 @@ export default function AdDetailPage() {
             </Button>
         </Link>
         <div className="absolute bottom-4 left-4 text-white">
-             {ad.price && (
+             {ad.price != null && (
                 <div className="flex items-center gap-2 text-2xl font-bold">
                     <BadgeIndianRupee className="h-6 w-6" />
                     <span>{ad.price.toLocaleString('en-IN')}</span>
